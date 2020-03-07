@@ -160,6 +160,315 @@
           <div id="js-content" class="content-ll">
             
   
+    <article id="post-CSRF" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2020/03/07/CSRF/">跨站请求伪造(CSRF)</a>
+    </h1>
+  
+
+        
+        <a href="/2020/03/07/CSRF/" class="archive-article-date">
+  	<time datetime="2020-03-06T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-03-07</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="CSRF简介"><a href="#CSRF简介" class="headerlink" title="CSRF简介"></a>CSRF简介</h2><p>&emsp;&emsp;<strong>跨站请求伪造</strong>，Cross-site request forgery，是一种常见的Web攻击，也是Web安全中最容易被忽视的一种攻击方式。</p>
+<p>&emsp;&emsp;<strong>危害</strong>：以你的名义，进行一些非你本意的操作(如转账、发消息、购买商品等等)，能够造成个人隐私泄露甚至是财产安全等问题。</p>
+<h2 id="CSRF的攻击"><a href="#CSRF的攻击" class="headerlink" title="CSRF的攻击"></a>CSRF的攻击</h2><h3 id="漏洞原理及攻击过程"><a href="#漏洞原理及攻击过程" class="headerlink" title="漏洞原理及攻击过程"></a>漏洞原理及攻击过程</h3><p><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CSRF.png" alt=""></p>
+<ol>
+<li>用户A打开浏览器,访问网站B,输入用户名和密码请求登录网站B。</li>
+<li>在用户A信息通过验证后,网站B在服务器端产生一个专属用户A的Cookie认证信息返回给浏览器,此后用户A的所有操作都会携带其本人的Cookie信息。</li>
+<li>在用户A的Cookie信息生效时,Hacker伪造了网站C(模拟网站B并携带恶意操作)。</li>
+<li>Hacker将伪造后的网站C，发送给用户A，诱使其点击。</li>
+<li>用户A在同一浏览器打开了Hacker发来的网站C,由于用户A在网站C的所有操作携带了其本人Cookie信息,执行网站C的操作(如转账)时,服务器会认为是用户A的本意操作,从而通过网站C的请求执行了Hacker预期的相关操作(如转账等)。</li>
+<li>实现网站C对网站B的恶意操作。</li>
+</ol>
+<p>&emsp;&emsp;<strong>实际上</strong>,网站C的操作并非用户A的本意操作,由于浏览器只认Cookie信息,所以这里Hacker成功地以用户A的名义在网站B进行了操作。</p>
+<p>&emsp;&emsp;<strong>攻击成功的原因</strong>：重要操作的所有参数都是可以被攻击者知道，从而构造虚假网页。</p>
+<h2 id="CSRF的防御"><a href="#CSRF的防御" class="headerlink" title="CSRF的防御"></a>CSRF的防御</h2><h3>CSRF漏洞检测</h3>
+
+<ul>
+<li>普遍方法:抓取一个正常请求的数据包,去掉Referer字段提交,若请求有效,则基本可以判断存在CSRF漏洞。</li>
+<li>检测工具:如CSRFTester,其原理为抓取数据包,修改相应信息,重新提交,这相当于一次伪造客户请求,模仿CSRF攻击,当然,此款工具也能用来进行CSRF攻击。</li>
+</ul>
+<h3>防御方法</h3>
+- 验证码&emsp;验证码强制用户与应用进行交互能够很好的遏制CSRF。验证码被认为是对抗CSRF攻击最简洁有效的防御方法，但考虑到用户的体验，不能给所有的操作都加上验证码，所以其只能作为一个辅助手段。
+- Referer Check&emsp;在互联网应用中，页面与页面之间具有一定的联系,Referer参数的值为跳转到当前页面的上一个页面URL(即页面来源)。服务器可以通过检查Referer参数是否合法来判断用户是否被CSRF攻击。
+- Anti CSRF Token&emsp;只有当攻击者预测出URL的所有参数才能成功的伪造请求，增加一个随机产生CSRF Token参数，使得攻击者无法成功伪造。
+**CSRF Token**:即user_token，这类型得随机参数被称为csrf token，它保证了攻击者无法猜到所有参数(需要结合XSS漏洞获取页面的token值)。
+
+<h4>防御方法的缺陷</h4>
+
+<ul>
+<li>验证码&emsp;验证码会给用户带来不好的体验</li>
+<li>Referer Check&emsp;若是伪造的网站携带可验证通过的Referer字段,还是能够通过此验证,进行CSRF攻击，除此之外，由于Referer会记录下用户的访问来源，存在客户认为隐私权被侵犯，而手动设置发送请求时不提供Referer字段。</li>
+<li>Anti CSRF Token&emsp;token值需要足够随机，必须使用安全的随机数生成算法保证其安全性，另外，Hacker也可以登录网站或者通过Referer值获得token值得到这个参数，在参数的有效期内进行CSRF攻击。</li>
+</ul>
+<p><br/><br/><br/></p>
+<blockquote>
+<p><font face="Georgia" color=#c4444>安全需要不断地运营，持续的优化。</font></p>
+</blockquote>
+<br/>
+作者：WebDogC
+参考书籍《白帽子讲Web安全》
+参考博客: https://blog.csdn.net/stpeace/article/details/53512283
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">CSRF、security、Web安全</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2020/03/07/CSRF/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
+    <article id="post-XSS" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2020/03/05/XSS/">跨站脚本攻击(XSS)</a>
+    </h1>
+  
+
+        
+        <a href="/2020/03/05/XSS/" class="archive-article-date">
+  	<time datetime="2020-03-04T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-03-05</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2>XSS简介</h2>
+
+<p>&emsp;&emsp;<strong>跨站脚本攻击</strong>，Cross site script,由于为了和层叠样式表(Cascading Style Sheet，CSS)有所区别，所以在安全领域中叫做“XSS”。<br>&emsp;&emsp;<strong>XSS攻击</strong>，通常是指黑客通过“HEML注入”篡改了网页，插入了恶意的脚本，从而在用户浏览网页时，控制用户浏览器的一种攻击。<br>&emsp;&emsp;XSS长期以来别列为客户端Web安全中的<strong>头号大敌</strong>。现在业内达成的共识是：针对各种不同场景产生的XSS，需要区分情景对待。</p>
+<blockquote>
+<p>在正确的地方做正确的事情。</p>
+</blockquote>
+<h4>XSS的分类</h4>
+
+<ul>
+<li>存储型XSS(Stored):攻击代码针对<strong>数据库</strong>，输出在所有相对应的<strong>HTTP响应</strong>中。</li>
+<li>反射型XSS(Reflected):恶意脚本在<strong>当前页面</strong>执行所形成的XSS。</li>
+<li>DOM型XSS:修改页面的<strong>DOM节点</strong>形成的XSS。(特殊的反射型XSS)</li>
+</ul>
+<h2>XSS攻击</h2>
+
+<p>&emsp;&emsp;XSS Payload：用以完成各种功能的恶意脚本，实际上就是JavaScript脚本，其可以实现任何JavaScript脚本能实现的功能。</p>
+<h4>XSS的攻击方式</h4>
+
+<ul>
+<li>构造GET、POST请求</li>
+<li>加载远程脚本</li>
+<li>XSS钓鱼</li>
+<li>识别用户浏览器</li>
+<li>识别用户安装的软件</li>
+<li>识别用户浏览历史</li>
+<li>获取用户的真实IP地址</li>
+<li>XSS Worm(蠕虫)攻击</li>
+</ul>
+<h4>XSS的攻击平台</h4>
+
+<p>&emsp;&emsp;为了使用方便，安全研究者将XSS Payload的许多功能封装起来，成为XSS攻击平台，即可以通过攻击平台更加方便地演示网站存在的XSS危害。</p>
+<h5>常见的XSS平台</h5>
+
+<ul>
+<li>Attack API</li>
+<li>BeEF</li>
+<li>XSS Proxy</li>
+</ul>
+<h4>XSS Payload构造技巧</h4>
+
+<ul>
+<li>利用页面字符编码</li>
+<li>绕过长度限制<ul>
+<li>利用location.hash“藏代码”</li>
+<li>利用注释符注释中间代码</li>
+<li>使用<base>标签劫持相对路径标签</li>
+<li>window.name与eval(name)相结合</li>
+<li>闭合标签</li>
+</ul>
+</li>
+<li>绕过标签限制<ul>
+<li>大小写混合</li>
+<li>标签嵌套</li>
+<li>夹杂注释 </li>
+</ul>
+</li>
+</ul>
+<h2>XSS防御</h2>
+
+<h4>输入检查</h4>
+
+<p>&emsp;&emsp;XSS Filter：XSS输入检查方式<br>&emsp;&emsp;所有客户端的JavaScript检查极容易被攻击者绕过，所以XSS输入检查的逻辑必须要放在服务端代码中实现。不过客户端JavaScript的输入检查，可以阻挡大部分正常用户的错误操作，从而节约服务器资源。<br>&emsp;&emsp;XSS Filter存在的两个问题：<br>&emsp;&emsp;&emsp;&emsp;# XSS Filter对语境的理解并不完整 。<br>&emsp;&emsp;&emsp;&emsp;# XSS Filter对特殊字符的处理可能会改变用户数据的语义。<br>&emsp;&emsp;针对上述两个问题，最好的解决办法是，尽量避免全局性XSS Filter，尽量避免对输入数据做统一的修改，即<strong>针对不同的场景使用不用的检查方法</strong>。<br>&emsp;&emsp;目前Web开发的普遍做法，是<strong>同时</strong>在<strong>客户端JavaScript</strong>中和<strong>服务器端代码</strong>中实现输入检查。</p>
+<h4>输出检查</h4>
+
+
+<p>&emsp;&emsp;遵循“在正确的地方使用正确的编码方式”原则，使用相对应的安全编码函数对数据变量进行编码或者转义来防御XSS攻击</p>
+<h4>正确地防御XSS</h4>
+
+<h5>防御反射型与存储型XSS</h5>
+
+<ul>
+<li>在HTML标签中输出<ul>
+<li>HtmlEncode</li>
+</ul>
+</li>
+<li>在HTML属性中输出<ul>
+<li>HtmlEncode</li>
+</ul>
+</li>
+<li>在<code>&lt;script&gt;</code>标签中输出<ul>
+<li>确保输出的变量在引号内</li>
+<li>使用JavascriptEncode</li>
+</ul>
+</li>
+<li>在事件中输出<ul>
+<li>JavascriptEncode </li>
+</ul>
+</li>
+<li>在CSS中输出<ul>
+<li>ESAPI.encoder().encodeForCSS()</li>
+</ul>
+</li>
+<li>在URL地址中输出<ul>
+<li>先检查变量是否以”http”开头</li>
+<li>对变量进行URLEncode</li>
+</ul>
+</li>
+<li>······</li>
+</ul>
+<h5>防御DOM型XSS</h5>
+
+<p>&emsp;&emsp;由于DOM型XSS是通过修改页面DOM节点所形成，即DOM型XSS是从JavaScript中输出数据到HTML页面里。<br>&emsp;在这里代码会经历HTML–&gt;JavaScript–&gt;HTML两个过程，而在第二个过程中，会出现两种情况，一是输出到事件或者脚本，二是输出到HTMl内容或者属性。<br>&emsp;&emsp;因此，<strong>防御方法</strong>应该是这样:</p>
+<ul>
+<li>过程一(HTML–&gt;JavaScript)：    <ul>
+<li>使用javascriptEncode</li>
+</ul>
+</li>
+<li>过程二(JavaScript–&gt;HTML)：<ul>
+<li>输出到事件或者脚本：使用javascriptEncode</li>
+<li>输出到HTML内容或者属性：使用HtmlEncode</li>
+</ul>
+</li>
+</ul>
+<h5>处理富文本</h5>
+
+<p>&emsp;&emsp;<strong>富文本</strong>：用户自定义的HTML代码</p>
+<ul>
+<li>在过滤富文本时，”事件”以及危险的标签(如<code>&lt;iframe&gt;</code>、<code>&lt;script&gt;</code>、<code>&lt;base&gt;</code>、<code>&lt;form&gt;</code>)应该严格被禁止。</li>
+<li>在标签的选择上，应该使用白名单，避免使用黑名单</li>
+<li>尽可能的禁止用户自定义CSS与style</li>
+</ul>
+<p>&emsp;&emsp;在网上有一些比较成熟的实现了对富文本XSS检查的开源项目(如Anti-Samy、HTMLPurify)</p>
+<p><br/><br/><br/><br>作者：WebDogC<br>参考书籍《白帽子讲Web安全》</p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">XSS、security、Web安全</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2020/03/05/XSS/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
     <article id="post-the view of security" class="article article-type-post  article-index" itemscope itemprop="blogPost">
   <div class="article-inner">
     
@@ -891,6 +1200,14 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color4">白帽子讲Web安全、note、security</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">XSS、security、Web安全</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">CSRF、security、Web安全</a>
               </li>
             
             <div class="clearfix"></div>
