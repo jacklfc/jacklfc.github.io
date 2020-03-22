@@ -6,14 +6,19 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <link rel="dns-prefetch" href="http://yoursite.com">
-  <title>Archives | WebDogC</title>
+  <title>注入攻击之SQL注入 | WebDogC</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta property="og:type" content="website">
-<meta property="og:title" content="WebDogC">
-<meta property="og:url" content="http://yoursite.com/archives/index.html">
+  <meta name="description" content="SQL注入简介&amp;emsp;&amp;emsp;注入攻击的本质，是把用户输入的数据当做代码执行，这里有两个关键条件，第一是用户能够控制输入，第二是原本程序要执行的代码，拼接了用户输入的数据。 &amp;emsp;&amp;emsp;SQL注入，SQL Injection，指的是web应用程序对用户输入数据的合法性没有判断或过滤不严，攻击者可以在web应用程序中事先定义好的查询语句的结尾上添加额外的SQL语句，在管理员不知情">
+<meta property="og:type" content="article">
+<meta property="og:title" content="注入攻击之SQL注入">
+<meta property="og:url" content="http://yoursite.com/2020/03/12/SQL/index.html">
 <meta property="og:site_name" content="WebDogC">
+<meta property="og:description" content="SQL注入简介&amp;emsp;&amp;emsp;注入攻击的本质，是把用户输入的数据当做代码执行，这里有两个关键条件，第一是用户能够控制输入，第二是原本程序要执行的代码，拼接了用户输入的数据。 &amp;emsp;&amp;emsp;SQL注入，SQL Injection，指的是web应用程序对用户输入数据的合法性没有判断或过滤不严，攻击者可以在web应用程序中事先定义好的查询语句的结尾上添加额外的SQL语句，在管理员不知情">
 <meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2020-03-11T16:00:00.000Z">
+<meta property="article:modified_time" content="2020-03-22T13:44:52.739Z">
 <meta property="article:author" content="WebDogC">
+<meta property="article:tag" content="注入、SQL注入、security、Web安全">
 <meta name="twitter:card" content="summary">
   
     <link rel="alternative" href="/atom.xml" title="WebDogC" type="application/atom+xml">
@@ -158,74 +163,126 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            
-  
-  
+            <article id="post-SQL" class="article article-type-post " itemscope itemprop="blogPost">
+  <div class="article-inner">
     
-    
-      
-      
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2020" class="archive-year">2020</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2020/03/22/FileUpload/" class="archive-article-date">
-  	<time datetime="2020-03-21T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-03-22</time>
-</a>
-        </div>
-    	 
+      <header class="article-header">
+        
   
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2020/03/22/FileUpload/">文件上传漏洞</a>
+    <h1 class="article-title" itemprop="name">
+      注入攻击之SQL注入
     </h1>
   
 
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">文件上传、解析漏洞、security、Web安全</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2020/03/12/SQL/" class="archive-article-date">
+        
+        <a href="/2020/03/12/SQL/" class="archive-article-date">
   	<time datetime="2020-03-11T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-03-12</time>
 </a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2020/03/12/SQL/">注入攻击之SQL注入</a>
-    </h1>
-  
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="SQL注入简介"><a href="#SQL注入简介" class="headerlink" title="SQL注入简介"></a>SQL注入简介</h2><p>&emsp;&emsp;<strong>注入攻击的本质</strong>，是把用户输入的数据当做代码执行，这里有两个关键条件，第一是用户能够控制输入，第二是原本程序要执行的代码，拼接了用户输入的数据。</p>
+<p>&emsp;&emsp;<strong>SQL注入</strong>，SQL Injection，指的是web应用程序对用户输入数据的合法性没有判断或过滤不严，攻击者可以在web应用程序中事先定义好的查询语句的结尾上添加额外的SQL语句，在管理员不知情的情况下实现非法操作，以此来实现欺骗数据库服务器执行非授权的任意查询，从而进一步得到相应的数据信息的一种攻击方式。</p>
+<p>&emsp;&emsp;<strong>原理</strong>：构造特殊的SQL查询，由于服务器缺少对请求内容的检验,数据和代码未分离，即数据当做了代码来执行，数据库执行了攻击者所要的操作。<br>&emsp;&emsp;<strong>利用</strong>:<br>&emsp;&emsp;&emsp;&emsp;1. 万能密码登录<br>&emsp;&emsp;&emsp;&emsp;2. 数据库信息泄露<br>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;+管理员后台用户名和密码<br>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;+数据库其他敏感信息<br>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;+整个数据库信息(脱库)<br>&emsp;&emsp;&emsp;&emsp;3. 获取Webshell<br>&emsp;&emsp;&emsp;&emsp;4. 获取服务器敏感文件<br>&emsp;&emsp;&emsp;&emsp;5. 获取服务器系统权限</p>
+<h4 id="SQL注入分类"><a href="#SQL注入分类" class="headerlink" title="SQL注入分类"></a>SQL注入分类</h4><p>&emsp;&emsp;SQL注入可以简要分为GET/POST/HEAD注入、数字型/字符型注入、Orale/Mysql/MSSQL/Access注入。</p>
+<p>具体分为</p>
+<ul>
+<li>显错注入<ul>
+<li>查询语句显错</li>
+<li>函数updatexml()显错<ul>
+<li>insert信息注入<ul>
+<li>header参数注入</li>
+</ul>
+</li>
+<li>update信息注入</li>
+<li>delete信息注入</li>
+</ul>
+</li>
+<li>函数extractvalue()显错</li>
+</ul>
+</li>
+<li>盲注<ul>
+<li>布尔盲注</li>
+<li>延时盲注</li>
+<li>Dnslog盲注</li>
+</ul>
+</li>
+<li>特殊注入<ul>
+<li>宽字节注入</li>
+<li>二次编码注入 </li>
+</ul>
+</li>
+</ul>
+<h2 id="SQL注入攻击"><a href="#SQL注入攻击" class="headerlink" title="SQL注入攻击"></a>SQL注入攻击</h2><p>&emsp;&emsp;找到SQL注入漏洞，仅仅是一个开始。要实施一次完整的攻击，还有很多事情要做。下面是一些有关SQL注入的攻击方式。</p>
+<ul>
+<li><p>常见攻击方式：猜解数据库信息(版本、用户等)、修改数据库结构(增删改表)、读写文件(Webshell)。</p>
+</li>
+<li><p>UDF命令执行：利用“用户自定义函数”的技巧，即UDF(User-Defined- Functions)来执行命令。</p>
+</li>
+<li><p>攻击存储过程：数据库内有大量的存储过程，其中有不少(如xp_cmdshell)能为攻击者提供极大的便利，除此之外，存储过程本身也可能会存在注入漏洞。</p>
+</li>
+<li><p>SQL约束攻击(SQL Column Truncation)：在MySQL的配置选项中，有一个sql_mode选项。当MySQL的sql_mode设置为default时，即没有开启STRICT_ALL_TABLES选项时，MySQL对于用户插入的超长值只会提示warning，而不是error（如果是error则插入不成功），这可能会导致发生一些“截断”问题。</p>
+</li>
+</ul>
+<h2 id="SQL注入防御"><a href="#SQL注入防御" class="headerlink" title="SQL注入防御"></a>SQL注入防御</h2><h3 id="防御方法"><a href="#防御方法" class="headerlink" title="防御方法"></a>防御方法</h3><ul>
+<li><p>对用户的输入进行严格的过滤</p>
+<ul>
+<li>检查数据类型，对于一些特定的输入(如邮箱、时间、数字)进行严格的格式检。</li>
+<li>使用安全函数，通过一个足够安全的编码函数，可以帮助对抗SQl注入。    <ul>
+<li>参考OWASP ESAPI中的<code>ESAPI.encoder().encodeForSQL()</code></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>参数化SQL语句</p>
+<ul>
+<li>使用预编译语句，绑定变量。攻击者无法改变SQL语句的结构，只会将用户的输入当做字符串来处理。</li>
+<li>使用安全的存储过程对抗SQL，存储过程中的效果和使用预编译语句类似，但需要注意的是，存储过程也可能会存在注入问题。</li>
+</ul>
+</li>
+<li><p>严格控制用户权限</p>
+<ul>
+<li>根据最小权限原则，避免Web应用使用root、dbowner等高权限账户直接连接数据库。另外，Web应用使用的数据库账户，不应该有创建自定义函数、操作本地文件的权限。</li>
+</ul>
+</li>
+</ul>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>&emsp;&emsp;SQL注入攻击是应用违背了“数据与代码分离原则”导致的结果。它有两个条件：一是用户能够控制数据的输入；二是代码拼接了用户输入的数据，将其当成代码执行。<br>&emsp;&emsp;所以在防御SQL注入攻击时，只需要牢记“数据与代码分离原则”，在应用与数据库的交互点进行安全的过滤检查，就能避免此类问题。</p>
+<p><br/><br/><br/><br><br/><br/><br/></p>
+<blockquote>
+<p><font face="Georgia" color=#c4444>理论上，通过设计和实施合理的安全解决方案，注入攻击是可以彻底杜绝的。</font></p>
+</blockquote>
+<p>作者：WebDogC<br>参考书籍《白帽子讲Web安全》</p>
 
-        <div class="article-info info-on-right">
-          
+      
+
+      
+        <div class="page-reward">
+          <a href="javascript:;" class="page-reward-btn tooltip-top">
+            <div class="tooltip tooltip-east">
+            <span class="tooltip-item">
+              赏
+            </span>
+            <span class="tooltip-content">
+              <span class="tooltip-text">
+                <span class="tooltip-inner">
+                  <p class="reward-p"><i class="icon icon-quo-left"></i>谢谢你请我吃糖果<i class="icon icon-quo-right"></i></p>
+                  <div class="reward-box">
+                    
+                    
+                  </div>
+                </span>
+              </span>
+            </span>
+          </div>
+          </a>
+        </div>
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
 	<div class="article-tag tagcloud">
 		<i class="icon-price-tags icon"></i>
 		<ul class="article-tag-list">
@@ -237,301 +294,115 @@
 		</ul>
 	</div>
 
-          
+      
 
+      
+
+      
+        
+<div class="share-btn share-icons tooltip-left">
+  <div class="tooltip tooltip-east">
+    <span class="tooltip-item">
+      <a href="javascript:;" class="share-sns share-outer">
+        <i class="icon icon-share"></i>
+      </a>
+    </span>
+    <span class="tooltip-content">
+      <div class="share-wrap">
+        <div class="share-icons">
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="icon icon-weibo"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="icon icon-weixin"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="icon icon-qq"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="icon icon-douban"></i>
+          </a>
+          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a>
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="icon icon-facebook"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="icon icon-twitter"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="icon icon-google"></i>
+          </a>
         </div>
-        <div class="clearfix"></div>
-    </header>
+      </div>
+    </span>
+  </div>
+</div>
+
+<div class="page-modal wx-share js-wx-box">
+    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//pan.baidu.com/share/qrcode?url=http://yoursite.com/2020/03/12/SQL/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div class="mask js-mask"></div>
+      
+      <div class="clearfix"></div>
+    </div>
   </div>
 </article>
+
   
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2020/03/07/CSRF/" class="archive-article-date">
-  	<time datetime="2020-03-06T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-03-07</time>
-</a>
+<nav id="article-nav">
+  
+    <a href="/2020/03/22/FileUpload/" id="article-nav-newer" class="article-nav-link-wrap">
+      <i class="icon-circle-left"></i>
+      <div class="article-nav-title">
+        
+          文件上传漏洞
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2020/03/07/CSRF/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">跨站请求伪造(CSRF)</div>
+      <i class="icon-circle-right"></i>
+    </a>
+  
+</nav>
+
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
         </div>
-    	 
+        
+        
+    </div>
+</aside>
+
+
+
   
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2020/03/07/CSRF/">跨站请求伪造(CSRF)</a>
-    </h1>
+  
   
 
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">CSRF、security、Web安全</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2020/03/05/XSS/" class="archive-article-date">
-  	<time datetime="2020-03-04T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-03-05</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2020/03/05/XSS/">跨站脚本攻击(XSS)</a>
-    </h1>
   
 
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">XSS、security、Web安全</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2020/02/29/the%20view%20of%20security/" class="archive-article-date">
-  	<time datetime="2020-02-28T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-02-29</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2020/02/29/the%20view%20of%20security/">The View of Security</a>
-    </h1>
   
 
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">白帽子讲Web安全、note、security</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
   
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2020/02/29/%E5%AE%89%E5%85%A8%E6%96%B9%E6%A1%88%E8%AE%BE%E8%AE%A1%E5%8E%9F%E5%88%99/" class="archive-article-date">
-  	<time datetime="2020-02-28T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-02-29</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2020/02/29/%E5%AE%89%E5%85%A8%E6%96%B9%E6%A1%88%E8%AE%BE%E8%AE%A1%E5%8E%9F%E5%88%99/">安全方案设计原则</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">白帽子讲Web安全、note、security</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2020/02/29/%E5%AE%89%E5%85%A8%E8%AF%84%E4%BC%B0%E5%AE%9E%E6%96%BD/" class="archive-article-date">
-  	<time datetime="2020-02-28T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-02-29</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2020/02/29/%E5%AE%89%E5%85%A8%E8%AF%84%E4%BC%B0%E5%AE%9E%E6%96%BD/">安全评估实施</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">白帽子讲Web安全、note、security</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2020/02/28/Web%E6%B8%97%E9%80%8F%E5%B7%A5%E7%A8%8B%E5%B8%88%E4%B9%8B%E8%B7%AF/" class="archive-article-date">
-  	<time datetime="2020-02-28T11:50:45.925Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-02-28</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2020/02/28/Web%E6%B8%97%E9%80%8F%E5%B7%A5%E7%A8%8B%E5%B8%88%E4%B9%8B%E8%B7%AF/">Web渗透工程师之路</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">plan</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2020/01/29/%E6%88%91%E7%9A%84%E7%AC%AC%E4%B8%80%E7%AF%87%E5%8D%9A%E5%AE%A2%E6%96%87%E7%AB%A0/" class="archive-article-date">
-  	<time datetime="2020-01-29T13:13:41.032Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-01-29</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2020/01/29/%E6%88%91%E7%9A%84%E7%AC%AC%E4%B8%80%E7%AF%87%E5%8D%9A%E5%AE%A2%E6%96%87%E7%AB%A0/">我的第一篇博客文章</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2020/01/29/hello-world/" class="archive-article-date">
-  	<time datetime="2020-01-29T12:51:49.465Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-01-29</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2020/01/29/hello-world/">Hello World</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-  
-    </div></section>
-  
-
-    
 
 
           </div>
@@ -554,8 +425,8 @@
 	var yiliaConfig = {
 		mathjax: false,
 		isHome: false,
-		isPost: false,
-		isArchive: true,
+		isPost: true,
+		isArchive: false,
 		isTag: false,
 		isCategory: false,
 		open_in_new: false,
