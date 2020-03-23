@@ -211,25 +211,15 @@
 <li>双写文件后缀绕过</li>
 </ul>
 </li>
-<li><p>目录穿越绕过</p>
-<ul>
-<li>目录可控时，可以尝试使用目录穿越的方法(../)，先找到可执行php的文件夹，然后BurpsuiteP抓包修改文件名<code>filename/../../···</code>，<code>../</code>(上级目录)有可能被过滤，可以在中间增加<code>./</code>(当前目录)来绕过。</li>
-</ul>
+<li><p>简单文件头检测 文件头是位于文件开头的一段承担一定任务的数据，一般都在开头的部分。<br>&emsp;&emsp;由于文件头的起始部分一般开头标记文件类型(如gif的文件头为GIF89a/GIF87a)，通过文件头的起始部分进行匹配检测上传的文件类型,比较简单的一种文件类型检测方法，可以通过在上传的文件前追加合法的文件头进行绕过。 </p>
 </li>
-<li><p>Windows文件流绕过</p>
-<ul>
-<li><code>::$DATA</code>(Windows文件流绕过)是利用了NTFS交换数据流(ADS)，ADS是NTFS磁盘格式的一个特性(在NTFS文件系统下，每个文件都可以存在多个数据流)。通俗的理解就是文件可以“寄宿”在另一个文件身上，而在资源管理器中却只能看到宿主文件，找不到寄宿文件。</li>
-<li>例如：cmd下键入<code>echo adbc&gt;&gt;a.txt::$DATA</code>这条命令是指将<code>abcd</code>作为数据写入到<code>a.txt</code></li>
-<li>运用：cmd键入<code>echo adbc&gt;&gt;a.txt:b.txt</code>这条命令的意思是将<code>abcd</code>写入到<code>a.txt:b.txt</code>，然而在资源管理器中只会看到没有大小没有内容的<code>a.txt</code>，访问修改其真实文件内容需要cmd下键入<code>notepad a.txt:b.txt</code>打开真实文件进行编辑。 </li>
-<li><strong>注：只针对Windows</strong></li>
 </ul>
-</li>
-<li><p>%00截断绕过</p>
 <ul>
-<li><code>0x00</code>被认为是终止符，在文件上传过程中，<code>0x00</code>可以被用来截断文件名，比如在构造文件名<code>1.php%00.jpg</code>(<code>0x00</code>在URL编码中为<code>%00</code>)，由于<code>%00</code>截断，就能够以图片文件形式上传，访问到<code>1.php</code>文件。</li>
-<li>在POST请求方式中，参数会被当做字符串处理，所以需要在数据包Hex中手动添加<code>00</code>截断符。</li>
+<li>目录穿越绕过 目录可控时，可以尝试使用目录穿越的方法(../)，先找到可执行php的文件夹，然后BurpsuiteP抓包修改文件名<code>filename/../../···</code>，<code>../</code>(上级目录)有可能被过滤，可以在中间增加<code>./</code>(当前目录)来绕过。</li>
+<li>Windows文件流绕过 <code>::$DATA</code>(Windows文件流绕过)是利用了NTFS交换数据流(ADS)，ADS是NTFS磁盘格式的一个特性(在NTFS文件系统下，每个文件都可以存在多个数据流)。通俗的理解就是文件可以“寄宿”在另一个文件身上，而在资源管理器中却只能看到宿主文件，找不到寄宿文件。<br>Ps：<br>&emsp;&emsp;例如：cmd下键入<code>echo adbc&gt;&gt;a.txt::$DATA</code>这条命令是指将<code>abcd</code>作为数据写入到<code>a.txt</code><br>&emsp;&emsp;运用：cmd键入<code>echo adbc&gt;&gt;a.txt:b.txt</code>这条命令的意思是将<code>abcd</code>写入到<code>a.txt:b.txt</code>，然而在资源管理器中只会看到没有大小没有内容的<code>a.txt</code>，访问修改其真实文件内容需要cmd下键入<code>notepad a.txt:b.txt</code>打开真实文件进行编辑。<br>&emsp;&emsp;<strong>注：只针对Windows</strong></li>
 </ul>
-</li>
+<ul>
+<li>%00截断绕过<br>&emsp;&emsp;<code>0x00</code>被认为是终止符，在文件上传过程中，<code>0x00</code>可以被用来截断文件名，比如在构造文件名<code>1.php%00.jpg</code>(<code>0x00</code>在URL编码中为<code>%00</code>)，由于<code>%00</code>截断，就能够以图片文件形式上传，访问到<code>1.php</code>文件。<br>&emsp;&emsp;在POST请求方式中，参数会被当做字符串处理，所以需要在数据包Hex中手动添加<code>00</code>截断符。</li>
 </ul>
 <h2 id="解析漏洞"><a href="#解析漏洞" class="headerlink" title="解析漏洞"></a>解析漏洞</h2><h4 id="Nginx文件名逻辑漏洞"><a href="#Nginx文件名逻辑漏洞" class="headerlink" title="Nginx文件名逻辑漏洞"></a>Nginx文件名逻辑漏洞</h4><p>&emsp;&emsp;上传一个以空格(%20)为结尾的文件，例如<code>abc.jpg</code>当访问abc.jpg%20%00(需URL解码).php时，会将上传的图片文件<code>abc.jpg</code>当做PHP文件执行。<br>&emsp;&emsp;影响版本：0.8.41<del>1.4.3、1.5.0</del>1.5.7</p>
 <h4 id="Apache文件解析问题"><a href="#Apache文件解析问题" class="headerlink" title="Apache文件解析问题"></a>Apache文件解析问题</h4><p>&emsp;&emsp;Apache对于文件名的解析是从后往前解析的，直到遇见一个Apache认识的文件类型为止。<br>&emsp;&emsp;如果在.htaccess中有如下配置<code>AddType application/x-httpd-php .xxx</code>则会将扩展名为<code>.xxx</code>的文件当做php文件执行.<br>&emsp;&emsp;<code>.htaccess</code>文件被称为分布式配置文件，一般存在于伪静态页面，其提供了针对目录改变配置的方法，在一个特定的文档目录中放置一个包含一个或多个指令的文件，以作用于此目录及其所有子目录。然而此功能默认不开启。<br>&emsp;&emsp;例如在<code>.htaccess</code>文件中键入<br><code>AddType application/x-httpd-php .jpg</code>则文件所在目录会将<code>jpg</code>文件会被当做<code>php</code>文件来解析<br>&emsp;&emsp;由于配置文件没有文件名，所有需要用到cmd的重命名命令 <code>ren filename .htaccess</code></p>
