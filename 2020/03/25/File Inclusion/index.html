@@ -6,14 +6,19 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <link rel="dns-prefetch" href="http://yoursite.com">
-  <title>Tag: plan | WebDogC</title>
+  <title>文件包含 | WebDogC</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta property="og:type" content="website">
-<meta property="og:title" content="WebDogC">
-<meta property="og:url" content="http://yoursite.com/tags/plan/index.html">
+  <meta name="description" content="概念：服务器执行PHP文件时，可以通过文件包含函数加载另一个文件(可以是非php文件)中的PHP代码，并且当PHP来执行。这个过程被称为文件包含。 原理：Web应用使用了文件包含函数,其加载的文件名参数为用户可控，加上对文件名过滤不严，导致Web应用包含了其他恶意文件，执行了非预期的代码。 文件包含函数 require() require_once() include() include_once">
+<meta property="og:type" content="article">
+<meta property="og:title" content="文件包含">
+<meta property="og:url" content="http://yoursite.com/2020/03/25/File%20Inclusion/index.html">
 <meta property="og:site_name" content="WebDogC">
+<meta property="og:description" content="概念：服务器执行PHP文件时，可以通过文件包含函数加载另一个文件(可以是非php文件)中的PHP代码，并且当PHP来执行。这个过程被称为文件包含。 原理：Web应用使用了文件包含函数,其加载的文件名参数为用户可控，加上对文件名过滤不严，导致Web应用包含了其他恶意文件，执行了非预期的代码。 文件包含函数 require() require_once() include() include_once">
 <meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2020-03-24T16:00:00.000Z">
+<meta property="article:modified_time" content="2020-04-06T09:51:35.639Z">
 <meta property="article:author" content="WebDogC">
+<meta property="article:tag" content="白帽子讲Web安全、文件包含、security、Web安全、note">
 <meta name="twitter:card" content="summary">
   
     <link rel="alternative" href="/atom.xml" title="WebDogC" type="application/atom+xml">
@@ -158,60 +163,222 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            
-  
-  
+            <article id="post-File Inclusion" class="article article-type-post " itemscope itemprop="blogPost">
+  <div class="article-inner">
     
-    
-      
-      
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2020" class="archive-year">2020</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2020/02/28/Web%E6%B8%97%E9%80%8F%E5%B7%A5%E7%A8%8B%E5%B8%88%E4%B9%8B%E8%B7%AF/" class="archive-article-date">
-  	<time datetime="2020-02-28T11:50:45.925Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-02-28</time>
-</a>
-        </div>
-    	 
+      <header class="article-header">
+        
   
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2020/02/28/Web%E6%B8%97%E9%80%8F%E5%B7%A5%E7%A8%8B%E5%B8%88%E4%B9%8B%E8%B7%AF/">Web渗透工程师之路</a>
+    <h1 class="article-title" itemprop="name">
+      文件包含
     </h1>
   
 
-        <div class="article-info info-on-right">
-          
+        
+        <a href="/2020/03/25/File%20Inclusion/" class="archive-article-date">
+  	<time datetime="2020-03-24T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-03-25</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p><strong>概念：</strong>服务器执行PHP文件时，可以通过文件包含函数加载另一个文件(可以是非php文件)中的PHP代码，并且当PHP来执行。这个过程被称为<strong>文件包含</strong>。</p>
+<p><strong>原理：</strong>Web应用使用了文件包含函数,其加载的文件名参数为用户可控，加上对文件名过滤不严，导致Web应用包含了其他恶意文件，执行了非预期的代码。</p>
+<h5 id="文件包含函数"><a href="#文件包含函数" class="headerlink" title="文件包含函数"></a>文件包含函数</h5><ul>
+<li>require()</li>
+<li>require_once()</li>
+<li>include()</li>
+<li>include_once()</li>
+</ul>
+<p>&emsp;&emsp;当使用这4个函数包含文件时，该文件将作为PHP文件执行，PHP内核并不会在意该被包含的文件是什么类型。</p>
+<blockquote>
+<p><code>include</code>：使用<code>include</code>引用外部文件时，只有代码执行到<code>include</code>语句时，调用的外部文件才会被引用并读取，当引用的文件发生错误时，系统会抛出一个警告，程序继续<strong>正常运行</strong>。<br><code>require</code>：使用<code>include</code>引用外部文件时，在php文件被执行之前，php解析器会将require语句替换成被引用的外部文件的全部内容然后重新生成一个php文件，并执行新生成的php文件代码，如果发生错误，服务器会直接报错并<strong>退出程序</strong>的执行。<br><code>include_once()</code>：使用include_once会在导入文件前先检测该文件是否在该页面的其他部分被引用过，如果有，则不会重复引用该文件，文件只能被<strong>引用一次</strong>。<br><code>require_once()</code>：在使用<code>require_once</code>时，先会检查要引用的文件是不是已将在该程序中的其他地方被引用过，如果有，则不会在重复调用该文件。(另外同时使用<code>require_once</code>语句在同一页面中引用了两个不同的文件时，只有第一个文件被执行，第二个引用的文件不会被执行)。</p>
+</blockquote>
+<h5 id="文件包含分类"><a href="#文件包含分类" class="headerlink" title="文件包含分类"></a>文件包含分类</h5><ul>
+<li>本地文件包含(LFI)：被包含的文件在服务器本地。<ul>
+<li>如 <code>url···?page=inlcude(&quot;文件所在绝对/相对路径&quot;)</code> </li>
+</ul>
+</li>
+<li>远程文件包含(RFI)：被包含的文件在第三方服务器,需要开启<code>php.ini</code>中的<code>allow_url_include</code>(默认是Off)。<ul>
+<li>如 <code>url···?page=http://文件访问url</code></li>
+</ul>
+</li>
+</ul>
+<h5 id="文件包含的利用技巧"><a href="#文件包含的利用技巧" class="headerlink" title="文件包含的利用技巧"></a>文件包含的利用技巧</h5><ol>
+<li>%00截断文件名 </li>
+<li>目录遍历/穿越<br>&emsp;&emsp;利用<code>./</code>以及<code>../</code>遍历目录，还可以用其不同的编码方式来绕过一些服务器逻辑。</li>
+<li>操作系统对目录最大长度限制<br>&emsp;&emsp;目录字符串，在Windows下256字节、Linux下4096字节时会达到最大值，最大长度之后的字符将被丢弃。利用这个方法可以绕过代码对包含文件名部分可控的限制。</li>
+</ol>
+<h5 id="包含的文件技巧"><a href="#包含的文件技巧" class="headerlink" title="包含的文件技巧"></a>包含的文件技巧</h5><ul>
+<li>包含用户上传的文件。</li>
+<li>包含<code>data://</code>或<code>php://input</code>等为协议。要求<code>allow_url_inlcude</code>配置为ON。</li>
+<li>包含Session文件。要求攻击者能控制Session文件的内容。</li>
+<li>包含日志文件。服务器一般会往WebServer的<code>access_log</code>里记录客户端的请求信息，在<code>error_log</code>记录出错请求，因此攻击者可以间接地将PHP代码写入到日志文件中进行包含。需要注意的是，在凌晨时包含文件，将提高攻击的成功性，因为WebServer会每天生成一个新的日志文件，这样就避免了因日志文件可能会很大以至于包含时PHP进程僵死。</li>
+<li>包含<code>/proc/self/environ</code>文件。<code>environ</code>文件是存储Web进程运行时的环境变量，其中很多都是用户可以控制的。</li>
+<li>包含上传的临时文件。</li>
+<li>包含其他应用创建的文件，比如数据库文件、缓存文件等。</li>
+</ul>
+<h3 id="防御"><a href="#防御" class="headerlink" title="防御"></a>防御</h3><ol>
+<li>禁用0字节，在一般的Web应用中，0字节对于用户来说，其实是不需要的。<code>./</code>以及<code>../</code>同理。</li>
+<li>配置open_basedir，指定PHP能打开的文件的目录。在Window下多个目录应当用分号隔开，在Linux下则用冒号隔开。</li>
+<li>对输入进行白名单机制验证。</li>
+<li>禁止用户对文件名可控，若实在存在需求，则需对文件名进行严格的检查。</li>
+</ol>
+<p><br /><br /><br /><br /></p>
+<blockquote>
+<p>偷梁换柱</p>
+</blockquote>
+<p>作者：WebDogC<br>参考书籍《白帽子讲Web安全》</p>
+
+      
+
+      
+        <div class="page-reward">
+          <a href="javascript:;" class="page-reward-btn tooltip-top">
+            <div class="tooltip tooltip-east">
+            <span class="tooltip-item">
+              赏
+            </span>
+            <span class="tooltip-content">
+              <span class="tooltip-text">
+                <span class="tooltip-inner">
+                  <p class="reward-p"><i class="icon icon-quo-left"></i>谢谢你请我吃糖果<i class="icon icon-quo-right"></i></p>
+                  <div class="reward-box">
+                    
+                    
+                  </div>
+                </span>
+              </span>
+            </span>
+          </div>
+          </a>
+        </div>
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
 	<div class="article-tag tagcloud">
 		<i class="icon-price-tags icon"></i>
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">plan</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">白帽子讲Web安全、文件包含、security、Web安全、note</a>
         		</li>
       		
 		</ul>
 	</div>
 
-          
+      
 
+      
+
+      
+        
+<div class="share-btn share-icons tooltip-left">
+  <div class="tooltip tooltip-east">
+    <span class="tooltip-item">
+      <a href="javascript:;" class="share-sns share-outer">
+        <i class="icon icon-share"></i>
+      </a>
+    </span>
+    <span class="tooltip-content">
+      <div class="share-wrap">
+        <div class="share-icons">
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="icon icon-weibo"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="icon icon-weixin"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="icon icon-qq"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="icon icon-douban"></i>
+          </a>
+          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a>
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="icon icon-facebook"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="icon icon-twitter"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="icon icon-google"></i>
+          </a>
         </div>
-        <div class="clearfix"></div>
-    </header>
+      </div>
+    </span>
+  </div>
+</div>
+
+<div class="page-modal wx-share js-wx-box">
+    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//pan.baidu.com/share/qrcode?url=http://yoursite.com/2020/03/25/File%20Inclusion/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div class="mask js-mask"></div>
+      
+      <div class="clearfix"></div>
+    </div>
   </div>
 </article>
+
+  
+<nav id="article-nav">
+  
+    <a href="/2020/04/06/%E5%8F%98%E9%87%8F%E8%A6%86%E7%9B%96%E6%BC%8F%E6%B4%9E/" id="article-nav-newer" class="article-nav-link-wrap">
+      <i class="icon-circle-left"></i>
+      <div class="article-nav-title">
+        
+          变量覆盖漏洞
+        
+      </div>
+    </a>
   
   
-    </div></section>
+    <a href="/2020/03/22/FileUpload/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">文件上传漏洞</div>
+      <i class="icon-circle-right"></i>
+    </a>
+  
+</nav>
+
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+  
+  
   
 
-    
+  
+
+  
+
+  
 
 
           </div>
@@ -234,9 +401,9 @@
 	var yiliaConfig = {
 		mathjax: false,
 		isHome: false,
-		isPost: false,
+		isPost: true,
 		isArchive: false,
-		isTag: true,
+		isTag: false,
 		isCategory: false,
 		open_in_new: false,
 		toc_hide_index: true,

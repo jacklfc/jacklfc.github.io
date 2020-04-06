@@ -6,14 +6,19 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <link rel="dns-prefetch" href="http://yoursite.com">
-  <title>Tag: plan | WebDogC</title>
+  <title>变量覆盖漏洞 | WebDogC</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta property="og:type" content="website">
-<meta property="og:title" content="WebDogC">
-<meta property="og:url" content="http://yoursite.com/tags/plan/index.html">
+  <meta name="description" content="概念：变量覆盖指的是可以用我们的传参值替换程序原有的变量值。从代码角度理解变量覆盖。 原理：程序对变量或者某些操作变量函数的使用不当，导致用户对变量可控，构造恶意传参，从而覆盖变量，造成影响。场景：&amp;emsp;&amp;emsp;经常导致变量覆盖漏洞场景有：$$使用不当，extract()函数使用不当，parse_str()函数使用不当import_request_variables()使用不当，开启了全">
+<meta property="og:type" content="article">
+<meta property="og:title" content="变量覆盖漏洞">
+<meta property="og:url" content="http://yoursite.com/2020/04/06/%E5%8F%98%E9%87%8F%E8%A6%86%E7%9B%96%E6%BC%8F%E6%B4%9E/index.html">
 <meta property="og:site_name" content="WebDogC">
+<meta property="og:description" content="概念：变量覆盖指的是可以用我们的传参值替换程序原有的变量值。从代码角度理解变量覆盖。 原理：程序对变量或者某些操作变量函数的使用不当，导致用户对变量可控，构造恶意传参，从而覆盖变量，造成影响。场景：&amp;emsp;&amp;emsp;经常导致变量覆盖漏洞场景有：$$使用不当，extract()函数使用不当，parse_str()函数使用不当import_request_variables()使用不当，开启了全">
 <meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2020-04-05T16:00:00.000Z">
+<meta property="article:modified_time" content="2020-04-06T09:29:21.046Z">
 <meta property="article:author" content="WebDogC">
+<meta property="article:tag" content="变量覆盖、白帽子讲Web安全、note、security">
 <meta name="twitter:card" content="summary">
   
     <link rel="alternative" href="/atom.xml" title="WebDogC" type="application/atom+xml">
@@ -158,60 +163,208 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            
-  
-  
+            <article id="post-变量覆盖漏洞" class="article article-type-post " itemscope itemprop="blogPost">
+  <div class="article-inner">
     
-    
-      
-      
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2020" class="archive-year">2020</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2020/02/28/Web%E6%B8%97%E9%80%8F%E5%B7%A5%E7%A8%8B%E5%B8%88%E4%B9%8B%E8%B7%AF/" class="archive-article-date">
-  	<time datetime="2020-02-28T11:50:45.925Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-02-28</time>
-</a>
-        </div>
-    	 
+      <header class="article-header">
+        
   
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2020/02/28/Web%E6%B8%97%E9%80%8F%E5%B7%A5%E7%A8%8B%E5%B8%88%E4%B9%8B%E8%B7%AF/">Web渗透工程师之路</a>
+    <h1 class="article-title" itemprop="name">
+      变量覆盖漏洞
     </h1>
   
 
-        <div class="article-info info-on-right">
-          
+        
+        <a href="/2020/04/06/%E5%8F%98%E9%87%8F%E8%A6%86%E7%9B%96%E6%BC%8F%E6%B4%9E/" class="archive-article-date">
+  	<time datetime="2020-04-05T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-04-06</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p><strong>概念：</strong>变量覆盖指的是可以用我们的传参值替换程序原有的变量值。<a href="#$$">从代码角度理解变量覆盖</a>。</p>
+<p><strong>原理：</strong>程序对变量或者某些操作变量函数的使用不当，导致用户对变量可控，构造恶意传参，从而覆盖变量，造成影响。<br><strong>场景：</strong><br>&emsp;&emsp;经常导致变量覆盖漏洞场景有：<code>$$</code>使用不当，<code>extract()</code>函数使用不当，<code>parse_str()</code>函数使用不当<code>import_request_variables()</code>使用不当，开启了全局变量注册等。</p>
+<p>通常情况下，以下四种情况可能造成变量覆盖漏洞</p>
+<ul>
+<li>使用了<code>$$</code></li>
+<li>使用了<code>int extract(array $var_array [,int $type [,string $prefix]])</code>函数</li>
+<li>使用了<code>void parse_str(string $str [,array &amp;$arr])</code>函数</li>
+<li>使用了<code>bool import_request_variables(string types [, string prefix])</code>函数</li>
+</ul>
+<p>下面逐个进行介绍</p>
+<p>&emsp;&emsp;1.<code>$$</code>:一个<code>$</code>表示变量，在一个变量<code>$a</code>前加上一个<code>$</code>，结果为将变量<code>$a</code>的值作为变量名，新生成一个变量。<br><strong>例子</strong></p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">	$a = <span class="number">1</span>;</span><br><span class="line">	<span class="keyword">foreach</span>(<span class="keyword">array</span>(<span class="string">'_COOKIE'</span>,<span class="string">'_POST'</span>,<span class="string">'_GET'</span>) <span class="keyword">as</span> $_request) &#123;</span><br><span class="line">	<span class="keyword">foreach</span>($$_request <span class="keyword">as</span> $_key=&gt;$_value) </span><br><span class="line">	&#123;$$_key=addslashes($_value);&#125;&#125;</span><br><span class="line">	<span class="keyword">echo</span> $a;</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+<p>&emsp;&emsp;这段代码作用是依次将接收到的GET传参、POST传参、Cookie传参放到变量数组<code>$$_request</code>中，并以当前的<code>$_request</code>数组中的值<code>&#39;_COOKIE&#39;,&#39;_POST&#39;,&#39;_GET&#39;</code>变成<code>$$_request</code>作为键名<code>$_key</code>(即<code>&#39;$_COOKIE&#39;,&#39;$_POST&#39;,&#39;$_GET&#39;</code>)去进行遍历，而<code>$$_key</code>则是以上述键名作为变量名进行操作，当传参中包含<code>$a</code>时，代码中的变量<code>$a</code>的值就会被覆盖成传参中<code>$a</code>的值。危害是可以造成任意变量注册。</p>
+<p>&emsp;&emsp;2.<code>int extract(array $var_array [,int $type [,string $prefix]])</code>函数：将变量从数组导入当前的符号表。简单来说就是以参数键值对数组的所有键名作为变量名生成变量，并将键名所对应的键值赋值给以对应键名作为变量名的变量。<br>&emsp;&emsp;其中，第二个参数指定函数将变量导入符号表时的行为，最常见的两个值是<code>EXTR_OVERWRITE</code>(默认值)及<code>EXTR_SKIP</code>，当值为<code>EXTR_OVERWRITE</code>时，如果变量名发生冲突，则覆盖已有变量；当值为<code>EXTR_SKIP</code>时，则不覆盖。<br><strong>例子</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">&lt;?php</span><br><span class="line">	$a &#x3D; &quot;1&quot;;</span><br><span class="line">	$b &#x3D; &quot;2&quot;;</span><br><span class="line">	$c &#x3D; &quot;3&quot;;</span><br><span class="line">	$my_array &#x3D; array(&quot;a&quot; &#x3D;&gt; &quot;Cat&quot;,&quot;b&quot; &#x3D;&gt; &quot;Dog&quot;, &quot;c&quot; &#x3D;&gt; &quot;Horse&quot;);</span><br><span class="line">	extract($my_array);</span><br><span class="line">	echo &quot;\$a &#x3D; $a; \$b &#x3D; $b; \$c &#x3D; $c&quot;;</span><br><span class="line">?&gt;</span><br></pre></td></tr></table></figure>
+<p>&emsp;&emsp;这段代码的输出结果为<code>$a = Cat; $b = Dog; $c = Horse</code>，因为<code>extract()</code>函数使得变量<code>$a</code>，<code>$b</code>，<code>$c</code>的值被覆盖。</p>
+<p>&emsp;&emsp;3.<code>void parse_str(string $str [,array &amp;$arr])</code>函数：解析URL的传参，将形如<code>name=admin</code>的查询字符串解析成传参变量<code>$name=admin</code>。如果指定了第二个参数，则会将解析后的变量存入该数组变量中。<br><strong>例子</strong></p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">	parse_str(<span class="string">"name=zkaq&amp;&amp;age=60"</span>);</span><br><span class="line">	<span class="keyword">echo</span> $name.<span class="string">"&lt;br&gt;"</span>; <span class="comment">//结果为zkaq </span></span><br><span class="line">	<span class="keyword">echo</span> $age;<span class="comment">//结果为60</span></span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+<p>&emsp;&emsp;那么，如果在parse_str中可以直接控制传参，就也可以实现变量覆盖。</p>
+<p>&emsp;&emsp;4.<code>bool import_request_variables(string types [, string prefix])</code>函数：有顺序地注册全局变量集合(<code>types</code>)，还可以为每个导入的变量添加指定前缀(<code>prefix</code>)。<br>&emsp;&emsp;参数中types字符串中允许为G、P、C字符，或者3个字符间任意的组合。其中，“G”表示GET变量，“p”表示POST变量，“C”表示Cookie。注意：3个字符的排列顺序是有区别的，当使用“PG”时传参的参数名字相同时，POST参数值会覆盖GET参数值。比较少见，简单了解。</p>
+<p>变量覆盖漏洞：通过构造GET、POST、Cookie传参，创建或者覆盖一些变量，对系统造成影响的漏洞。<br>变量覆盖主要存在于<code>$$</code>、<code>extract()</code>、<code>parse_str()</code>、<code>import_request_variables()</code>应该对以上4个地方加以注意。</p>
+<h4 id="建议"><a href="#建议" class="headerlink" title="建议"></a>建议</h4><ul>
+<li>重视变量以及可能造成变量覆盖漏洞的函数和方法的使用。</li>
+<li>关闭register_global配置。</li>
+<li>对用户可控的变量进行严格的过滤检查,甚至避免用户对变量可控。</li>
+<li>对变量进行初始化。</li>
+</ul>
+<div id="$$"><理解变量覆盖></div>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">	$array=<span class="keyword">array</span>(<span class="string">"a"</span>=&gt;<span class="string">"1"</span>);</span><br><span class="line">	<span class="comment">//生成一个键值对(一个键名与键值的组合)数组，=&gt;相当于一个索引连接符，这里a为数组中其中一个键名，1为其对应的值</span></span><br><span class="line">	<span class="comment">//当我们需要使用数组中的值时，只需要用数组名['值所对应的键名']即可</span></span><br><span class="line">	<span class="keyword">echo</span> $array[<span class="string">'a'</span>].<span class="string">"&lt;br&gt;"</span>;</span><br><span class="line">	<span class="comment">//输出在array数组中键名为a所对应的键值，结果为1</span></span><br><span class="line">	<span class="comment">//而$_GET、$_POST、$_COOKIE都是键值对数组，接收的传参参数名为键名，参数值为键值。</span></span><br><span class="line">	</span><br><span class="line">	<span class="comment">//向此网页做如下输出结果的传参(可修改)</span></span><br><span class="line">	<span class="keyword">echo</span> $_GET[<span class="string">'name'</span>].<span class="string">"&lt;br&gt;"</span>; <span class="comment">//name=&gt;123</span></span><br><span class="line">	<span class="keyword">echo</span> $_POST[<span class="string">'pwd'</span>].<span class="string">"&lt;br&gt;"</span>; <span class="comment">//pwd=&gt;456</span></span><br><span class="line">	<span class="keyword">echo</span> $_COOKIE[<span class="string">'a'</span>].<span class="string">"&lt;br&gt;"</span>; <span class="comment">//a=&gt;12345678</span></span><br><span class="line">	</span><br><span class="line">	<span class="comment">//先来看看foreach(array('_COOKIE','_POST','_GET') as $_request)</span></span><br><span class="line">	<span class="keyword">foreach</span>(<span class="keyword">array</span>(<span class="string">'_COOKIE'</span>,<span class="string">'_POST'</span>,<span class="string">'_GET'</span>) <span class="keyword">as</span> $_request) &#123;  </span><br><span class="line">		<span class="keyword">echo</span> $_request.<span class="string">"&lt;br&gt;"</span>;</span><br><span class="line">		<span class="comment">/*</span></span><br><span class="line"><span class="comment">			输出结果为</span></span><br><span class="line"><span class="comment">					  _COOKIE</span></span><br><span class="line"><span class="comment">					  _POST</span></span><br><span class="line"><span class="comment">					  _GET</span></span><br><span class="line"><span class="comment">		*/</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">//生成一个数组$request，将'_COOKIE','_POST','_GET'作为键名</span></span><br><span class="line">	</span><br><span class="line">	$a = <span class="number">1</span>; </span><br><span class="line">	<span class="keyword">echo</span> <span class="string">"\$a="</span>.$a.<span class="string">"&lt;br&gt;"</span>; <span class="comment">//声明一个变量$a，此时变量$a的值为1 </span></span><br><span class="line">	<span class="keyword">echo</span> <span class="string">"&lt;br/&gt;"</span>;</span><br><span class="line">	<span class="keyword">foreach</span>(<span class="keyword">array</span>(<span class="string">'_COOKIE'</span>,<span class="string">'_POST'</span>,<span class="string">'_GET'</span>) <span class="keyword">as</span> $_request) &#123;  </span><br><span class="line">		<span class="keyword">foreach</span>($$_request <span class="keyword">as</span> $_key=&gt;$_value) </span><br><span class="line">		&#123;</span><br><span class="line">		<span class="comment">//$_request的值为_COOKIE、_POST、_GET 那么$$_request的值为$_COOKIE、$_POST、$_GET</span></span><br><span class="line">		<span class="comment">//那么这个foreach循环实际上遍历的是数组$_COOKIE、$_POST、$_GET</span></span><br><span class="line">			<span class="keyword">echo</span> $_key.<span class="string">"="</span>.$_value;</span><br><span class="line">			<span class="comment">//输出各个数组的键值对</span></span><br><span class="line">			<span class="comment">/*结果为</span></span><br><span class="line"><span class="comment">			a=12345678</span></span><br><span class="line"><span class="comment">			pwd=456</span></span><br><span class="line"><span class="comment">			name=123</span></span><br><span class="line"><span class="comment">			*/</span></span><br><span class="line">			</span><br><span class="line">			$$_key=addslashes($_value); </span><br><span class="line">			<span class="comment">//$_key的值为a、pwd、name，$$_key就是生成变量$a、$pwd、$name,这里的赋值就是对$_key产生变量覆盖</span></span><br><span class="line">			<span class="comment">//由于这里的顺序是$_COOKIE、$_POST、$_GET</span></span><br><span class="line">			<span class="comment">//所以如果三种传参都含有a参数，会以GET&gt;POST&gt;Cookie的顺序进行变量覆盖</span></span><br><span class="line">			<span class="keyword">echo</span> <span class="string">"&lt;br&gt;"</span>; </span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">echo</span> <span class="string">"\$a="</span>.$a.<span class="string">"&lt;br&gt;"</span>; </span><br><span class="line">	<span class="comment">/*最初变量$a=1,但是当我们向GET、POST、Cookie传参a参数时</span></span><br><span class="line"><span class="comment">	上述代码就会新生成一个$a并且赋值我们传参的值</span></span><br><span class="line"><span class="comment">	在这里，此时再输出变量$a，此时变量$a的值为COOKIE传参中的值12345678</span></span><br><span class="line"><span class="comment">	*/</span></span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+<br><br><br>
+<font face="Georgia" color=#c4444>安全问题产生于不正当的传参。</font>
+
+<p>作者：WebDogC<br>参考书籍《白帽子讲Web安全》</p>
+
+      
+
+      
+        <div class="page-reward">
+          <a href="javascript:;" class="page-reward-btn tooltip-top">
+            <div class="tooltip tooltip-east">
+            <span class="tooltip-item">
+              赏
+            </span>
+            <span class="tooltip-content">
+              <span class="tooltip-text">
+                <span class="tooltip-inner">
+                  <p class="reward-p"><i class="icon icon-quo-left"></i>谢谢你请我吃糖果<i class="icon icon-quo-right"></i></p>
+                  <div class="reward-box">
+                    
+                    
+                  </div>
+                </span>
+              </span>
+            </span>
+          </div>
+          </a>
+        </div>
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
 	<div class="article-tag tagcloud">
 		<i class="icon-price-tags icon"></i>
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">plan</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">变量覆盖、白帽子讲Web安全、note、security</a>
         		</li>
       		
 		</ul>
 	</div>
 
-          
+      
 
+      
+
+      
+        
+<div class="share-btn share-icons tooltip-left">
+  <div class="tooltip tooltip-east">
+    <span class="tooltip-item">
+      <a href="javascript:;" class="share-sns share-outer">
+        <i class="icon icon-share"></i>
+      </a>
+    </span>
+    <span class="tooltip-content">
+      <div class="share-wrap">
+        <div class="share-icons">
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="icon icon-weibo"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="icon icon-weixin"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="icon icon-qq"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="icon icon-douban"></i>
+          </a>
+          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a>
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="icon icon-facebook"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="icon icon-twitter"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="icon icon-google"></i>
+          </a>
         </div>
-        <div class="clearfix"></div>
-    </header>
+      </div>
+    </span>
+  </div>
+</div>
+
+<div class="page-modal wx-share js-wx-box">
+    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//pan.baidu.com/share/qrcode?url=http://yoursite.com/2020/04/06/%E5%8F%98%E9%87%8F%E8%A6%86%E7%9B%96%E6%BC%8F%E6%B4%9E/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div class="mask js-mask"></div>
+      
+      <div class="clearfix"></div>
+    </div>
   </div>
 </article>
+
+  
+<nav id="article-nav">
+  
+    <a href="/2020/04/06/XML%E6%B3%A8%E5%85%A5(XXE)/" id="article-nav-newer" class="article-nav-link-wrap">
+      <i class="icon-circle-left"></i>
+      <div class="article-nav-title">
+        
+          XML注入(XXE)
+        
+      </div>
+    </a>
   
   
-    </div></section>
+    <a href="/2020/03/25/File%20Inclusion/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">文件包含</div>
+      <i class="icon-circle-right"></i>
+    </a>
+  
+</nav>
+
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+  
+  
   
 
-    
+  
+
+  
+
+  
 
 
           </div>
@@ -234,9 +387,9 @@
 	var yiliaConfig = {
 		mathjax: false,
 		isHome: false,
-		isPost: false,
+		isPost: true,
 		isArchive: false,
-		isTag: true,
+		isTag: false,
 		isCategory: false,
 		open_in_new: false,
 		toc_hide_index: true,
