@@ -160,6 +160,390 @@
           <div id="js-content" class="content-ll">
             
   
+    <article id="post-反序列化漏洞" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2020/04/07/%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E/">反序列化漏洞</a>
+    </h1>
+  
+
+        
+        <a href="/2020/04/07/%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E/" class="archive-article-date">
+  	<time datetime="2020-04-06T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-04-07</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p><strong>概念</strong><br>&emsp;&emsp;序列化(serialize)：将PHP中的对象、类、数组等多种数据类型变量的信息保存为字符串，方便保存到数据库或者文件中。<br>&emsp;&emsp;反序列化(unserialize)：将经过序列化后的状态信息字符串反转为数据类型，方便对其进行使用。</p>
+<p>&emsp;&emsp;序列化后的字符串解析：<br>&emsp;&emsp;&emsp;&emsp;变量类型:类名长度:类名：属性数量:{属性类型:属性名长度:属性名;属性值类型:属性值长度:属性值;}<br><strong>例子</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">&lt;?php</span><br><span class="line">class testclass&#123;</span><br><span class="line">	var $test &#x3D; &#39;123&#39;;</span><br><span class="line">&#125;</span><br><span class="line">$object1 &#x3D; new testclass;</span><br><span class="line">$object_ser &#x3D; serialize($object1);</span><br><span class="line">print_r($object_ser);</span><br><span class="line">echo &quot;&lt;hr&gt;&quot;;</span><br><span class="line">$object2&#x3D;unerialize($object_ser);</span><br><span class="line">print_r($object2);</span><br><span class="line">?&gt;</span><br></pre></td></tr></table></figure>
+<p>&emsp;&emsp;在这里，声明了一个类<code>testclass</code>，这个类只有一个属性<code>$test</code>，并用这个类创建了一个对象<code>$object1</code>，通过<code>serialize()</code>把这个对象转变成一个字符串<code>$object_ser</code>，与 <code>serialize()</code>对应的，<code>unserialize()</code>将序列化后的结果字符串<code>$object_ser</code>恢复成其原本的对象类型并赋值给<code>$object2</code>，代码执行结果为<code>O:9:&quot;testclass&quot;:1:{s:4:&quot;test&quot;;s:3:&quot;123&quot;;}&lt;hr&gt;testclass Object ( [test] =&gt; 123 )</code>。</p>
+<h4 id="魔术方法"><a href="#魔术方法" class="headerlink" title="魔术方法"></a>魔术方法</h4><p>&emsp;&emsp;在php中有一类特殊的方法叫“Magic function”，PHP 将所有以<code>__</code>(两个下划线)开头的类方法保留为魔术方法。魔术方法的作用在于当程序符合魔术方法的触发条件时，魔术方法会被自动调用。</p>
+<ul>
+<li><code>__construct()</code>：创建对象时会自动调用。(构造函数)</li>
+<li><code>__destruct()</code>：对象被销毁时会自动调用。(析构函数)</li>
+<li><code>__wakeup()</code>：当使用unserialize()反序列化一个对象时，会检查是否存在一个<code>__wakeup()</code>方法。如果存在，则会先调用 <code>__wakeup ()</code>方法，预先准备反序列化后的对象需要的资源。 </li>
+<li><code>__toString()</code>：当对象被当成字符串使用时自动调用。</li>
+</ul>
+<p><strong>详解<a href="https://www.php.net/manual/zh/language.oop5.magic.php" target="_blank" rel="noopener">https://www.php.net/manual/zh/language.oop5.magic.php</a></strong></p>
+<p><strong>原理：</strong><br>&emsp;&emsp;本质上<code>serialize()</code>和<code>unserialize()</code>在PHP内部实现上是没有漏洞的，漏洞的主要产生是由于应用程序无法严谨地处理对象、魔术函数以及序列化相关问题导致的。<br>&emsp;&emsp;当传给<code>unserialize()</code>的参数可控时，那么用户就可以注入精心构造的payload。当程序进行反序列化的时候就会触发对象中的<code>__destruct()</code>或者<code>__wakeup()</code>魔术方法，造成意想不到的危害。<br><strong>结论：</strong><br>&emsp;&emsp;反序列化漏洞有两个条件，一是参数可控，二是存在<code>__destruct()</code>或者<code>__wakeup()</code>魔术方法。</p>
+<p><br><br><br><br><font face="Georgia" color=#c4444>安全问题产生于不正当的传参。</font></p>
+<p>作者：WebDogC<br>参考书籍《白帽子讲Web安全》</p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">反序列化、白帽子讲Web安全、note、security</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2020/04/07/%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
+    <article id="post-逻辑漏洞" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2020/04/07/%E9%80%BB%E8%BE%91%E6%BC%8F%E6%B4%9E/">常见逻辑漏洞</a>
+    </h1>
+  
+
+        
+        <a href="/2020/04/07/%E9%80%BB%E8%BE%91%E6%BC%8F%E6%B4%9E/" class="archive-article-date">
+  	<time datetime="2020-04-06T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-04-07</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="验证码绕过"><a href="#验证码绕过" class="headerlink" title="验证码绕过"></a>验证码绕过</h2><p>&emsp;&emsp;验证码（CAPTCHA）是一种区分用户是计算机还是人的公共全自动程序。可以防止不正当的重复性操作(如恶意破解密码、刷票、论坛灌水等)。</p>
+<h5 id="常见方法"><a href="#常见方法" class="headerlink" title="常见方法"></a>常见方法</h5><ul>
+<li>前端验证，验证码为前端JS验证，抓包即可绕过。</li>
+<li>不做任何校验，输入任意字符也能验证通过。</li>
+<li>具有时效性(常见)，验证码在一定的时间内都有效。</li>
+<li>去除参数(常见)，抓包去除掉验证码的参数。</li>
+<li>验证码可控，验证为GET/POST传参，可抓包修改。</li>
+<li>具有规律，根据特定规律生成验证码(如时间戳)。</li>
+<li>验证码隐藏在Cookie中。</li>
+<li>———————–分割线————————<h2 id="密码找回"><a href="#密码找回" class="headerlink" title="密码找回"></a>密码找回</h2>&emsp;&emsp;密码找回验证主要是以手机短信验证码及邮箱验证码两种方式。其实质还是验证码，只是验证方式些许不同，依旧主要通过抓包修改进行绕过。</li>
+</ul>
+<h5 id="常见操作"><a href="#常见操作" class="headerlink" title="常见操作"></a>常见操作</h5><ul>
+<li>后端发送验证码之后在前端返回。<a href="https://www.uedbox.com/post/13890/" target="_blank" rel="noopener">https://www.uedbox.com/post/13890/</a></li>
+<li>验证码验证无次数限制，可爆破出正确验证码。</li>
+<li>验证码可控，验证码参数在HTTP请求头中，且可修改。</li>
+<li>绕过验证码验证页面，直接跳转到修改密码的页面。<a href="https://www.uedbox.com/post/35739/" target="_blank" rel="noopener">https://www.uedbox.com/post/35739/</a></li>
+<li>越权漏洞，站点通过userid参识别用户，可自己接收正确验证码抓包修改userid参数实现修改他人密码。<a href="https://www.uedbox.com/post/42136/" target="_blank" rel="noopener">https://www.uedbox.com/post/42136/</a></li>
+<li>密保问题的答案可能在页面中显示，也可能在JS里，或者是在数据包中。</li>
+<li>———————–分割线————————<h2 id="越权漏洞"><a href="#越权漏洞" class="headerlink" title="越权漏洞"></a>越权漏洞</h2></li>
+</ul>
+<p><strong>原理</strong><br>&emsp;&emsp;由于服务器端对客户提出的数据操作请求过分信任，忽略了对该用户操作权限的判定，导致修改相关参数就可以对其他账户的增、删、查、改操作。</p>
+<h5 id="漏洞分类及测试方法"><a href="#漏洞分类及测试方法" class="headerlink" title="漏洞分类及测试方法"></a>漏洞分类及测试方法</h5><ul>
+<li>水平越权：指相同权限下不同的用户可以互相访问，并进行操作。<ul>
+<li>水平越权：主要就是测试能否通过A用户操作影响到B用户，一般做法为抓包分析是否存在类似<code>uid</code>、<code>id</code>、<code>userid</code>等识别用户的参数，对其修改并访问。</li>
+</ul>
+</li>
+<li>垂直越权：指低权限用户越权使用高权限用户的功能。<ul>
+<li>垂直越权：主要就是测试能否通过普通用户操作影响到管理员用户，一般做法是抓包分析是否存在类似<code>admin</code>、<code>level</code>、<code>shenfen</code>等表身份等级的参数，对其修改并访问。</li>
+</ul>
+</li>
+</ul>
+<h5 id="常见越权漏洞方式"><a href="#常见越权漏洞方式" class="headerlink" title="常见越权漏洞方式"></a>常见越权漏洞方式</h5><ol>
+<li>通过修改GET传参来越权<br> 国航某网站可越权访问其他订单<a href="https://www.uedbox.com/post/9900/" target="_blank" rel="noopener">https://www.uedbox.com/post/9900/</a></li>
+<li>修改POST传参进行越权<br> 暴风某站平行越权(用户敏感信息泄露)<a href="https://www.uedbox.com/post/9549/" target="_blank" rel="noopener">https://www.uedbox.com/post/9549/</a></li>
+<li>修改cookie传参进行越权<br> 宜信某平台多处越权及任意用户登录<a href="https://www.uedbox.com/post/12566/" target="_blank" rel="noopener">https://www.uedbox.com/post/12566/</a></li>
+<li>未授权访问<br> 乐视影业临时简历预览系统未授权访问，导致用户敏感信息泄露<a href="https://www.uedbox.com/post/12151/" target="_blank" rel="noopener">https://www.uedbox.com/post/12151/</a></li>
+</ol>
+<p>Tips:</p>
+<ul>
+<li>参数可以在Web端、APP端、应用程序端、Wap端被抓取。</li>
+<li>参数在Web端可以用GET、POST、Cookie三种传参方式,有时还需要解码。</li>
+<li>———————–分割线————————<h2 id="支付漏洞"><a href="#支付漏洞" class="headerlink" title="支付漏洞"></a>支付漏洞</h2></li>
+</ul>
+<h5 id="在线支付方式"><a href="#在线支付方式" class="headerlink" title="在线支付方式"></a>在线支付方式</h5><p>商户网站确认支付结果有两种方式：</p>
+<ul>
+<li>通过浏览器进行跳转通知<ul>
+<li>基于用户访问的浏览器，用户成功付款，付款页面跳转到支付成功页面，再发送给商户网站支付成功的数据包。如果在付款成功后，未等待跳转到支付结果页面就关闭了支付页面，那么商户网站就收不到支付成功的数据包，导致交易难以处理，而且浏览器端数据很容易被篡改使得安全性无法得到保障。</li>
+</ul>
+</li>
+<li>服务器端异步通知(主流)<ul>
+<li>该方式是用户支付成功后，支付公司服务器后台(如微信、支付宝)会采用POST或GET的方式直接向用户指定的商户异步通知支付成功信息，商户网站接收异部通知信息的过程总，要对支付公司返回的支付结果进行签名验证，成功后进行支付逻辑处理，如验证金额、订单信息是否与发起支付时一致，验证正常后则进行交易。</li>
+</ul>
+</li>
+</ul>
+<p><strong>漏洞原理</strong>：开发者对支付过程中需要的逻辑考虑不够严谨，未能考虑到支付各个过程会出现的逻辑错误。</p>
+<h5 id="常见的支付漏洞"><a href="#常见的支付漏洞" class="headerlink" title="常见的支付漏洞"></a>常见的支付漏洞</h5><ul>
+<li>修改支付价格<ul>
+<li>支付三部曲：点击订购、产生订单、进行付款。三个步骤皆可尝试抓包修改金额(如负数)。</li>
+<li>中国国旅任意金额购买机票<a href="https://www.uedbox.com/post/22477/" target="_blank" rel="noopener">https://www.uedbox.com/post/22477/</a></li>
+</ul>
+</li>
+<li>修改支付状态<ul>
+<li>通过修改订单的状态参数(如订单号修改成已支付过的订单号)，实现低价购买高价的目的。</li>
+<li>同程旅交汇低价支付高价订单<a href="https://www.uedbox.com/post/24090/" target="_blank" rel="noopener">https://www.uedbox.com/post/24090/</a></li>
+</ul>
+</li>
+<li>修改订单数量<ul>
+<li>修改数量为特殊值(-1、0)，计算总价时产生逻辑错误。</li>
+<li>同程旅游网支付漏洞<a href="https://www.uedbox.com/post/23143/" target="_blank" rel="noopener">https://www.uedbox.com/post/23143/</a></li>
+</ul>
+</li>
+<li>越权支付<ul>
+<li>用他人的账户买单。当存在userid这类传参时，就可以尝试修改id值测试是否存在越权支付。</li>
+<li>同程艺龙可用他人信用卡代为支付<a href="https://www.uedbox.com/post/12258/" target="_blank" rel="noopener">https://www.uedbox.com/post/12258/</a></li>
+</ul>
+</li>
+<li>无限制试用<ul>
+<li>没有对商品属性进行严格判断，比如抓包修改参数，购买试用或者活动的商品。</li>
+</ul>
+</li>
+<li>积分兑换<ul>
+<li>同支付，皆可尝试抓包修改参数值进行测试。</li>
+<li>东吴人寿商城积分支付漏洞<a href="http://woo.zone.ci/bug_detail.php?wybug_id=wooyun-2015-0156253" target="_blank" rel="noopener">http://woo.zone.ci/bug_detail.php?wybug_id=wooyun-2015-0156253</a></li>
+</ul>
+</li>
+<li>优惠券使用<ul>
+<li>抓包修改优惠券的使用参数，例如数量、金额等</li>
+</ul>
+</li>
+<li>运费<ul>
+<li>抓包修改负值运费，使订单总价降低。</li>
+</ul>
+</li>
+</ul>
+<h5 id="漏洞挖掘"><a href="#漏洞挖掘" class="headerlink" title="漏洞挖掘"></a>漏洞挖掘</h5><ul>
+<li>观察数据包<ul>
+<li>可能一个支付操作有三四个数据包，要对数据包进行仔细筛选。</li>
+</ul>
+</li>
+<li>分析数据包<ul>
+<li>要对数据包的中参数进行仔细分析。</li>
+</ul>
+</li>
+<li>发散思维<ul>
+<li>多站在开发者角度思考。</li>
+</ul>
+</li>
+<li>多尝试<ul>
+<li>PC端、Wap端(移动端)、App端。</li>
+</ul>
+</li>
+</ul>
+<h4 id="防御方法"><a href="#防御方法" class="headerlink" title="防御方法"></a>防御方法</h4><ul>
+<li>对支付过程的每一项参数进行检查校验。</li>
+<li>落实好与第三方支付平台的校验核对。</li>
+<li>支付参数进行MD5 加密、解密、数字签名及验证，避免数据修改，重放攻击中的各种问题。</li>
+<li>对交易金额设置阈值，进行人工审核，尽可能减小损失。</li>
+</ul>
+<p><br/><br/><br/></p>
+<blockquote>
+<p><font face="Georgia" color=#c4444>把握住传参就能把握住逻辑漏洞的命脉。</font></p>
+</blockquote>
+<p>作者：WebDogC<br>参考书籍《白帽子讲Web安全》</p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">逻辑、验证码、越权、支付、security、Web安全</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2020/04/07/%E9%80%BB%E8%BE%91%E6%BC%8F%E6%B4%9E/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
+    <article id="post-变量覆盖漏洞" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2020/04/06/%E5%8F%98%E9%87%8F%E8%A6%86%E7%9B%96%E6%BC%8F%E6%B4%9E/">变量覆盖漏洞</a>
+    </h1>
+  
+
+        
+        <a href="/2020/04/06/%E5%8F%98%E9%87%8F%E8%A6%86%E7%9B%96%E6%BC%8F%E6%B4%9E/" class="archive-article-date">
+  	<time datetime="2020-04-05T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-04-06</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p><strong>概念：</strong>变量覆盖指的是可以用我们的传参值替换程序原有的变量值。<a href="#$$">从代码角度理解变量覆盖</a>。</p>
+<p><strong>原理：</strong>程序对变量或者某些操作变量函数的使用不当，导致用户对变量可控，构造恶意传参，从而覆盖变量，造成影响。<br><strong>场景：</strong><br>&emsp;&emsp;经常导致变量覆盖漏洞场景有：<code>$$</code>使用不当，<code>extract()</code>函数使用不当，<code>parse_str()</code>函数使用不当<code>import_request_variables()</code>使用不当，开启了全局变量注册等。</p>
+<h5 id="通常情况下，以下四种情况可能造成变量覆盖漏洞"><a href="#通常情况下，以下四种情况可能造成变量覆盖漏洞" class="headerlink" title="通常情况下，以下四种情况可能造成变量覆盖漏洞"></a>通常情况下，以下四种情况可能造成变量覆盖漏洞</h5><ul>
+<li>使用了<code>$$</code></li>
+<li>使用了<code>int extract(array $var_array [,int $type [,string $prefix]])</code>函数</li>
+<li>使用了<code>void parse_str(string $str [,array &amp;$arr])</code>函数</li>
+<li>使用了<code>bool import_request_variables(string types [, string prefix])</code>函数</li>
+</ul>
+<p>下面逐个进行介绍<br>&emsp;&emsp;1.<code>$$</code>:一个<code>$</code>表示变量，在一个变量<code>$a</code>前加上一个<code>$</code>，结果为将变量<code>$a</code>的值作为变量名，新生成一个变量。<br><strong>例子</strong></p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">	$a = <span class="number">1</span>;</span><br><span class="line">	<span class="keyword">foreach</span>(<span class="keyword">array</span>(<span class="string">'_COOKIE'</span>,<span class="string">'_POST'</span>,<span class="string">'_GET'</span>) <span class="keyword">as</span> $_request) &#123;</span><br><span class="line">	<span class="keyword">foreach</span>($$_request <span class="keyword">as</span> $_key=&gt;$_value) </span><br><span class="line">	&#123;$$_key=addslashes($_value);&#125;&#125;</span><br><span class="line">	<span class="keyword">echo</span> $a;</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+<p>&emsp;&emsp;这段代码作用是依次将接收到的GET传参、POST传参、Cookie传参放到变量数组<code>$$_request</code>中，并以当前的<code>$_request</code>数组中的值<code>&#39;_COOKIE&#39;,&#39;_POST&#39;,&#39;_GET&#39;</code>变成<code>$$_request</code>作为键名<code>$_key</code>(即<code>&#39;$_COOKIE&#39;,&#39;$_POST&#39;,&#39;$_GET&#39;</code>)去进行遍历，而<code>$$_key</code>则是以上述键名作为变量名进行操作，当传参中包含<code>$a</code>时，代码中的变量<code>$a</code>的值就会被覆盖成传参中<code>$a</code>的值。危害是可以造成任意变量注册。<br>&emsp;&emsp;2.<code>int extract(array $var_array [,int $type [,string $prefix]])</code>函数：将变量从数组导入当前的符号表。简单来说就是以参数键值对数组的所有键名作为变量名生成变量，并将键名所对应的键值赋值给以对应键名作为变量名的变量。<br>&emsp;&emsp;其中，第二个参数指定函数将变量导入符号表时的行为，最常见的两个值是<code>EXTR_OVERWRITE</code>(默认值)及<code>EXTR_SKIP</code>，当值为<code>EXTR_OVERWRITE</code>时，如果变量名发生冲突，则覆盖已有变量；当值为<code>EXTR_SKIP</code>时，则不覆盖。<br><strong>例子</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">&lt;?php</span><br><span class="line">	$a &#x3D; &quot;1&quot;;</span><br><span class="line">	$b &#x3D; &quot;2&quot;;</span><br><span class="line">	$c &#x3D; &quot;3&quot;;</span><br><span class="line">	$my_array &#x3D; array(&quot;a&quot; &#x3D;&gt; &quot;Cat&quot;,&quot;b&quot; &#x3D;&gt; &quot;Dog&quot;, &quot;c&quot; &#x3D;&gt; &quot;Horse&quot;);</span><br><span class="line">	extract($my_array);</span><br><span class="line">	echo &quot;\$a &#x3D; $a; \$b &#x3D; $b; \$c &#x3D; $c&quot;;</span><br><span class="line">?&gt;</span><br></pre></td></tr></table></figure>
+<p>&emsp;&emsp;这段代码的输出结果为<code>$a = Cat; $b = Dog; $c = Horse</code>，因为<code>extract()</code>函数使得变量<code>$a</code>，<code>$b</code>，<code>$c</code>的值被覆盖。<br>&emsp;&emsp;3.<code>void parse_str(string $str [,array &amp;$arr])</code>函数：解析URL的传参，将形如<code>name=admin</code>的查询字符串解析成传参变量<code>$name=admin</code>。如果指定了第二个参数，则会将解析后的变量存入该数组变量中。<br><strong>例子</strong></p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">	parse_str(<span class="string">"name=zkaq&amp;&amp;age=60"</span>);</span><br><span class="line">	<span class="keyword">echo</span> $name.<span class="string">"&lt;br&gt;"</span>; <span class="comment">//结果为zkaq </span></span><br><span class="line">	<span class="keyword">echo</span> $age;<span class="comment">//结果为60</span></span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+<p>&emsp;&emsp;那么，如果在parse_str中可以直接控制传参，就也可以实现变量覆盖。<br>&emsp;&emsp;4.<code>bool import_request_variables(string types [, string prefix])</code>函数：有顺序地注册全局变量集合(<code>types</code>)，还可以为每个导入的变量添加指定前缀(<code>prefix</code>)。<br>&emsp;&emsp;参数中types字符串中允许为G、P、C字符，或者3个字符间任意的组合。其中，“G”表示GET变量，“p”表示POST变量，“C”表示Cookie。注意：3个字符的排列顺序是有区别的，当使用“PG”时传参的参数名字相同时，POST参数值会覆盖GET参数值。比较少见，简单了解。</p>
+<h4 id="建议"><a href="#建议" class="headerlink" title="建议"></a>建议</h4><ul>
+<li>重视变量以及可能造成变量覆盖漏洞的函数和方法的使用。</li>
+<li>关闭register_global配置。</li>
+<li>对用户可控的变量进行严格的过滤检查,甚至避免用户对变量可控。</li>
+<li>对变量进行初始化。</li>
+</ul>
+<div id="$$"><理解变量覆盖></div>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">	$array=<span class="keyword">array</span>(<span class="string">"a"</span>=&gt;<span class="string">"1"</span>);</span><br><span class="line">	<span class="comment">//生成一个键值对(一个键名与键值的组合)数组，=&gt;相当于一个索引连接符，这里a为数组中其中一个键名，1为其对应的值</span></span><br><span class="line">	<span class="comment">//当我们需要使用数组中的值时，只需要用数组名['值所对应的键名']即可</span></span><br><span class="line">	<span class="keyword">echo</span> $array[<span class="string">'a'</span>].<span class="string">"&lt;br&gt;"</span>;</span><br><span class="line">	<span class="comment">//输出在array数组中键名为a所对应的键值，结果为1</span></span><br><span class="line">	<span class="comment">//而$_GET、$_POST、$_COOKIE都是键值对数组，接收的传参参数名为键名，参数值为键值。</span></span><br><span class="line">	</span><br><span class="line">	<span class="comment">//向此网页做如下输出结果的传参(可修改)</span></span><br><span class="line">	<span class="keyword">echo</span> $_GET[<span class="string">'name'</span>].<span class="string">"&lt;br&gt;"</span>; <span class="comment">//name=&gt;123</span></span><br><span class="line">	<span class="keyword">echo</span> $_POST[<span class="string">'pwd'</span>].<span class="string">"&lt;br&gt;"</span>; <span class="comment">//pwd=&gt;456</span></span><br><span class="line">	<span class="keyword">echo</span> $_COOKIE[<span class="string">'a'</span>].<span class="string">"&lt;br&gt;"</span>; <span class="comment">//a=&gt;12345678</span></span><br><span class="line">	</span><br><span class="line">	<span class="comment">//先来看看foreach(array('_COOKIE','_POST','_GET') as $_request)</span></span><br><span class="line">	<span class="keyword">foreach</span>(<span class="keyword">array</span>(<span class="string">'_COOKIE'</span>,<span class="string">'_POST'</span>,<span class="string">'_GET'</span>) <span class="keyword">as</span> $_request) &#123;  </span><br><span class="line">		<span class="keyword">echo</span> $_request.<span class="string">"&lt;br&gt;"</span>;</span><br><span class="line">		<span class="comment">/*</span></span><br><span class="line"><span class="comment">			输出结果为</span></span><br><span class="line"><span class="comment">			    _COOKIE</span></span><br><span class="line"><span class="comment">			    _POST</span></span><br><span class="line"><span class="comment">			    _GET</span></span><br><span class="line"><span class="comment">		*/</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">//生成一个数组$request，将'_COOKIE','_POST','_GET'作为键名</span></span><br><span class="line">	</span><br><span class="line">	$a = <span class="number">1</span>; </span><br><span class="line">	<span class="keyword">echo</span> <span class="string">"\$a="</span>.$a.<span class="string">"&lt;br&gt;"</span>; <span class="comment">//声明一个变量$a，此时变量$a的值为1 </span></span><br><span class="line">	<span class="keyword">echo</span> <span class="string">"&lt;br/&gt;"</span>;</span><br><span class="line">	<span class="keyword">foreach</span>(<span class="keyword">array</span>(<span class="string">'_COOKIE'</span>,<span class="string">'_POST'</span>,<span class="string">'_GET'</span>) <span class="keyword">as</span> $_request) &#123;  </span><br><span class="line">		<span class="keyword">foreach</span>($$_request <span class="keyword">as</span> $_key=&gt;$_value) </span><br><span class="line">		&#123;</span><br><span class="line">		<span class="comment">//$_request的值为_COOKIE、_POST、_GET 那么$$_request的值为$_COOKIE、$_POST、$_GET</span></span><br><span class="line">		<span class="comment">//那么这个foreach循环实际上遍历的是数组$_COOKIE、$_POST、$_GET</span></span><br><span class="line">			<span class="keyword">echo</span> $_key.<span class="string">"="</span>.$_value;</span><br><span class="line">			<span class="comment">//输出各个数组的键值对</span></span><br><span class="line">			<span class="comment">/*结果为</span></span><br><span class="line"><span class="comment">			   a=12345678</span></span><br><span class="line"><span class="comment">			   pwd=456</span></span><br><span class="line"><span class="comment">			   name=123</span></span><br><span class="line"><span class="comment">			*/</span></span><br><span class="line">			</span><br><span class="line">			$$_key=addslashes($_value); </span><br><span class="line">			<span class="comment">//$_key的值为a、pwd、name，$$_key就是生成变量$a、$pwd、$name,这里的赋值就是对$_key产生变量覆盖</span></span><br><span class="line">			<span class="comment">//由于这里的顺序是$_COOKIE、$_POST、$_GET</span></span><br><span class="line">			<span class="comment">//所以如果三种传参都含有a参数，会以GET&gt;POST&gt;Cookie的顺序进行变量覆盖</span></span><br><span class="line">			<span class="keyword">echo</span> <span class="string">"&lt;br&gt;"</span>; </span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">echo</span> <span class="string">"\$a="</span>.$a.<span class="string">"&lt;br&gt;"</span>; </span><br><span class="line">	<span class="comment">/*最初变量$a=1,但是当我们向GET、POST、Cookie传参a参数时</span></span><br><span class="line"><span class="comment">	上述代码就会新生成一个$a并且赋值我们传参的值</span></span><br><span class="line"><span class="comment">	在这里，此时再输出变量$a，此时变量$a的值为COOKIE传参中的值12345678</span></span><br><span class="line"><span class="comment">	*/</span></span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+<br><br><br>
+<font face="Georgia" color=#c4444>安全问题产生于不正当的传参。</font>
+
+<p>作者：WebDogC<br>参考书籍《白帽子讲Web安全》</p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">变量覆盖、白帽子讲Web安全、note、security</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2020/04/06/%E5%8F%98%E9%87%8F%E8%A6%86%E7%9B%96%E6%BC%8F%E6%B4%9E/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
     <article id="post-XML注入(XXE)" class="article article-type-post  article-index" itemscope itemprop="blogPost">
   <div class="article-inner">
     
@@ -167,13 +551,13 @@
         
   
     <h1 itemprop="name">
-      <a class="article-title" href="/2020/04/06/XML%E6%B3%A8%E5%85%A5(XXE)/">XML注入(XXE)</a>
+      <a class="article-title" href="/2020/04/01/XML%E6%B3%A8%E5%85%A5(XXE)/">XML注入(XXE)</a>
     </h1>
   
 
         
-        <a href="/2020/04/06/XML%E6%B3%A8%E5%85%A5(XXE)/" class="archive-article-date">
-  	<time datetime="2020-04-06T08:30:03.236Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-04-06</time>
+        <a href="/2020/04/01/XML%E6%B3%A8%E5%85%A5(XXE)/" class="archive-article-date">
+  	<time datetime="2020-03-31T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-04-01</time>
 </a>
         
       </header>
@@ -233,113 +617,7 @@
 
       
         <p class="article-more-link">
-          <a class="article-more-a" href="/2020/04/06/XML%E6%B3%A8%E5%85%A5(XXE)/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
-    <article id="post-变量覆盖漏洞" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2020/04/06/%E5%8F%98%E9%87%8F%E8%A6%86%E7%9B%96%E6%BC%8F%E6%B4%9E/">变量覆盖漏洞</a>
-    </h1>
-  
-
-        
-        <a href="/2020/04/06/%E5%8F%98%E9%87%8F%E8%A6%86%E7%9B%96%E6%BC%8F%E6%B4%9E/" class="archive-article-date">
-  	<time datetime="2020-04-05T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-04-06</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p><strong>概念：</strong>变量覆盖指的是可以用我们的传参值替换程序原有的变量值。<a href="#$$">从代码角度理解变量覆盖</a>。</p>
-<p><strong>原理：</strong>程序对变量或者某些操作变量函数的使用不当，导致用户对变量可控，构造恶意传参，从而覆盖变量，造成影响。<br><strong>场景：</strong><br>&emsp;&emsp;经常导致变量覆盖漏洞场景有：<code>$$</code>使用不当，<code>extract()</code>函数使用不当，<code>parse_str()</code>函数使用不当<code>import_request_variables()</code>使用不当，开启了全局变量注册等。</p>
-<p>通常情况下，以下四种情况可能造成变量覆盖漏洞</p>
-<ul>
-<li>使用了<code>$$</code></li>
-<li>使用了<code>int extract(array $var_array [,int $type [,string $prefix]])</code>函数</li>
-<li>使用了<code>void parse_str(string $str [,array &amp;$arr])</code>函数</li>
-<li>使用了<code>bool import_request_variables(string types [, string prefix])</code>函数</li>
-</ul>
-<p>下面逐个进行介绍</p>
-<p>&emsp;&emsp;1.<code>$$</code>:一个<code>$</code>表示变量，在一个变量<code>$a</code>前加上一个<code>$</code>，结果为将变量<code>$a</code>的值作为变量名，新生成一个变量。<br><strong>例子</strong></p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">	$a = <span class="number">1</span>;</span><br><span class="line">	<span class="keyword">foreach</span>(<span class="keyword">array</span>(<span class="string">'_COOKIE'</span>,<span class="string">'_POST'</span>,<span class="string">'_GET'</span>) <span class="keyword">as</span> $_request) &#123;</span><br><span class="line">	<span class="keyword">foreach</span>($$_request <span class="keyword">as</span> $_key=&gt;$_value) </span><br><span class="line">	&#123;$$_key=addslashes($_value);&#125;&#125;</span><br><span class="line">	<span class="keyword">echo</span> $a;</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
-<p>&emsp;&emsp;这段代码作用是依次将接收到的GET传参、POST传参、Cookie传参放到变量数组<code>$$_request</code>中，并以当前的<code>$_request</code>数组中的值<code>&#39;_COOKIE&#39;,&#39;_POST&#39;,&#39;_GET&#39;</code>变成<code>$$_request</code>作为键名<code>$_key</code>(即<code>&#39;$_COOKIE&#39;,&#39;$_POST&#39;,&#39;$_GET&#39;</code>)去进行遍历，而<code>$$_key</code>则是以上述键名作为变量名进行操作，当传参中包含<code>$a</code>时，代码中的变量<code>$a</code>的值就会被覆盖成传参中<code>$a</code>的值。危害是可以造成任意变量注册。</p>
-<p>&emsp;&emsp;2.<code>int extract(array $var_array [,int $type [,string $prefix]])</code>函数：将变量从数组导入当前的符号表。简单来说就是以参数键值对数组的所有键名作为变量名生成变量，并将键名所对应的键值赋值给以对应键名作为变量名的变量。<br>&emsp;&emsp;其中，第二个参数指定函数将变量导入符号表时的行为，最常见的两个值是<code>EXTR_OVERWRITE</code>(默认值)及<code>EXTR_SKIP</code>，当值为<code>EXTR_OVERWRITE</code>时，如果变量名发生冲突，则覆盖已有变量；当值为<code>EXTR_SKIP</code>时，则不覆盖。<br><strong>例子</strong></p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">&lt;?php</span><br><span class="line">	$a &#x3D; &quot;1&quot;;</span><br><span class="line">	$b &#x3D; &quot;2&quot;;</span><br><span class="line">	$c &#x3D; &quot;3&quot;;</span><br><span class="line">	$my_array &#x3D; array(&quot;a&quot; &#x3D;&gt; &quot;Cat&quot;,&quot;b&quot; &#x3D;&gt; &quot;Dog&quot;, &quot;c&quot; &#x3D;&gt; &quot;Horse&quot;);</span><br><span class="line">	extract($my_array);</span><br><span class="line">	echo &quot;\$a &#x3D; $a; \$b &#x3D; $b; \$c &#x3D; $c&quot;;</span><br><span class="line">?&gt;</span><br></pre></td></tr></table></figure>
-<p>&emsp;&emsp;这段代码的输出结果为<code>$a = Cat; $b = Dog; $c = Horse</code>，因为<code>extract()</code>函数使得变量<code>$a</code>，<code>$b</code>，<code>$c</code>的值被覆盖。</p>
-<p>&emsp;&emsp;3.<code>void parse_str(string $str [,array &amp;$arr])</code>函数：解析URL的传参，将形如<code>name=admin</code>的查询字符串解析成传参变量<code>$name=admin</code>。如果指定了第二个参数，则会将解析后的变量存入该数组变量中。<br><strong>例子</strong></p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">	parse_str(<span class="string">"name=zkaq&amp;&amp;age=60"</span>);</span><br><span class="line">	<span class="keyword">echo</span> $name.<span class="string">"&lt;br&gt;"</span>; <span class="comment">//结果为zkaq </span></span><br><span class="line">	<span class="keyword">echo</span> $age;<span class="comment">//结果为60</span></span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
-<p>&emsp;&emsp;那么，如果在parse_str中可以直接控制传参，就也可以实现变量覆盖。</p>
-<p>&emsp;&emsp;4.<code>bool import_request_variables(string types [, string prefix])</code>函数：有顺序地注册全局变量集合(<code>types</code>)，还可以为每个导入的变量添加指定前缀(<code>prefix</code>)。<br>&emsp;&emsp;参数中types字符串中允许为G、P、C字符，或者3个字符间任意的组合。其中，“G”表示GET变量，“p”表示POST变量，“C”表示Cookie。注意：3个字符的排列顺序是有区别的，当使用“PG”时传参的参数名字相同时，POST参数值会覆盖GET参数值。比较少见，简单了解。</p>
-<p>变量覆盖漏洞：通过构造GET、POST、Cookie传参，创建或者覆盖一些变量，对系统造成影响的漏洞。<br>变量覆盖主要存在于<code>$$</code>、<code>extract()</code>、<code>parse_str()</code>、<code>import_request_variables()</code>应该对以上4个地方加以注意。</p>
-<h4 id="建议"><a href="#建议" class="headerlink" title="建议"></a>建议</h4><ul>
-<li>重视变量以及可能造成变量覆盖漏洞的函数和方法的使用。</li>
-<li>关闭register_global配置。</li>
-<li>对用户可控的变量进行严格的过滤检查,甚至避免用户对变量可控。</li>
-<li>对变量进行初始化。</li>
-</ul>
-<div id="$$"><理解变量覆盖></div>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">	$array=<span class="keyword">array</span>(<span class="string">"a"</span>=&gt;<span class="string">"1"</span>);</span><br><span class="line">	<span class="comment">//生成一个键值对(一个键名与键值的组合)数组，=&gt;相当于一个索引连接符，这里a为数组中其中一个键名，1为其对应的值</span></span><br><span class="line">	<span class="comment">//当我们需要使用数组中的值时，只需要用数组名['值所对应的键名']即可</span></span><br><span class="line">	<span class="keyword">echo</span> $array[<span class="string">'a'</span>].<span class="string">"&lt;br&gt;"</span>;</span><br><span class="line">	<span class="comment">//输出在array数组中键名为a所对应的键值，结果为1</span></span><br><span class="line">	<span class="comment">//而$_GET、$_POST、$_COOKIE都是键值对数组，接收的传参参数名为键名，参数值为键值。</span></span><br><span class="line">	</span><br><span class="line">	<span class="comment">//向此网页做如下输出结果的传参(可修改)</span></span><br><span class="line">	<span class="keyword">echo</span> $_GET[<span class="string">'name'</span>].<span class="string">"&lt;br&gt;"</span>; <span class="comment">//name=&gt;123</span></span><br><span class="line">	<span class="keyword">echo</span> $_POST[<span class="string">'pwd'</span>].<span class="string">"&lt;br&gt;"</span>; <span class="comment">//pwd=&gt;456</span></span><br><span class="line">	<span class="keyword">echo</span> $_COOKIE[<span class="string">'a'</span>].<span class="string">"&lt;br&gt;"</span>; <span class="comment">//a=&gt;12345678</span></span><br><span class="line">	</span><br><span class="line">	<span class="comment">//先来看看foreach(array('_COOKIE','_POST','_GET') as $_request)</span></span><br><span class="line">	<span class="keyword">foreach</span>(<span class="keyword">array</span>(<span class="string">'_COOKIE'</span>,<span class="string">'_POST'</span>,<span class="string">'_GET'</span>) <span class="keyword">as</span> $_request) &#123;  </span><br><span class="line">		<span class="keyword">echo</span> $_request.<span class="string">"&lt;br&gt;"</span>;</span><br><span class="line">		<span class="comment">/*</span></span><br><span class="line"><span class="comment">			输出结果为</span></span><br><span class="line"><span class="comment">					  _COOKIE</span></span><br><span class="line"><span class="comment">					  _POST</span></span><br><span class="line"><span class="comment">					  _GET</span></span><br><span class="line"><span class="comment">		*/</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">//生成一个数组$request，将'_COOKIE','_POST','_GET'作为键名</span></span><br><span class="line">	</span><br><span class="line">	$a = <span class="number">1</span>; </span><br><span class="line">	<span class="keyword">echo</span> <span class="string">"\$a="</span>.$a.<span class="string">"&lt;br&gt;"</span>; <span class="comment">//声明一个变量$a，此时变量$a的值为1 </span></span><br><span class="line">	<span class="keyword">echo</span> <span class="string">"&lt;br/&gt;"</span>;</span><br><span class="line">	<span class="keyword">foreach</span>(<span class="keyword">array</span>(<span class="string">'_COOKIE'</span>,<span class="string">'_POST'</span>,<span class="string">'_GET'</span>) <span class="keyword">as</span> $_request) &#123;  </span><br><span class="line">		<span class="keyword">foreach</span>($$_request <span class="keyword">as</span> $_key=&gt;$_value) </span><br><span class="line">		&#123;</span><br><span class="line">		<span class="comment">//$_request的值为_COOKIE、_POST、_GET 那么$$_request的值为$_COOKIE、$_POST、$_GET</span></span><br><span class="line">		<span class="comment">//那么这个foreach循环实际上遍历的是数组$_COOKIE、$_POST、$_GET</span></span><br><span class="line">			<span class="keyword">echo</span> $_key.<span class="string">"="</span>.$_value;</span><br><span class="line">			<span class="comment">//输出各个数组的键值对</span></span><br><span class="line">			<span class="comment">/*结果为</span></span><br><span class="line"><span class="comment">			a=12345678</span></span><br><span class="line"><span class="comment">			pwd=456</span></span><br><span class="line"><span class="comment">			name=123</span></span><br><span class="line"><span class="comment">			*/</span></span><br><span class="line">			</span><br><span class="line">			$$_key=addslashes($_value); </span><br><span class="line">			<span class="comment">//$_key的值为a、pwd、name，$$_key就是生成变量$a、$pwd、$name,这里的赋值就是对$_key产生变量覆盖</span></span><br><span class="line">			<span class="comment">//由于这里的顺序是$_COOKIE、$_POST、$_GET</span></span><br><span class="line">			<span class="comment">//所以如果三种传参都含有a参数，会以GET&gt;POST&gt;Cookie的顺序进行变量覆盖</span></span><br><span class="line">			<span class="keyword">echo</span> <span class="string">"&lt;br&gt;"</span>; </span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">echo</span> <span class="string">"\$a="</span>.$a.<span class="string">"&lt;br&gt;"</span>; </span><br><span class="line">	<span class="comment">/*最初变量$a=1,但是当我们向GET、POST、Cookie传参a参数时</span></span><br><span class="line"><span class="comment">	上述代码就会新生成一个$a并且赋值我们传参的值</span></span><br><span class="line"><span class="comment">	在这里，此时再输出变量$a，此时变量$a的值为COOKIE传参中的值12345678</span></span><br><span class="line"><span class="comment">	*/</span></span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
-<br><br><br>
-<font face="Georgia" color=#c4444>安全问题产生于不正当的传参。</font>
-
-<p>作者：WebDogC<br>参考书籍《白帽子讲Web安全》</p>
-
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">变量覆盖、白帽子讲Web安全、note、security</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2020/04/06/%E5%8F%98%E9%87%8F%E8%A6%86%E7%9B%96%E6%BC%8F%E6%B4%9E/">展开全文 >></a>
+          <a class="article-more-a" href="/2020/04/01/XML%E6%B3%A8%E5%85%A5(XXE)/">展开全文 >></a>
         </p>
       
 
@@ -649,8 +927,7 @@
         <h2 id="SQL注入简介"><a href="#SQL注入简介" class="headerlink" title="SQL注入简介"></a>SQL注入简介</h2><p>&emsp;&emsp;<strong>注入攻击的本质</strong>，是把用户输入的数据当做代码执行，这里有两个关键条件，第一是用户能够控制输入，第二是原本程序要执行的代码，拼接了用户输入的数据。</p>
 <p>&emsp;&emsp;<strong>SQL注入</strong>，SQL Injection，指的是web应用程序对用户输入数据的合法性没有判断或过滤不严，攻击者可以在web应用程序中事先定义好的查询语句的结尾上添加额外的SQL语句，在管理员不知情的情况下实现非法操作，以此来实现欺骗数据库服务器执行非授权的任意查询，从而进一步得到相应的数据信息的一种攻击方式。</p>
 <p>&emsp;&emsp;<strong>原理</strong>：构造特殊的SQL查询，由于服务器缺少对请求内容的检验,数据和代码未分离，即数据当做了代码来执行，数据库执行了攻击者所要的操作。<br>&emsp;&emsp;<strong>利用</strong>:<br>&emsp;&emsp;&emsp;&emsp;1. 万能密码登录<br>&emsp;&emsp;&emsp;&emsp;2. 数据库信息泄露<br>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;+管理员后台用户名和密码<br>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;+数据库其他敏感信息<br>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;+整个数据库信息(脱库)<br>&emsp;&emsp;&emsp;&emsp;3. 获取Webshell<br>&emsp;&emsp;&emsp;&emsp;4. 获取服务器敏感文件<br>&emsp;&emsp;&emsp;&emsp;5. 获取服务器系统权限</p>
-<h4 id="SQL注入分类"><a href="#SQL注入分类" class="headerlink" title="SQL注入分类"></a>SQL注入分类</h4><p>&emsp;&emsp;SQL注入可以简要分为GET/POST/HEAD注入、数字型/字符型注入、Orale/Mysql/MSSQL/Access注入。</p>
-<p>具体分为</p>
+<h4 id="SQL注入分类"><a href="#SQL注入分类" class="headerlink" title="SQL注入分类"></a>SQL注入分类</h4><p>&emsp;&emsp;SQL注入可以简要分为GET/POST/HEAD注入、数字型/字符型注入、Orale/Mysql/MSSQL/Access注入。<br>具体分为</p>
 <ul>
 <li>显错注入<ul>
 <li>查询语句显错</li>
@@ -678,7 +955,7 @@
 </ul>
 </li>
 </ul>
-<h2 id="SQL注入攻击"><a href="#SQL注入攻击" class="headerlink" title="SQL注入攻击"></a>SQL注入攻击</h2><p>&emsp;&emsp;找到SQL注入漏洞，仅仅是一个开始。要实施一次完整的攻击，还有很多事情要做。下面是一些有关SQL注入的攻击方式。</p>
+<h2 id="SQL注入攻击"><a href="#SQL注入攻击" class="headerlink" title="SQL注入攻击"></a>SQL注入攻击</h2><p>找到SQL注入漏洞，仅仅是一个开始。要实施一次完整的攻击，还有很多事情要做。下面是一些有关SQL注入的攻击方式。</p>
 <ul>
 <li><p>常见攻击方式：猜解数据库信息(版本、用户等)、修改数据库结构(增删改表)、读写文件(Webshell)。</p>
 </li>
@@ -689,7 +966,7 @@
 <li><p>SQL约束攻击(SQL Column Truncation)：在MySQL的配置选项中，有一个sql_mode选项。当MySQL的sql_mode设置为default时，即没有开启STRICT_ALL_TABLES选项时，MySQL对于用户插入的超长值只会提示warning，而不是error（如果是error则插入不成功），这可能会导致发生一些“截断”问题。</p>
 </li>
 </ul>
-<h2 id="SQL注入防御"><a href="#SQL注入防御" class="headerlink" title="SQL注入防御"></a>SQL注入防御</h2><h3 id="防御方法"><a href="#防御方法" class="headerlink" title="防御方法"></a>防御方法</h3><ul>
+<h2 id="SQL注入防御"><a href="#SQL注入防御" class="headerlink" title="SQL注入防御"></a>SQL注入防御</h2><ul>
 <li><p>对用户的输入进行严格的过滤</p>
 <ul>
 <li>检查数据类型，对于一些特定的输入(如邮箱、时间、数字)进行严格的格式检。</li>
@@ -1189,293 +1466,6 @@
 
 
   
-    <article id="post-安全方案设计原则" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2020/02/29/%E5%AE%89%E5%85%A8%E6%96%B9%E6%A1%88%E8%AE%BE%E8%AE%A1%E5%8E%9F%E5%88%99/">安全方案设计原则</a>
-    </h1>
-  
-
-        
-        <a href="/2020/02/29/%E5%AE%89%E5%85%A8%E6%96%B9%E6%A1%88%E8%AE%BE%E8%AE%A1%E5%8E%9F%E5%88%99/" class="archive-article-date">
-  	<time datetime="2020-02-28T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-02-29</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h2 id="白帽子兵法–安全方案设计原则"><a href="#白帽子兵法–安全方案设计原则" class="headerlink" title="白帽子兵法–安全方案设计原则"></a>白帽子兵法–安全方案设计原则</h2><h4>安全默认原则(Security By Default)</h4>
-
-<ul>
-<li>白名单原则：尽可能多的使用白名单限制。</li>
-<li>最小权限原则：系统只授予主体必要的权限，避免过度授权。</li>
-</ul>
-<h4>纵深防御原则(Defense in Depth)</h4>
-
-<ul>
-<li>全方面实施解决方案，各方案相互配合，构成一个整体。</li>
-<li>在解决根本问题的地方实施针对性的安全方案。</li>
-</ul>
-<h4>数据与代码分离原则</h4>
-&emsp;&emsp;将数据与代码进行严格的分离，避免恶意代码执行从而导致安全问题的发生。
-
-<h4>不可预测性原则</h4>
-&emsp;&emsp;有规律的参数将容易被遍历导致安全问题，而不可预测性，能够有效地对抗基于篡改、伪造的攻击。
-<br>
-<br>
->Security By Default是时刻要牢记的总则；纵深防御，是要更全面、更正确的看待问题；数据与代码分离，是从漏洞成因上看问题；不可预测性原则，则是从客服攻击方法的角度看问题。
-
-<br>
-<br><br>
-<font face="Georgia" color=#c4444>在正确的地方做正确的事情。</font>
-<br>
-
-<p>作者：WebDogC<br>参考书籍《白帽子讲Web安全》</p>
-
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">白帽子讲Web安全、note、security</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2020/02/29/%E5%AE%89%E5%85%A8%E6%96%B9%E6%A1%88%E8%AE%BE%E8%AE%A1%E5%8E%9F%E5%88%99/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
-    <article id="post-安全评估实施" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2020/02/29/%E5%AE%89%E5%85%A8%E8%AF%84%E4%BC%B0%E5%AE%9E%E6%96%BD/">安全评估实施</a>
-    </h1>
-  
-
-        
-        <a href="/2020/02/29/%E5%AE%89%E5%85%A8%E8%AF%84%E4%BC%B0%E5%AE%9E%E6%96%BD/" class="archive-article-date">
-  	<time datetime="2020-02-28T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-02-29</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h2 id="安全评估过程四大阶段"><a href="#安全评估过程四大阶段" class="headerlink" title="安全评估过程四大阶段"></a>安全评估过程四大阶段</h2><ul>
-<li>资产等级划分<ul>
-<li>互联网安全的核心问题，是数据安全的问题。</li>
-<li>对资产进行等级划分，就是对数据做等级划分。</li>
-<li>确认侧重的数据后，划分信任域及信任边界。</li>
-</ul>
-</li>
-<li>威胁分析<ul>
-<li>要尽可能的将所有的威胁都找出来。</li>
-<li>一般采用头脑风暴法、或利用模型进行威胁建模。</li>
-<li><a href="#STRIDE">STRIDE模型</a></li>
-</ul>
-</li>
-<li>风险分析<ul>
-<li>风险由发生可能性和造成损失大小两个因素组成。</li>
-<li>需要结合具体情况，权衡事件发生的可能性，科学的衡量风险。</li>
-<li><a href="#DREAD">DREAD模型</a>，在DREAD模型中，根据等级权重，可以具体计算一个风险值。</li>
-</ul>
-</li>
-<li>确认解决方案<ul>
-<li>根据前三个阶段的结果做出具有针对性的解决方案。</li>
-<li>特点：能够有效解决问题、用户体验好、高性能、低耦合、易于扩展与升级。</li>
-</ul>
-</li>
-</ul>
-<p>威胁建模：使用一个模型，帮助我们去思考那些方面有可能存在威胁的建模过程。</p>
-<div id="STRIDE">STRIDE模型</div>
-
-<table>
-<thead>
-<tr>
-<th>威胁</th>
-<th>定义</th>
-<th>对应的安全属性</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>Spoofing(伪装)</td>
-<td>冒充他人身份</td>
-<td>认证</td>
-</tr>
-<tr>
-<td>Tampering(篡改)</td>
-<td>修改数据或代码</td>
-<td>完整性</td>
-</tr>
-<tr>
-<td>Repudiation(抵赖)</td>
-<td>否认做过的事情</td>
-<td>不可抵赖性</td>
-</tr>
-<tr>
-<td>InformationDisclosure(信息泄露)</td>
-<td>机密信息泄露</td>
-<td>机密性</td>
-</tr>
-<tr>
-<td>Denial of Service(拒绝服务)</td>
-<td>拒绝服务</td>
-<td>可用性</td>
-</tr>
-<tr>
-<td>Elevation of Privilege(提升权限)</td>
-<td>未经授权获得许可</td>
-<td>授权</td>
-</tr>
-</tbody></table>
-<div id="DREAD">DREAD模型</div>
-
-<table>
-<thead>
-<tr>
-<th>等级</th>
-<th>高(3)</th>
-<th>中(2)</th>
-<th>低(1)</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>Damage Potential(潜在损害)</td>
-<td>获取完全验证权限；执行管理员操<br>作；非法上传文件</td>
-<td>泄露敏感信息</td>
-<td>泄露其他信息</td>
-</tr>
-<tr>
-<td>Reproducibility(再现性)</td>
-<td>攻击者可以随意再次攻击</td>
-<td>攻击者可以重复攻击，但有时间限制</td>
-<td>攻击者很难重复攻击过程</td>
-</tr>
-<tr>
-<td>Exploitability(可利用性)</td>
-<td>初学者在短期内能掌握攻击方法</td>
-<td>熟练的攻击者才能完成这次攻击</td>
-<td>漏洞利用条件非常苛刻</td>
-</tr>
-<tr>
-<td>Affected users(受影响用户)</td>
-<td>所有用户，默认配置，关键用户</td>
-<td>部分用户，非默认配置</td>
-<td>极少数用户，匿名用户</td>
-</tr>
-<tr>
-<td>Discoverability(可发现性)</td>
-<td>漏洞显眼</td>
-<td>需要深入挖掘</td>
-<td>发现该漏洞及其困难</td>
-</tr>
-</tbody></table>
-<br>
-<font size=5 color=black>模型只能起到一个辅助的作用，最终做出决策的还是人。</font>
-
-<p><br><br><br><br><font face="Georgia" color=#c4444>安全是一门朴素的学问，也是一种平衡的艺术。</font></p>
-<p>作者：WebDogC<br>参考书籍《白帽子讲Web安全》</p>
-
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">白帽子讲Web安全、note、security</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2020/02/29/%E5%AE%89%E5%85%A8%E8%AF%84%E4%BC%B0%E5%AE%9E%E6%96%BD/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
   
     <nav id="page-nav">
       <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="extend next" rel="next" href="/page/2/">Next &amp;raquo;</a>
@@ -1606,6 +1596,14 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color4">变量覆盖、白帽子讲Web安全、note、security</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">反序列化、白帽子讲Web安全、note、security</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">逻辑、验证码、越权、支付、security、Web安全</a>
               </li>
             
             <div class="clearfix"></div>
