@@ -160,6 +160,406 @@
           <div id="js-content" class="content-ll">
             
   
+    <article id="post-File Inclusion" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2020/03/25/File%20Inclusion/">文件包含</a>
+    </h1>
+  
+
+        
+        <a href="/2020/03/25/File%20Inclusion/" class="archive-article-date">
+  	<time datetime="2020-03-24T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-03-25</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p><strong>概念：</strong>服务器执行PHP文件时，可以通过文件包含函数加载另一个文件(可以是非php文件)中的PHP代码，并且当PHP来执行。这个过程被称为<strong>文件包含</strong>。</p>
+<p><strong>原理：</strong>Web应用使用了文件包含函数,其加载的文件名参数为用户可控，加上对文件名过滤不严，导致Web应用包含了其他恶意文件，执行了非预期的代码。</p>
+<h5 id="文件包含函数"><a href="#文件包含函数" class="headerlink" title="文件包含函数"></a>文件包含函数</h5><ul>
+<li>require()</li>
+<li>require_once()</li>
+<li>include()</li>
+<li>include_once()</li>
+</ul>
+<p>&emsp;&emsp;当使用这4个函数包含文件时，该文件将作为PHP文件执行，PHP内核并不会在意该被包含的文件是什么类型。</p>
+<blockquote>
+<p><code>include</code>：使用<code>include</code>引用外部文件时，只有代码执行到<code>include</code>语句时，调用的外部文件才会被引用并读取，当引用的文件发生错误时，系统会抛出一个警告，程序继续<strong>正常运行</strong>。<br><code>require</code>：使用<code>include</code>引用外部文件时，在php文件被执行之前，php解析器会将require语句替换成被引用的外部文件的全部内容然后重新生成一个php文件，并执行新生成的php文件代码，如果发生错误，服务器会直接报错并<strong>退出程序</strong>的执行。<br><code>include_once()</code>：使用include_once会在导入文件前先检测该文件是否在该页面的其他部分被引用过，如果有，则不会重复引用该文件，文件只能被<strong>引用一次</strong>。<br><code>require_once()</code>：在使用<code>require_once</code>时，先会检查要引用的文件是不是已将在该程序中的其他地方被引用过，如果有，则不会在重复调用该文件。(另外同时使用<code>require_once</code>语句在同一页面中引用了两个不同的文件时，只有第一个文件被执行，第二个引用的文件不会被执行)。</p>
+</blockquote>
+<h5 id="文件包含分类"><a href="#文件包含分类" class="headerlink" title="文件包含分类"></a>文件包含分类</h5><ul>
+<li>本地文件包含(LFI)：被包含的文件在服务器本地。<ul>
+<li>如 <code>url···?page=inlcude(&quot;文件所在绝对/相对路径&quot;)</code> </li>
+</ul>
+</li>
+<li>远程文件包含(RFI)：被包含的文件在第三方服务器,需要开启<code>php.ini</code>中的<code>allow_url_include</code>(默认是Off)。<ul>
+<li>如 <code>url···?page=http://文件访问url</code></li>
+</ul>
+</li>
+</ul>
+<h5 id="文件包含的利用技巧"><a href="#文件包含的利用技巧" class="headerlink" title="文件包含的利用技巧"></a>文件包含的利用技巧</h5><ol>
+<li>%00截断文件名 </li>
+<li>目录遍历/穿越<br>&emsp;&emsp;利用<code>./</code>以及<code>../</code>遍历目录，还可以用其不同的编码方式来绕过一些服务器逻辑。</li>
+<li>操作系统对目录最大长度限制<br>&emsp;&emsp;目录字符串，在Windows下256字节、Linux下4096字节时会达到最大值，最大长度之后的字符将被丢弃。利用这个方法可以绕过代码对包含文件名部分可控的限制。</li>
+</ol>
+<h5 id="包含的文件技巧"><a href="#包含的文件技巧" class="headerlink" title="包含的文件技巧"></a>包含的文件技巧</h5><ul>
+<li>包含用户上传的文件。</li>
+<li>包含<code>data://</code>或<code>php://input</code>等为协议。要求<code>allow_url_inlcude</code>配置为ON。</li>
+<li>包含Session文件。要求攻击者能控制Session文件的内容。</li>
+<li>包含日志文件。服务器一般会往WebServer的<code>access_log</code>里记录客户端的请求信息，在<code>error_log</code>记录出错请求，因此攻击者可以间接地将PHP代码写入到日志文件中进行包含。需要注意的是，在凌晨时包含文件，将提高攻击的成功性，因为WebServer会每天生成一个新的日志文件，这样就避免了因日志文件可能会很大以至于包含时PHP进程僵死。</li>
+<li>包含<code>/proc/self/environ</code>文件。<code>environ</code>文件是存储Web进程运行时的环境变量，其中很多都是用户可以控制的。</li>
+<li>包含上传的临时文件。</li>
+<li>包含其他应用创建的文件，比如数据库文件、缓存文件等。</li>
+</ul>
+<h3 id="防御"><a href="#防御" class="headerlink" title="防御"></a>防御</h3><ol>
+<li>禁用0字节，在一般的Web应用中，0字节对于用户来说，其实是不需要的。<code>./</code>以及<code>../</code>同理。</li>
+<li>配置open_basedir，指定PHP能打开的文件的目录。在Window下多个目录应当用分号隔开，在Linux下则用冒号隔开。</li>
+<li>对输入进行白名单机制验证。</li>
+<li>禁止用户对文件名可控，若实在存在需求，则需对文件名进行严格的检查。</li>
+</ol>
+<p><br /><br /><br /><br /></p>
+<blockquote>
+<p>偷梁换柱</p>
+</blockquote>
+<p>作者：WebDogC<br>参考书籍《白帽子讲Web安全》</p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">白帽子讲Web安全、文件包含、security、Web安全、note</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2020/03/25/File%20Inclusion/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
+    <article id="post-FileUpload" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2020/03/22/FileUpload/">文件上传漏洞</a>
+    </h1>
+  
+
+        
+        <a href="/2020/03/22/FileUpload/" class="archive-article-date">
+  	<time datetime="2020-03-21T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-03-22</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p><strong>概念：</strong><br>&emsp;&emsp;<strong>文件上传</strong>是Web中将本地文件上传到服务器上的常见功能，而文件上传漏洞则指存在Web用户上传恶意代码文件(如Webshell、一句话木马)，并在服务器上运行的漏洞。<br>&emsp;&emsp;<strong>文件上传漏洞</strong>是指用户上传了一个可执行的脚本文件，并通过此脚本文件获得了执行服务器端命令的能力。</p>
+<p><strong>原理：</strong><br>&emsp;&emsp;当服务器未对上传的文件进行严格的验证和处理时,如果上传的目标目录没有限制文件执行权限，导致所上传的动态文件可以被正常访问执行，就会造成文件上传漏洞。</p>
+<p><strong>综上所述：</strong><br>&emsp;&emsp;可以得出产生文件上传漏洞的两个必需条件：<strong>一是上传的脚本文件能够被Web容器解释执行，二是用户能够从Web上访问到此文件</strong>。如此看来，只要解决这两个问题，就可避免文件上传漏洞的产生，然而在实际中，无法做到限制文件访问权限，所以只能侧重对文件上传点进行严格的安全检查与处理。</p>
+<h4 id="文件上传的正常流程"><a href="#文件上传的正常流程" class="headerlink" title="文件上传的正常流程"></a>文件上传的正常流程</h4><ol>
+<li>前端选择文件，进行提交上传。</li>
+<li>浏览器发送到服务器。</li>
+<li>服务器中间件接受到报文，解析后交给相关后端代码进行处理。</li>
+<li>后端代码处理通过后将上传的文件移动到目标文件夹中，在PHP中会先将上传的文件写入到临时文件夹中，再将上传的文件移动到目标文件夹中。</li>
+</ol>
+<h4 id="针对上述流程，可有以下4个相对应的检测过程"><a href="#针对上述流程，可有以下4个相对应的检测过程" class="headerlink" title="针对上述流程，可有以下4个相对应的检测过程"></a>针对上述流程，可有以下4个相对应的检测过程</h4><ol>
+<li>在前端以Js代码对上传的文件进行检测。</li>
+<li>在数据包发送到服务器的过程中，使用WAF对文件内容进行检测。</li>
+<li>在后端代码层面上进一步对文件类型及内容进行检测。</li>
+<li>利用服务器上的防御软件对文件内容进行检测。</li>
+</ol>
+<h2 id="常见绕过方式"><a href="#常见绕过方式" class="headerlink" title="常见绕过方式"></a>常见绕过方式</h2><h4 id="一句话木马"><a href="#一句话木马" class="headerlink" title="一句话木马"></a>一句话木马</h4><p><code>php：&lt;?php @eval($_post[&#39;pass&#39;]);?&gt;</code><br><code>asp：&lt;%eval request (&quot;pass&quot;)%&gt;</code><br><code>aspx：&lt;%@ Page Language=&quot;Jscript&quot;%&gt;&lt; %eval(Request.Item[&quot;pass&quot;],&quot;unsafe&quot;);%&gt;</code></p>
+<h4 id="图片马制作"><a href="#图片马制作" class="headerlink" title="图片马制作"></a>图片马制作</h4><p>&emsp;&emsp;以PHP图片马为例，创建一个内容为<code>&lt;?php  @eval($_REQUEST[&#39;a&#39;]);?&gt;</code>的<code>1.txt</code>，准备一张图片<code>1.jpg</code>(大小在300kB以下)，生成名为<code>123.jpg</code>的图片马，命令行下执行命令<code>copy 1.txt + 1.jpg/b 123.jpg</code>。<br>&emsp;&emsp;制作ASP图片马及ASPX图片马方法同上。</p>
+<h4 id="前端绕过：Burpsuite抓包修改文件名后缀即可。"><a href="#前端绕过：Burpsuite抓包修改文件名后缀即可。" class="headerlink" title="前端绕过：Burpsuite抓包修改文件名后缀即可。"></a>前端绕过：Burpsuite抓包修改文件名后缀即可。</h4><p>&emsp;&emsp;判断前端检测方法：上传一个限制文件，利用Burpsuite抓包，若页面弹窗或者是回显“上传失败”，Burpsuite没有抓取到数据包，则为前端检测。</p>
+<h3 id="后端绕过"><a href="#后端绕过" class="headerlink" title="后端绕过"></a>后端绕过</h3><ul>
+<li><p>黑名单机制绕过</p>
+</li>
+<li><p>白名单机制绕过</p>
+<ul>
+<li>图片马绕过</li>
+<li>文件后缀名大小写绕过</li>
+<li>文件后缀(点)绕过</li>
+<li>文件后缀(空格)绕过</li>
+<li>根据代码构造文件后缀绕过</li>
+<li>双写文件后缀绕过</li>
+</ul>
+</li>
+<li><p>简单文件头检测 文件头是位于文件开头的一段承担一定任务的数据，一般都在开头的部分。<br>&emsp;&emsp;由于文件头的起始部分一般开头标记文件类型(如gif的文件头为GIF89a/GIF87a)，通过文件头的起始部分进行匹配检测上传的文件类型,比较简单的一种文件类型检测方法，可以通过在上传的文件前追加合法的文件头进行绕过。 </p>
+</li>
+</ul>
+<ul>
+<li>目录穿越绕过 目录可控时，可以尝试使用目录穿越的方法(../)，先找到可执行php的文件夹，然后BurpsuiteP抓包修改文件名<code>filename/../../···</code>，<code>../</code>(上级目录)有可能被过滤，可以在中间增加<code>./</code>(当前目录)来绕过。</li>
+<li>Windows文件流绕过 <code>::$DATA</code>(Windows文件流绕过)是利用了NTFS交换数据流(ADS)，ADS是NTFS磁盘格式的一个特性(在NTFS文件系统下，每个文件都可以存在多个数据流)。通俗的理解就是文件可以“寄宿”在另一个文件身上，而在资源管理器中却只能看到宿主文件，找不到寄宿文件。<br>Ps：<br>&emsp;&emsp;例如：cmd下键入<code>echo adbc&gt;&gt;a.txt::$DATA</code>这条命令是指将<code>abcd</code>作为数据写入到<code>a.txt</code><br>&emsp;&emsp;运用：cmd键入<code>echo adbc&gt;&gt;a.txt:b.txt</code>这条命令的意思是将<code>abcd</code>写入到<code>a.txt:b.txt</code>，然而在资源管理器中只会看到没有大小没有内容的<code>a.txt</code>，访问修改其真实文件内容需要cmd下键入<code>notepad a.txt:b.txt</code>打开真实文件进行编辑。<br>&emsp;&emsp;<strong>注：只针对Windows</strong></li>
+</ul>
+<ul>
+<li>%00截断绕过<br>&emsp;&emsp;<code>0x00</code>被认为是终止符，在文件上传过程中，<code>0x00</code>可以被用来截断文件名，比如在构造文件名<code>1.php%00.jpg</code>(<code>0x00</code>在URL编码中为<code>%00</code>)，由于<code>%00</code>截断，就能够以图片文件形式上传，访问到<code>1.php</code>文件。<br>&emsp;&emsp;在POST请求方式中，参数会被当做字符串处理，所以需要在数据包Hex中手动添加<code>00</code>截断符。</li>
+</ul>
+<h2 id="解析漏洞"><a href="#解析漏洞" class="headerlink" title="解析漏洞"></a>解析漏洞</h2><h4 id="Nginx文件名逻辑漏洞"><a href="#Nginx文件名逻辑漏洞" class="headerlink" title="Nginx文件名逻辑漏洞"></a>Nginx文件名逻辑漏洞</h4><p>&emsp;&emsp;上传一个以空格(%20)为结尾的文件，例如<code>abc.jpg</code>当访问abc.jpg%20%00(需URL解码).php时，会将上传的图片文件<code>abc.jpg</code>当做PHP文件执行。<br>&emsp;&emsp;影响版本：<code>0.8.41~1.4.3</code>、<code>1.5.0~1.5.7</code></p>
+<h4 id="Apache文件解析问题"><a href="#Apache文件解析问题" class="headerlink" title="Apache文件解析问题"></a>Apache文件解析问题</h4><p>&emsp;&emsp;Apache对于文件名的解析是从后往前解析的，直到遇见一个Apache认识的文件类型为止。<br>&emsp;&emsp;如果在.htaccess中有如下配置<code>AddType application/x-httpd-php .xxx</code>则会将扩展名为<code>.xxx</code>的文件当做php文件执行.<br>&emsp;&emsp;<code>.htaccess</code>文件被称为分布式配置文件，一般存在于伪静态页面，其提供了针对目录改变配置的方法，在一个特定的文档目录中放置一个包含一个或多个指令的文件，以作用于此目录及其所有子目录。然而此功能默认不开启。<br>&emsp;&emsp;例如在<code>.htaccess</code>文件中键入<br><code>AddType application/x-httpd-php .jpg</code>则文件所在目录会将<code>jpg</code>文件会被当做<code>php</code>文件来解析<br>&emsp;&emsp;由于配置文件没有文件名，所有需要用到cmd的重命名命令 <code>ren filename .htaccess</code></p>
+<h4 id="IIS文件解析问题"><a href="#IIS文件解析问题" class="headerlink" title="IIS文件解析问题"></a>IIS文件解析问题</h4><p>&emsp;&emsp;在IIS6和Windows环境下，<code>;</code>具有截断作用，当服务器的本地硬盘上存在文件<code>abc.asp;xxx.jpg</code>时，由于<code>;</code>的截断，将保留下来<code>.asp</code>，IIS6.0从META_SCRIPT_MAP脚本映射表里与扩展名匹配对比，并反馈给<code>asp.dll</code>处理，即将此文件解析为<code>abc.asp</code>，从而导致脚本被执行。</p>
+<p>&emsp;&emsp;在IIS6.0中，由于处理文件夹扩展名出错，导致将<code>/*.asp/</code>目录下上传的所有文件都会被作为ASP文件进行解析，构造上传文件名<code>a.asp/abc.jpg</code>，当访问<code>abc.jpg</code>所在URL时，服务器会将<code>a.asp</code>目录下的文件(即<code>abc.jpg</code>)都当做<code>asp</code>文件解析。</p>
+<h4 id="PHP-CGI路径解析漏洞"><a href="#PHP-CGI路径解析漏洞" class="headerlink" title="PHP CGI路径解析漏洞"></a>PHP CGI路径解析漏洞</h4><p>在映射URL时，两个环境变量很重要<br>&emsp;&emsp;1. PATH_INFO，确认文件，返回文件对应信息。<br>&emsp;&emsp;2. SCRIPT_FILENAME，检查文件是否存在，并传递路径给PHP CGI。</p>
+<p>此漏洞需要满足两个条件<br>&emsp;&emsp;1. Web容器(如Nginx、Apache、IIS)使用fastcgi的方式调用脚本解释器(Nginx默认使用此方式)。<br>&emsp;&emsp;2. 在<code>php.ini</code>中开启<code>cgi.fix_pathinfo</code>选项，而在php中此选项是默认开启的。当此选项值为1时URL映射将递归(向上递归)查询路径确认文件的合法性。</p>
+<p><strong>漏洞的成因</strong>就是利用了上述两个环境变量的差值所造成的逻辑错误。</p>
+<blockquote>
+<p>举例，上传一个<code>test.jpg</code>文件，当访问其图片所在URL<code>http://www.xxx.com/path/test.jpg</code>时，在URL最后加<code>noexist.php</code>(不存在的文件)后，会将test.jpg当做php文件进行解析。</p>
+</blockquote>
+<p><strong>过程分析</strong><br>&emsp;&emsp;访问URL<br>&emsp;&emsp;<code>http://www.xxx.com/path/test.jpg/noexist.php</code><br>&emsp;&emsp;在URL映射时，当php开启了<code>cgi.fix_pathinfo</code>选项,由于<code>noexist.php</code>的不存在且test.jpg并不是真实目录，此时SCRIPT_FILENAME的值为<code>/path/test.jpg</code>，而此时另一个环境变量PATH_INFO的值为<code>noexist.php</code>，PHP在最终执行时，就会调用php解析程序解析<code>test.jpg</code>。</p>
+<h2 id="设计安全的文件上传功能"><a href="#设计安全的文件上传功能" class="headerlink" title="设计安全的文件上传功能"></a>设计安全的文件上传功能</h2><ul>
+<li>文件上传的目录设置为不可执行(即无法访问)，只要Web容器无法解析该目录下的文件，即使恶意脚本文件被成功上传，无法被执行，就不会对服务器造成影响。</li>
+<li>判断文件的类型，可以结合使用MIME Type、后缀检查、白名单机制等方式，对上传的文件进行类型检查，只是需要注意确保能够防御到所有绕过方式。</li>
+<li>使用随机数改写文件名和文件路径，从文件访问上进行防御，改写文件路径以及文件名，能够极大的增加攻击成本。</li>
+<li>单独设置文件服务器，实现存储目录与Web分离，这样即便是恶意脚本文件被成功上传以及访问，也无法对服务器造成破坏，此设置需要根据具体业务需求。</li>
+<li>对文件内容进行压缩重新生成，当上传的文件内容发生改变，即使文件被成功访问执行，也无法对服务器造成影响。<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2>&emsp;&emsp;文件上传本来是一个正常的功能，但如果应用缺乏对文件的安全检查，或者对文件的安全检查存在问题，就会被黑客门利用，以造成损失。<br>&emsp;&emsp;文章讲述了文件上传漏洞的相关概念、文件上传流程、常见绕过方式、解析漏洞以及防御方法。</li>
+</ul>
+<p><br /><br /><br /><br /></p>
+<blockquote>
+<p>千里之堤毁于蚁穴</p>
+</blockquote>
+<p>作者：WebDogC<br>参考书籍《白帽子讲Web安全》</p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">文件上传、解析漏洞、security、Web安全</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2020/03/22/FileUpload/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
+    <article id="post-SQL" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2020/03/12/SQL/">注入攻击之SQL注入</a>
+    </h1>
+  
+
+        
+        <a href="/2020/03/12/SQL/" class="archive-article-date">
+  	<time datetime="2020-03-11T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-03-12</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="SQL注入简介"><a href="#SQL注入简介" class="headerlink" title="SQL注入简介"></a>SQL注入简介</h2><p>&emsp;&emsp;<strong>注入攻击的本质</strong>，是把用户输入的数据当做代码执行，这里有两个关键条件，第一是用户能够控制输入，第二是原本程序要执行的代码，拼接了用户输入的数据。</p>
+<p>&emsp;&emsp;<strong>SQL注入</strong>，SQL Injection，指的是web应用程序对用户输入数据的合法性没有判断或过滤不严，攻击者可以在web应用程序中事先定义好的查询语句的结尾上添加额外的SQL语句，在管理员不知情的情况下实现非法操作，以此来实现欺骗数据库服务器执行非授权的任意查询，从而进一步得到相应的数据信息的一种攻击方式。</p>
+<p>&emsp;&emsp;<strong>原理</strong>：构造特殊的SQL查询，由于服务器缺少对请求内容的检验,数据和代码未分离，即数据当做了代码来执行，数据库执行了攻击者所要的操作。<br>&emsp;&emsp;<strong>利用</strong>:<br>&emsp;&emsp;&emsp;&emsp;1. 万能密码登录<br>&emsp;&emsp;&emsp;&emsp;2. 数据库信息泄露<br>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;+管理员后台用户名和密码<br>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;+数据库其他敏感信息<br>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;+整个数据库信息(脱库)<br>&emsp;&emsp;&emsp;&emsp;3. 获取Webshell<br>&emsp;&emsp;&emsp;&emsp;4. 获取服务器敏感文件<br>&emsp;&emsp;&emsp;&emsp;5. 获取服务器系统权限</p>
+<h4 id="SQL注入分类"><a href="#SQL注入分类" class="headerlink" title="SQL注入分类"></a>SQL注入分类</h4><p>&emsp;&emsp;SQL注入可以简要分为GET/POST/HEAD注入、数字型/字符型注入、Orale/Mysql/MSSQL/Access注入。<br>具体分为</p>
+<ul>
+<li>显错注入<ul>
+<li>查询语句显错</li>
+<li>函数updatexml()显错<ul>
+<li>insert信息注入<ul>
+<li>header参数注入</li>
+</ul>
+</li>
+<li>update信息注入</li>
+<li>delete信息注入</li>
+</ul>
+</li>
+<li>函数extractvalue()显错</li>
+</ul>
+</li>
+<li>盲注<ul>
+<li>布尔盲注</li>
+<li>延时盲注</li>
+<li>Dnslog盲注</li>
+</ul>
+</li>
+<li>特殊注入<ul>
+<li>宽字节注入</li>
+<li>二次编码注入 </li>
+</ul>
+</li>
+</ul>
+<h2 id="SQL注入攻击"><a href="#SQL注入攻击" class="headerlink" title="SQL注入攻击"></a>SQL注入攻击</h2><p>找到SQL注入漏洞，仅仅是一个开始。要实施一次完整的攻击，还有很多事情要做。下面是一些有关SQL注入的攻击方式。</p>
+<ul>
+<li><p>常见攻击方式：猜解数据库信息(版本、用户等)、修改数据库结构(增删改表)、读写文件(Webshell)。</p>
+</li>
+<li><p>UDF命令执行：利用“用户自定义函数”的技巧，即UDF(User-Defined- Functions)来执行命令。</p>
+</li>
+<li><p>攻击存储过程：数据库内有大量的存储过程，其中有不少(如xp_cmdshell)能为攻击者提供极大的便利，除此之外，存储过程本身也可能会存在注入漏洞。</p>
+</li>
+<li><p>SQL约束攻击(SQL Column Truncation)：在MySQL的配置选项中，有一个sql_mode选项。当MySQL的sql_mode设置为default时，即没有开启STRICT_ALL_TABLES选项时，MySQL对于用户插入的超长值只会提示warning，而不是error（如果是error则插入不成功），这可能会导致发生一些“截断”问题。</p>
+</li>
+</ul>
+<h2 id="SQL注入防御"><a href="#SQL注入防御" class="headerlink" title="SQL注入防御"></a>SQL注入防御</h2><ul>
+<li><p>对用户的输入进行严格的过滤</p>
+<ul>
+<li>检查数据类型，对于一些特定的输入(如邮箱、时间、数字)进行严格的格式检。</li>
+<li>使用安全函数，通过一个足够安全的编码函数，可以帮助对抗SQl注入。    <ul>
+<li>参考OWASP ESAPI中的<code>ESAPI.encoder().encodeForSQL()</code></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>参数化SQL语句</p>
+<ul>
+<li>使用预编译语句，绑定变量。攻击者无法改变SQL语句的结构，只会将用户的输入当做字符串来处理。</li>
+<li>使用安全的存储过程对抗SQL，存储过程中的效果和使用预编译语句类似，但需要注意的是，存储过程也可能会存在注入问题。</li>
+</ul>
+</li>
+<li><p>严格控制用户权限</p>
+<ul>
+<li>根据最小权限原则，避免Web应用使用root、dbowner等高权限账户直接连接数据库。另外，Web应用使用的数据库账户，不应该有创建自定义函数、操作本地文件的权限。</li>
+</ul>
+</li>
+</ul>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>&emsp;&emsp;SQL注入攻击是应用违背了“数据与代码分离原则”导致的结果。它有两个条件：一是用户能够控制数据的输入；二是代码拼接了用户输入的数据，将其当成代码执行。<br>&emsp;&emsp;所以在防御SQL注入攻击时，只需要牢记“数据与代码分离原则”，在应用与数据库的交互点进行安全的过滤检查，就能避免此类问题。</p>
+<p><br/><br/><br/><br><br/><br/><br/></p>
+<blockquote>
+<p><font face="Georgia" color=#c4444>理论上，通过设计和实施合理的安全解决方案，注入攻击是可以彻底杜绝的。</font></p>
+</blockquote>
+<p>作者：WebDogC<br>参考书籍《白帽子讲Web安全》</p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">注入、SQL注入、security、Web安全</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2020/03/12/SQL/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
     <article id="post-CSRF" class="article article-type-post  article-index" itemscope itemprop="blogPost">
   <div class="article-inner">
     
@@ -1030,84 +1430,9 @@
 
 
   
-    <article id="post-hello-world" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2020/01/29/hello-world/">Hello World</a>
-    </h1>
-  
-
-        
-        <a href="/2020/01/29/hello-world/" class="archive-article-date">
-  	<time datetime="2020-01-29T12:51:49.465Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-01-29</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>Welcome to <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/" target="_blank" rel="noopener">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html" target="_blank" rel="noopener">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues" target="_blank" rel="noopener">GitHub</a>.</p>
-<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo new <span class="hljs-string">"My New Post"</span><br></code></pre></td></tr></table></figure>
-
-<p>More info: <a href="https://hexo.io/docs/writing.html" target="_blank" rel="noopener">Writing</a></p>
-<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo server<br></code></pre></td></tr></table></figure>
-
-<p>More info: <a href="https://hexo.io/docs/server.html" target="_blank" rel="noopener">Server</a></p>
-<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo generate<br></code></pre></td></tr></table></figure>
-
-<p>More info: <a href="https://hexo.io/docs/generating.html" target="_blank" rel="noopener">Generating</a></p>
-<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo deploy<br></code></pre></td></tr></table></figure>
-
-<p>More info: <a href="https://hexo.io/docs/one-command-deployment.html" target="_blank" rel="noopener">Deployment</a></p>
-
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2020/01/29/hello-world/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
   
     <nav id="page-nav">
-      <a class="extend prev" rel="prev" href="/">&amp;laquo; Prev</a><a class="page-number" href="/">1</a><span class="page-number current">2</span>
+      <a class="extend prev" rel="prev" href="/">&amp;laquo; Prev</a><a class="page-number" href="/">1</a><span class="page-number current">2</span><a class="page-number" href="/page/3/">3</a><a class="extend next" rel="next" href="/page/3/">Next &amp;raquo;</a>
     </nav>
   
 
@@ -1255,6 +1580,18 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color4">白帽子讲Web安全、note、security</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color1">复现、CTF、study、SQL、GET</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">复现、CTF、study、SQL、POST</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color1">复现、CTF、study、SQL、XFF</a>
               </li>
             
             <div class="clearfix"></div>
