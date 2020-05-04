@@ -776,7 +776,7 @@ body {
 }
 
 .left-col {
-  background: #fff;
+  background: rgba(255,255,255,.5);
   width: 300px;
   position: fixed;
   opacity: 1;
