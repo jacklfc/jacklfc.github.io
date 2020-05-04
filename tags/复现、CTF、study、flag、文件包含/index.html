@@ -6,33 +6,15 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <link rel="dns-prefetch" href="http://yoursite.com">
-  <title>复现之XFF-SQL注入getshell | WebDogC</title>
+  <title>Tag: 复现、CTF、study、flag、文件包含 | WebDogC</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="0x00前言&amp;emsp;&amp;emsp;本文是第三篇，重点记录靶机80端口X-Forwarded-For-SQL注入的渗透过程，涉及知识点：sqlmap之hearder扫描、nikto及nmap的使用、文件上传之CGI、msf生成后门等。关于靶场，玩法不一，以下只是本人的一次学习过程，不喜勿喷。0x01环境&amp;emsp;&amp;emsp;攻击机(kali)：192.168.3.104&amp;emsp;&amp;emsp;靶">
-<meta property="og:type" content="article">
-<meta property="og:title" content="复现之XFF-SQL注入getshell">
-<meta property="og:url" content="http://yoursite.com/2020/05/01/XFF-SQL%E6%B3%A8%E5%85%A5/index.html">
+  <meta property="og:type" content="website">
+<meta property="og:title" content="WebDogC">
+<meta property="og:url" content="http://yoursite.com/tags/%E5%A4%8D%E7%8E%B0%E3%80%81CTF%E3%80%81study%E3%80%81flag%E3%80%81%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/index.html">
 <meta property="og:site_name" content="WebDogC">
-<meta property="og:description" content="0x00前言&amp;emsp;&amp;emsp;本文是第三篇，重点记录靶机80端口X-Forwarded-For-SQL注入的渗透过程，涉及知识点：sqlmap之hearder扫描、nikto及nmap的使用、文件上传之CGI、msf生成后门等。关于靶场，玩法不一，以下只是本人的一次学习过程，不喜勿喷。0x01环境&amp;emsp;&amp;emsp;攻击机(kali)：192.168.3.104&amp;emsp;&amp;emsp;靶">
 <meta property="og:locale" content="en_US">
-<meta property="og:image" content="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/XFF-SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%871.png">
-<meta property="og:image" content="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/XFF-SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%872.png">
-<meta property="og:image" content="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/XFF-SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%873.png">
-<meta property="og:image" content="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/XFF-SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%874.png">
-<meta property="og:image" content="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/XFF-SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%875.png">
-<meta property="og:image" content="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/XFF-SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%876.png">
-<meta property="og:image" content="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/XFF-SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%877.png">
-<meta property="og:image" content="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/XFF-SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%878.png">
-<meta property="og:image" content="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/XFF-SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%879.png">
-<meta property="og:image" content="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/XFF-SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%8710.png">
-<meta property="og:image" content="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/XFF-SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%8711.png">
-<meta property="og:image" content="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/XFF-SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%8712.png">
-<meta property="article:published_time" content="2020-04-30T16:00:00.000Z">
-<meta property="article:modified_time" content="2020-05-02T12:52:26.159Z">
 <meta property="article:author" content="WebDogC">
-<meta property="article:tag" content="复现、CTF、study、SQL、XFF">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/XFF-SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%871.png">
   
     <link rel="alternative" href="/atom.xml" title="WebDogC" type="application/atom+xml">
   
@@ -176,172 +158,98 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            <article id="post-XFF-SQL注入" class="article article-type-post " itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
+            
   
-    <h1 class="article-title" itemprop="name">
-      复现之XFF-SQL注入getshell
+  
+    
+    
+      
+      
+      <section class="archives-wrap">
+        <div class="archive-year-wrap">
+          <a href="/archives/2020" class="archive-year">2020</a>
+        </div>
+        <div class="archives">
+    
+    <article class="archive-article archive-type-post">
+  <div class="archive-article-inner">
+    <header class="archive-article-header">
+      	<div class="article-meta">
+	      	<a href="/2020/05/03/GetFlag-%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB-2/" class="archive-article-date">
+  	<time datetime="2020-05-02T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-05-03</time>
+</a>
+        </div>
+    	 
+  
+    <h1 itemprop="name">
+      <a class="archive-article-title" href="/2020/05/03/GetFlag-%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB-2/">文件包含获取root权限-2</a>
     </h1>
   
 
-        
-        <a href="/2020/05/01/XFF-SQL%E6%B3%A8%E5%85%A5/" class="archive-article-date">
-  	<time datetime="2020-04-30T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-05-01</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p><strong>0x00前言</strong><br>&emsp;&emsp;本文是第三篇，重点记录靶机80端口X-Forwarded-For-SQL注入的渗透过程，涉及知识点：sqlmap之hearder扫描、nikto及nmap的使用、文件上传之CGI、msf生成后门等。关于靶场，玩法不一，以下只是本人的一次学习过程，不喜勿喷。<br><strong>0x01环境</strong><br>&emsp;&emsp;攻击机(kali)：192.168.3.104<br>&emsp;&emsp;靶机：192.168.3.103<br><strong>0x02工具</strong><br>&emsp;&emsp;nmap、nikto、dirb、sqlmap、metasploit、VMware<br><strong>0x03过程</strong><br>&emsp;&emsp;<strong>信息探测</strong><br>&emsp;&emsp;终端下输入<code>nmap -T4 -A -p- -v 192.168.3.103</code><br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/XFF-SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%871.png" alt=""><br>&emsp;&emsp;探测结果为<br>&emsp;&emsp;&emsp;&emsp;开放端口：80(http)<br>&emsp;&emsp;&emsp;&emsp;Web容器信息：nginx 0.7.67<br>&emsp;&emsp;进一步探测敏感信息<br>&emsp;&emsp;终端下输入<code>nikto -host http://192.168.3.103</code><br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/XFF-SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%872.png" alt=""><br>&emsp;&emsp;输入<code>dirb http://192.168.3.103</code><br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/XFF-SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%873.png" alt=""><br>&emsp;&emsp;扫描结果：后台登录页面<code>/admin/login.php</code>、PHP版本为5.3.3<br>&emsp;&emsp;<strong>深入挖掘</strong><br>&emsp;&emsp;打开浏览器对站点进行简单浏览<br>&emsp;&emsp;发现网站和SQL注入-GET站点一样，尝试GET注入<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/XFF-SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%874.png" alt=""><br>&emsp;&emsp;很明显，这里做了限制，也许是盲注或者是过滤了简单payload，这里不做展开。<br>&emsp;&emsp;直接来到后台登录页面，尝试弱口令以及万能密码<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/XFF-SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%875.png" alt=""><br>&emsp;&emsp;登录失败。<br>&emsp;&emsp;用Burpsuite抓取一下数据包<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/XFF-SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%876.png" alt=""><br>&emsp;&emsp;可尝试暴力破解账号密码(这里不做展开)，在破解的同时，思考是否会存在head注入，常见的head注入参数有User-Agent、Referer、X-Forwarded-For，分别放到sqlmap工具中跑一下。</p>
-<blockquote>
-<p><code>sqlmap -u &quot;http://192.168.3.103&quot; --headers=&quot;User-Agent:*&quot; --level 5 --batch</code><br><code>sqlmap -u &quot;http://192.168.3.103&quot; --headers=&quot;Referer:*&quot; --level 5 --batch</code><br><code>sqlmap -u &quot;http://192.168.3.103&quot; --headers=&quot;X-Forwarded-For:*&quot; --level 5 --batch</code></p>
-</blockquote>
-<p>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/XFF-SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%877.png" alt=""><br>&emsp;&emsp;发现只有X-Forwarded-For存在SQL。<br>&emsp;&emsp;通过sqlmap工具找到了当前数据库photoblog下的users表中的login和password字段值。<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/XFF-SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%878.png" alt=""><br>&emsp;&emsp;登录后台<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/XFF-SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%879.png" alt=""><br>&emsp;&emsp;成功登录，发现与SQL注入-GET类似。<br>&emsp;&emsp;<strong>漏洞利用</strong><br>&emsp;&emsp;同样使用msf制作木马文件，并修改文件名后缀为PHP后上传。<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/XFF-SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%8710.png" alt=""><br>&emsp;&emsp;上传失败，只能上传图片文件。<br>&emsp;&emsp;百度，并没有搜索到Nginx 0.7.67相关解析漏洞<br>&emsp;&emsp;制作图片马文件，代码为msf生成的php代码。设置好监听ip以及端口后，打开监听器<br>&emsp;&emsp;上传图片马文件，尝试%00截断，发现图片会被重新命名，失效。<br>&emsp;&emsp;尝试CGI解析，访问上传的图片，并在url后加上<code>/1.php</code><br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/XFF-SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%8711.png" alt=""><br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/XFF-SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%8712.png" alt=""><br>&emsp;&emsp;成功返回shell，当前用户为普通用户权限，接下来是提权操作。由于本人水平有限，暂时不多展开。<br>—————————-分割线——————————–<br><strong>0x04总结</strong><br>&emsp;&emsp;此次渗透过程首先对目标站点进行信息收集，针对唯一开放的80端口进行敏感信息探测，发现存在后台登录页面，不存在明显的GET/POST-SQL注入，从head-SQL注入入手，用SQLmap逐个尝试，利用存在的X-Forwarded-For-SQL注入，获取数据成功登录后台，接着获取WebShell的过程存在文件上传的限制，利用CGI解析成功绕过，拿到webshell。<br>&emsp;&emsp;虽然此次渗透大体过程与前两次并无太大差异，但也复习了一些知识点且学到了一些新姿势。渗透还可深入提权，奈何现在水平有限，以后有时间再来填这个坑吧。</p>
-<p><br><br><br><br><font face="Georgia" color=#c4444>head-SQL注入除了User-Agent、Referer、X-Forwarded-For还有Cookie。</font><br>作者：WebDogC</p>
-
-      
-
-      
-        <div class="page-reward">
-          <a href="javascript:;" class="page-reward-btn tooltip-top">
-            <div class="tooltip tooltip-east">
-            <span class="tooltip-item">
-              赏
-            </span>
-            <span class="tooltip-content">
-              <span class="tooltip-text">
-                <span class="tooltip-inner">
-                  <p class="reward-p"><i class="icon icon-quo-left"></i>谢谢你请我吃糖果<i class="icon icon-quo-right"></i></p>
-                  <div class="reward-box">
-                    
-                    
-                  </div>
-                </span>
-              </span>
-            </span>
-          </div>
-          </a>
-        </div>
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
+        <div class="article-info info-on-right">
+          
 	<div class="article-tag tagcloud">
 		<i class="icon-price-tags icon"></i>
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">复现、CTF、study、SQL、XFF</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">复现、CTF、study、flag、文件包含</a>
         		</li>
       		
 		</ul>
 	</div>
 
-      
+          
 
-      
-
-      
-        
-<div class="share-btn share-icons tooltip-left">
-  <div class="tooltip tooltip-east">
-    <span class="tooltip-item">
-      <a href="javascript:;" class="share-sns share-outer">
-        <i class="icon icon-share"></i>
-      </a>
-    </span>
-    <span class="tooltip-content">
-      <div class="share-wrap">
-        <div class="share-icons">
-          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
-            <i class="icon icon-weibo"></i>
-          </a>
-          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
-            <i class="icon icon-weixin"></i>
-          </a>
-          <a class="qq share-sns" href="javascript:;" data-type="qq">
-            <i class="icon icon-qq"></i>
-          </a>
-          <a class="douban share-sns" href="javascript:;" data-type="douban">
-            <i class="icon icon-douban"></i>
-          </a>
-          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
-            <i class="icon icon-qzone"></i>
-          </a>
-          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
-            <i class="icon icon-facebook"></i>
-          </a>
-          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
-            <i class="icon icon-twitter"></i>
-          </a>
-          <a class="google share-sns" href="javascript:;" data-type="google">
-            <i class="icon icon-google"></i>
-          </a>
         </div>
-      </div>
-    </span>
-  </div>
-</div>
-
-<div class="page-modal wx-share js-wx-box">
-    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
-    <p>扫一扫，分享到微信</p>
-    <div class="wx-qrcode">
-      <img src="//pan.baidu.com/share/qrcode?url=http://yoursite.com/2020/05/01/XFF-SQL%E6%B3%A8%E5%85%A5/" alt="微信分享二维码">
-    </div>
-</div>
-
-<div class="mask js-mask"></div>
-      
-      <div class="clearfix"></div>
-    </div>
+        <div class="clearfix"></div>
+    </header>
   </div>
 </article>
-
   
-<nav id="article-nav">
-  
-  
-    <a href="/2020/04/27/POST-SQL%E6%B3%A8%E5%85%A5/" id="article-nav-older" class="article-nav-link-wrap">
-      <div class="article-nav-title">复现之POST-SQL注入getshell</div>
-      <i class="icon-circle-right"></i>
-    </a>
-  
-</nav>
-
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
+    
+    
+    <article class="archive-article archive-type-post">
+  <div class="archive-article-inner">
+    <header class="archive-article-header">
+      	<div class="article-meta">
+	      	<a href="/2020/05/02/GetFlag-%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB-1/" class="archive-article-date">
+  	<time datetime="2020-05-01T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-05-02</time>
+</a>
         </div>
-        
-        
-    </div>
-</aside>
-
-
-
+    	 
   
-  
+    <h1 itemprop="name">
+      <a class="archive-article-title" href="/2020/05/02/GetFlag-%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB-1/">文件包含获取root权限-1</a>
+    </h1>
   
 
+        <div class="article-info info-on-right">
+          
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">复现、CTF、study、flag、文件包含</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+          
+
+        </div>
+        <div class="clearfix"></div>
+    </header>
+  </div>
+</article>
+  
+  
+    </div></section>
   
 
-  
-
-  
+    
 
 
           </div>
@@ -364,9 +272,9 @@
 	var yiliaConfig = {
 		mathjax: false,
 		isHome: false,
-		isPost: true,
+		isPost: false,
 		isArchive: false,
-		isTag: false,
+		isTag: true,
 		isCategory: false,
 		open_in_new: false,
 		toc_hide_index: true,
@@ -499,6 +407,10 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color1">复现、CTF、study、SQL、XFF</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">复现、CTF、study、flag、文件包含</a>
               </li>
             
             <div class="clearfix"></div>

