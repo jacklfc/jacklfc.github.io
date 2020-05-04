@@ -6,11 +6,11 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <link rel="dns-prefetch" href="http://yoursite.com">
-  <title>复现之POST-SQL注入getshell | WebDogC</title>
+  <title>GetFlag-POST-SQL注入 | WebDogC</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <meta name="description" content="0x00前言&amp;emsp;&amp;emsp;本文是第二篇，重点记录靶机8080端口POST-SQL注入的渗透过程，涉及知识点：工具sqlmap、nikto及nmap的使用、文件上传、msf生成后门、提权等。关于靶场，玩法不一，以下只是本人的一次学习过程，不喜勿喷。ps：此靶场可能没有设置Flag值，也可能是由于本人水平有限，没有找到Flag的位置。 0x01环境&amp;emsp;&amp;emsp;攻击机(kali)：">
 <meta property="og:type" content="article">
-<meta property="og:title" content="复现之POST-SQL注入getshell">
+<meta property="og:title" content="GetFlag-POST-SQL注入">
 <meta property="og:url" content="http://yoursite.com/2020/04/27/GetFlag-POST-SQL%E6%B3%A8%E5%85%A5/index.html">
 <meta property="og:site_name" content="WebDogC">
 <meta property="og:description" content="0x00前言&amp;emsp;&amp;emsp;本文是第二篇，重点记录靶机8080端口POST-SQL注入的渗透过程，涉及知识点：工具sqlmap、nikto及nmap的使用、文件上传、msf生成后门、提权等。关于靶场，玩法不一，以下只是本人的一次学习过程，不喜勿喷。ps：此靶场可能没有设置Flag值，也可能是由于本人水平有限，没有找到Flag的位置。 0x01环境&amp;emsp;&amp;emsp;攻击机(kali)：">
@@ -34,7 +34,7 @@
 <meta property="og:image" content="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/POST-SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%8717.png">
 <meta property="og:image" content="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/POST-SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%8718.png">
 <meta property="article:published_time" content="2020-04-26T16:00:00.000Z">
-<meta property="article:modified_time" content="2020-05-04T07:41:57.535Z">
+<meta property="article:modified_time" content="2020-05-04T07:49:26.256Z">
 <meta property="article:author" content="WebDogC">
 <meta property="article:tag" content="复现、CTF、study、SQL、POST">
 <meta name="twitter:card" content="summary">
@@ -189,7 +189,7 @@
         
   
     <h1 class="article-title" itemprop="name">
-      复现之POST-SQL注入getshell
+      GetFlag-POST-SQL注入
     </h1>
   
 
@@ -319,14 +319,14 @@
       <i class="icon-circle-left"></i>
       <div class="article-nav-title">
         
-          GetFlag-XFF-SQL注入getshell
+          GetFlag-XFF-SQL注入
         
       </div>
     </a>
   
   
     <a href="/2020/04/25/GetFlag-GET-SQL%E6%B3%A8%E5%85%A5/" id="article-nav-older" class="article-nav-link-wrap">
-      <div class="article-nav-title">复现之GET-SQL注入getshell</div>
+      <div class="article-nav-title">GetFlag-GET-SQL注入</div>
       <i class="icon-circle-right"></i>
     </a>
   
