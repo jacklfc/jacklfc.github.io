@@ -1993,7 +1993,7 @@ pre .css ~ * .id, pre .id {
   border: 1px solid #ddd;
   border-top: 1px solid #fff;
   border-bottom: 1px solid #fff;
-  background: rgba(255,255,255,.5);
+  background: #fff;
   transition: all .2s ease-in
 }
 
@@ -2917,11 +2917,7 @@ pre .css ~ * .id, pre .id {
   }
 
   .mid-col {
-    position: absolute;
-    right: 0;
-    left: 300px;
-    min-height: 100%;
-    width: auto
+    left: 0
   }
 
   #header .header-nav, .mid-col {
