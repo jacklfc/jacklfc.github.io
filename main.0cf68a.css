@@ -776,7 +776,9 @@ body {
 }
 
 .left-col {
-  background: #fff;
+  /*background: #fff;*/
+  background: linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.5)),
+  url('https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/background/wallpaper.png') no-repeat 0% 20%/ cover;
   width: 300px;
   position: fixed;
   opacity: 1;
