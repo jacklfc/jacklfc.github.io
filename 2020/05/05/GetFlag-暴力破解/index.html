@@ -6,15 +6,53 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <link rel="dns-prefetch" href="http://yoursite.com">
-  <title>Tag: 文件上传、解析漏洞、security、Web安全 | WebDogC</title>
+  <title>GetFlag-暴力破解 | WebDogC</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta property="og:type" content="website">
-<meta property="og:title" content="WebDogC">
-<meta property="og:url" content="http://yoursite.com/tags/%E6%96%87%E4%BB%B6%E4%B8%8A%E4%BC%A0%E3%80%81%E8%A7%A3%E6%9E%90%E6%BC%8F%E6%B4%9E%E3%80%81security%E3%80%81Web%E5%AE%89%E5%85%A8/index.html">
+  <meta name="description" content="0x00前言&amp;emsp;&amp;emsp;本文是第六篇，介绍暴力破解的一些小姿势，涉及知识点：工具nikto、dirb、Wpscan以及nmap的使用，文件上传、用msf控制台生成后门进行暴力破解等，关于靶场，玩法不一，以下只是本人的一次学习过程，不喜勿喷。0x01环境&amp;emsp;&amp;emsp;攻击机(kali)：192.168.3.107&amp;emsp;&amp;emsp;靶机(Ubuntu)：192.168.3.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="GetFlag-暴力破解">
+<meta property="og:url" content="http://yoursite.com/2020/05/05/GetFlag-%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/index.html">
 <meta property="og:site_name" content="WebDogC">
+<meta property="og:description" content="0x00前言&amp;emsp;&amp;emsp;本文是第六篇，介绍暴力破解的一些小姿势，涉及知识点：工具nikto、dirb、Wpscan以及nmap的使用，文件上传、用msf控制台生成后门进行暴力破解等，关于靶场，玩法不一，以下只是本人的一次学习过程，不喜勿喷。0x01环境&amp;emsp;&amp;emsp;攻击机(kali)：192.168.3.107&amp;emsp;&amp;emsp;靶机(Ubuntu)：192.168.3.">
 <meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%871.png">
+<meta property="og:image" content="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%872.png">
+<meta property="og:image" content="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%873-1.png">
+<meta property="og:image" content="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%873.png">
+<meta property="og:image" content="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%874.png">
+<meta property="og:image" content="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%875.png">
+<meta property="og:image" content="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%876.png">
+<meta property="og:image" content="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%877.png">
+<meta property="og:image" content="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%878.png">
+<meta property="og:image" content="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%879.png">
+<meta property="og:image" content="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%8710.png">
+<meta property="og:image" content="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%8711.png">
+<meta property="og:image" content="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%8712.png">
+<meta property="og:image" content="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%8713.png">
+<meta property="og:image" content="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%8714.png">
+<meta property="og:image" content="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%8715.png">
+<meta property="og:image" content="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%8716.png">
+<meta property="og:image" content="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%8717.png">
+<meta property="og:image" content="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%8718.png">
+<meta property="og:image" content="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%87181.png">
+<meta property="og:image" content="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%8719.png">
+<meta property="og:image" content="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%8720.png">
+<meta property="og:image" content="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%8721.png">
+<meta property="og:image" content="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%8722.png">
+<meta property="og:image" content="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%8723.png">
+<meta property="og:image" content="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%8724.png">
+<meta property="og:image" content="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%8725.png">
+<meta property="og:image" content="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%8726.png">
+<meta property="og:image" content="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%8727.png">
+<meta property="og:image" content="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%8728.png">
+<meta property="og:image" content="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%8729.png">
+<meta property="og:image" content="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%8730.png">
+<meta property="article:published_time" content="2020-05-04T16:00:00.000Z">
+<meta property="article:modified_time" content="2020-05-05T14:40:27.782Z">
 <meta property="article:author" content="WebDogC">
+<meta property="article:tag" content="复现、CTF、study、flag、暴力破解">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%871.png">
   
     <link rel="alternative" href="/atom.xml" title="WebDogC" type="application/atom+xml">
   
@@ -158,60 +196,168 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            
-  
-  
+            <article id="post-GetFlag-暴力破解" class="article article-type-post " itemscope itemprop="blogPost">
+  <div class="article-inner">
     
-    
-      
-      
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2020" class="archive-year">2020</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2020/03/22/FileUpload/" class="archive-article-date">
-  	<time datetime="2020-03-21T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-03-22</time>
-</a>
-        </div>
-    	 
+      <header class="article-header">
+        
   
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2020/03/22/FileUpload/">文件上传漏洞</a>
+    <h1 class="article-title" itemprop="name">
+      GetFlag-暴力破解
     </h1>
   
 
-        <div class="article-info info-on-right">
-          
+        
+        <a href="/2020/05/05/GetFlag-%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/" class="archive-article-date">
+  	<time datetime="2020-05-04T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-05-05</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p><strong>0x00前言</strong><br>&emsp;&emsp;本文是第六篇，介绍暴力破解的一些小姿势，涉及知识点：工具nikto、dirb、Wpscan以及nmap的使用，文件上传、用msf控制台生成后门进行暴力破解等，关于靶场，玩法不一，以下只是本人的一次学习过程，不喜勿喷。<br><strong>0x01环境</strong><br>&emsp;&emsp;攻击机(kali)：192.168.3.107<br>&emsp;&emsp;靶机(Ubuntu)：192.168.3.106<br><strong>0x02工具</strong><br>&emsp;&emsp;nmap、nikto、dirb、john、metasploit、VMware、VirtualBox<br><strong>0x03过程</strong><br>&emsp;&emsp;<strong>信息探测</strong><br>&emsp;&emsp;终端下输入<code>nmap -T4 -A -p- 192.168.3.106</code><br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%871.png" alt=""><br>&emsp;&emsp;探测结果为<br>&emsp;&emsp;开放端口： 80(http)、22(ssh)、21(ftp)<br>&emsp;&emsp;Web容器信息：Apache httpd 2.4.18<br>&emsp;&emsp;系统信息：Ubuntu 2.2<br>&emsp;&emsp;针对开放http服务的80端口，进一步探测敏感信息<br>&emsp;&emsp;终端下输入<code>nikto -host http://192.168.1.106</code><br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%872.png" alt=""><br>&emsp;&emsp;输入<code>dirb http://192.168.3.106</code><br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%873-1.png" alt=""><br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%873.png" alt=""><br>&emsp;&emsp;扫描结果：<br>&emsp;&emsp;网站首页index.html、目录/secret/以及后台页面目录/wp-admin/<br>&emsp;&emsp;<strong>深入挖掘</strong><br>&emsp;&emsp;打开浏览器访问ip地址<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%874.png" alt=""><br>&emsp;&emsp;查看源码，啥也没有<br>&emsp;&emsp;访问/secret/<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%875.png" alt=""><br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%876.png" alt=""><br>&emsp;&emsp;大致浏览之后，发现网站是用WordPress搭建的，以及一个登录入口<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%877.png" alt=""><br>&emsp;&emsp;访问登录入口发现找不到该页面，而域名发生变化，将其改成ip地址<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%878.png" alt=""><br>&emsp;&emsp;成功进入后台登录页面，尝试输入弱口令，admin/admin，<br>&emsp;&emsp;域名还是发生变化导致服务器找不到该页面，这里修改本机host文件添加域名解析记录<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%879.png" alt=""><br>&emsp;&emsp;回到页面，点击刷新<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%8710.png" alt=""><br>&emsp;&emsp;弹出一个新的登录页面，继续尝试用弱口令admin/admin<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%8711.png" alt=""><br>&emsp;&emsp;成功进入后台页面<br>&emsp;&emsp;这里可以使用专门针对WordPress站点的扫描工具WPScan，使用命令<br>&emsp;&emsp;<code>wpscan --url  www.vtcsec.com/secret/ --enumerate u</code><br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%8712.png" alt=""><br>&emsp;&emsp;获得结果admin<br>&emsp;&emsp;接下来可以用wpscan继续用字段对站点进行密码的暴力破解<br>&emsp;&emsp;这里用metasploit中的爆破模块进行密码的暴力破解<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%8713.png" alt=""><br>&emsp;&emsp;相应设置以后，开始破解<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%8714.png" alt=""><br>&emsp;&emsp;成功获得密码<br>&emsp;&emsp;<strong>漏洞利用</strong><br>&emsp;&emsp;登录后寻找文件或者代码上传点，发现和之前的POST-SQL注入的后台页面是一样的，先在设置将语言改成中文，来到外观404页面的编辑处<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%8715.png" alt=""><br>&emsp;&emsp;思路：将反弹shell的代码放到404模板内，保存后访问不存在页面，404.php被触发，成功反弹shell。<br>&emsp;&emsp;使用msfvenom生成代码<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%8716.png" alt=""><br>&emsp;&emsp;将代码复制到404模板内并保存<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%8717.png" alt=""><br>&emsp;&emsp;用msf控制台打开监听<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%8718.png" alt=""><br>&emsp;&emsp;接下来访问一个不存在的页面<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%87181.png" alt=""><br>&emsp;&emsp;发现监听端没有反应，多尝试几个页面，依然没有反应，使用netcat反弹，依然没有反应，应该是404.php没有被调用。<br>&emsp;&emsp;尝试直接访问404.php，需要知道404.php所在路径。在模板编辑中发现css文件，猜测css文件和404.php同属于一个目录，而博客网页需要导入css文件<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%8719.png" alt=""><br>&emsp;&emsp;这时去找到一篇文章，查看页面源代码<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%8720.png" alt=""><br>&emsp;&emsp;成功发现路径，接下来访问404.php<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%8721.png" alt=""><br>&emsp;&emsp;msf控制台成功建立对话<br>&emsp;&emsp;输入shell，得到反弹shell，然后使用python脚本命令，反弹终端<br>&emsp;&emsp;输入<code>python -c  “import pty;pty.spawn(‘/bin/bash’)”</code><br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%8722.png" alt=""><br>&emsp;&emsp;成功返回终端，<br>&emsp;&emsp;跳转到根目录，查看home目录，进行一波信息收集<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%8723.png" alt=""><br>&emsp;&emsp;发现用户marlinspike，而wordpress配置文件为原始文件，没有进行相关配置<br>&emsp;&emsp;这时可以利用msf控制台反弹的对话下载passwd以及shadow文件使用john工具进行密码的暴力破解。<br>&emsp;&emsp;下载文件<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%8724.png" alt=""><br>&emsp;&emsp;确认文件是否被下载成功<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%8725.png" alt=""><br>&emsp;&emsp;文件成功下载，先使用命令将文件转换为john工具可识别的文件<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%8726.png" alt=""><br>&emsp;&emsp;使用john破解密码<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%8727.png" alt=""><br>&emsp;&emsp;成功破解到密码，回到终端进行登录，并查看当前用户可执行的sudo命令，然后提权<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%8728.png" alt=""><br>&emsp;&emsp;进入Flag值一般在root目录下，进入到root目录<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%8729.png" alt=""><br>&emsp;&emsp;靶场没有设置flag值，渗透到此为止。<br>&emsp;&emsp;当然，也可以使用ssh远程登录用户<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%8730.png" alt=""><br><strong>0x04总结</strong><br>&emsp;&emsp;这个靶场不难，一个弱口令轻松登入后台，利用模板页面可修改，上传反弹shell的代码，主要是get了暴力破解的一些姿势。</p>
+<p><br><br><br><br><font face="Georgia" color=#c4444>暴破靠字典。</font><br>作者：WebDogC</p>
+
+      
+
+      
+        <div class="page-reward">
+          <a href="javascript:;" class="page-reward-btn tooltip-top">
+            <div class="tooltip tooltip-east">
+            <span class="tooltip-item">
+              赏
+            </span>
+            <span class="tooltip-content">
+              <span class="tooltip-text">
+                <span class="tooltip-inner">
+                  <p class="reward-p"><i class="icon icon-quo-left"></i>谢谢你请我吃糖果<i class="icon icon-quo-right"></i></p>
+                  <div class="reward-box">
+                    
+                    
+                  </div>
+                </span>
+              </span>
+            </span>
+          </div>
+          </a>
+        </div>
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
 	<div class="article-tag tagcloud">
 		<i class="icon-price-tags icon"></i>
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">文件上传、解析漏洞、security、Web安全</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">复现、CTF、study、flag、暴力破解</a>
         		</li>
       		
 		</ul>
 	</div>
 
-          
+      
 
+      
+
+      
+        
+<div class="share-btn share-icons tooltip-left">
+  <div class="tooltip tooltip-east">
+    <span class="tooltip-item">
+      <a href="javascript:;" class="share-sns share-outer">
+        <i class="icon icon-share"></i>
+      </a>
+    </span>
+    <span class="tooltip-content">
+      <div class="share-wrap">
+        <div class="share-icons">
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="icon icon-weibo"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="icon icon-weixin"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="icon icon-qq"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="icon icon-douban"></i>
+          </a>
+          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a>
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="icon icon-facebook"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="icon icon-twitter"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="icon icon-google"></i>
+          </a>
         </div>
-        <div class="clearfix"></div>
-    </header>
+      </div>
+    </span>
+  </div>
+</div>
+
+<div class="page-modal wx-share js-wx-box">
+    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//pan.baidu.com/share/qrcode?url=http://yoursite.com/2020/05/05/GetFlag-%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div class="mask js-mask"></div>
+      
+      <div class="clearfix"></div>
+    </div>
   </div>
 </article>
+
+  
+<nav id="article-nav">
   
   
-    </div></section>
+    <a href="/2020/05/03/GetFlag-%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB-2/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">GetFlag-文件包含-2</div>
+      <i class="icon-circle-right"></i>
+    </a>
+  
+</nav>
+
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+  
+  
   
 
-    
+  
+
+  
+
+  
 
 
           </div>
@@ -234,9 +380,9 @@
 	var yiliaConfig = {
 		mathjax: false,
 		isHome: false,
-		isPost: false,
+		isPost: true,
 		isArchive: false,
-		isTag: true,
+		isTag: false,
 		isCategory: false,
 		open_in_new: false,
 		toc_hide_index: true,

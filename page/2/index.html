@@ -160,6 +160,199 @@
           <div id="js-content" class="content-ll">
             
   
+    <article id="post-逻辑漏洞" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2020/04/07/%E9%80%BB%E8%BE%91%E6%BC%8F%E6%B4%9E/">常见逻辑漏洞</a>
+    </h1>
+  
+
+        
+        <a href="/2020/04/07/%E9%80%BB%E8%BE%91%E6%BC%8F%E6%B4%9E/" class="archive-article-date">
+  	<time datetime="2020-04-06T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-04-07</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="验证码绕过"><a href="#验证码绕过" class="headerlink" title="验证码绕过"></a>验证码绕过</h2><p>&emsp;&emsp;验证码（CAPTCHA）是一种区分用户是计算机还是人的公共全自动程序。可以防止不正当的重复性操作(如恶意破解密码、刷票、论坛灌水等)。</p>
+<h5 id="常见方法"><a href="#常见方法" class="headerlink" title="常见方法"></a>常见方法</h5><ul>
+<li>前端验证，验证码为前端JS验证，抓包即可绕过。</li>
+<li>不做任何校验，输入任意字符也能验证通过。</li>
+<li>具有时效性(常见)，验证码在一定的时间内都有效。</li>
+<li>去除参数(常见)，抓包去除掉验证码的参数。</li>
+<li>验证码可控，验证为GET/POST传参，可抓包修改。</li>
+<li>具有规律，根据特定规律生成验证码(如时间戳)。</li>
+<li>验证码隐藏在Cookie中。</li>
+</ul>
+<p>————————分割线————————</p>
+<h2 id="密码找回"><a href="#密码找回" class="headerlink" title="密码找回"></a>密码找回</h2><p>&emsp;&emsp;密码找回验证主要是以手机短信验证码及邮箱验证码两种方式。其实质还是验证码，只是验证方式些许不同，依旧主要通过抓包修改进行绕过。</p>
+<h5 id="常见操作"><a href="#常见操作" class="headerlink" title="常见操作"></a>常见操作</h5><ul>
+<li>后端发送验证码之后在前端返回。<a href="https://www.uedbox.com/post/13890/" target="_blank" rel="noopener">https://www.uedbox.com/post/13890/</a></li>
+<li>验证码验证无次数限制，可爆破出正确验证码。</li>
+<li>验证码可控，验证码参数在HTTP请求头中，且可修改。</li>
+<li>绕过验证码验证页面，直接跳转到修改密码的页面。<a href="https://www.uedbox.com/post/35739/" target="_blank" rel="noopener">https://www.uedbox.com/post/35739/</a></li>
+<li>越权漏洞，站点通过userid参识别用户，可自己接收正确验证码抓包修改userid参数实现修改他人密码。<a href="https://www.uedbox.com/post/42136/" target="_blank" rel="noopener">https://www.uedbox.com/post/42136/</a></li>
+<li>密保问题的答案可能在页面中显示，也可能在JS里，或者是在数据包中。</li>
+</ul>
+<p>————————分割线————————</p>
+<h2 id="越权漏洞"><a href="#越权漏洞" class="headerlink" title="越权漏洞"></a>越权漏洞</h2><p><strong>原理</strong><br>&emsp;&emsp;由于服务器端对客户提出的数据操作请求过分信任，忽略了对该用户操作权限的判定，导致修改相关参数就可以对其他账户的增、删、查、改操作。</p>
+<h5 id="漏洞分类及测试方法"><a href="#漏洞分类及测试方法" class="headerlink" title="漏洞分类及测试方法"></a>漏洞分类及测试方法</h5><ul>
+<li>水平越权：指相同权限下不同的用户可以互相访问，并进行操作。<ul>
+<li>水平越权：主要就是测试能否通过A用户操作影响到B用户，一般做法为抓包分析是否存在类似<code>uid</code>、<code>id</code>、<code>userid</code>等识别用户的参数，对其修改并访问。</li>
+</ul>
+</li>
+<li>垂直越权：指低权限用户越权使用高权限用户的功能。<ul>
+<li>垂直越权：主要就是测试能否通过普通用户操作影响到管理员用户，一般做法是抓包分析是否存在类似<code>admin</code>、<code>level</code>、<code>shenfen</code>等表身份等级的参数，对其修改并访问。</li>
+</ul>
+</li>
+</ul>
+<h5 id="常见越权漏洞方式"><a href="#常见越权漏洞方式" class="headerlink" title="常见越权漏洞方式"></a>常见越权漏洞方式</h5><ol>
+<li>通过修改GET传参来越权<br> 国航某网站可越权访问其他订单<a href="https://www.uedbox.com/post/9900/" target="_blank" rel="noopener">https://www.uedbox.com/post/9900/</a></li>
+<li>修改POST传参进行越权<br> 暴风某站平行越权(用户敏感信息泄露)<a href="https://www.uedbox.com/post/9549/" target="_blank" rel="noopener">https://www.uedbox.com/post/9549/</a></li>
+<li>修改cookie传参进行越权<br> 宜信某平台多处越权及任意用户登录<a href="https://www.uedbox.com/post/12566/" target="_blank" rel="noopener">https://www.uedbox.com/post/12566/</a></li>
+<li>未授权访问<br> 乐视影业临时简历预览系统未授权访问，导致用户敏感信息泄露<a href="https://www.uedbox.com/post/12151/" target="_blank" rel="noopener">https://www.uedbox.com/post/12151/</a></li>
+</ol>
+<p><strong>Tips:</strong><br>1.参数可以在Web端、APP端、应用程序端、Wap端被抓取。<br>2.参数在Web端可以用GET、POST、Cookie三种传参方式,有时还需要解码。</p>
+<p>————————分割线————————</p>
+<h2 id="支付漏洞"><a href="#支付漏洞" class="headerlink" title="支付漏洞"></a>支付漏洞</h2><h5 id="在线支付方式"><a href="#在线支付方式" class="headerlink" title="在线支付方式"></a>在线支付方式</h5><p>商户网站确认支付结果有两种方式：</p>
+<ul>
+<li>通过浏览器进行跳转通知<ul>
+<li>基于用户访问的浏览器，用户成功付款，付款页面跳转到支付成功页面，再发送给商户网站支付成功的数据包。如果在付款成功后，未等待跳转到支付结果页面就关闭了支付页面，那么商户网站就收不到支付成功的数据包，导致交易难以处理，而且浏览器端数据很容易被篡改使得安全性无法得到保障。</li>
+</ul>
+</li>
+<li>服务器端异步通知(主流)<ul>
+<li>该方式是用户支付成功后，支付公司服务器后台(如微信、支付宝)会采用POST或GET的方式直接向用户指定的商户异步通知支付成功信息，商户网站接收异部通知信息的过程中，要对支付公司返回的支付结果进行签名验证，成功后进行支付逻辑处理，如验证金额、订单信息是否与发起支付时一致，验证正常后则进行交易。</li>
+</ul>
+</li>
+</ul>
+<p><strong>漏洞原理</strong>：开发者对支付过程中需要的逻辑考虑不够严谨，未能考虑到支付各个过程会出现的逻辑错误。</p>
+<h5 id="常见的支付漏洞"><a href="#常见的支付漏洞" class="headerlink" title="常见的支付漏洞"></a>常见的支付漏洞</h5><ul>
+<li>修改支付价格<ul>
+<li>支付三部曲：点击订购、产生订单、进行付款。三个步骤皆可尝试抓包修改金额(如负数)。</li>
+<li>中国国旅任意金额购买机票<a href="https://www.uedbox.com/post/22477/" target="_blank" rel="noopener">https://www.uedbox.com/post/22477/</a></li>
+</ul>
+</li>
+<li>修改支付状态<ul>
+<li>通过修改订单的状态参数(如订单号修改成已支付过的订单号)，实现低价购买高价的目的。</li>
+<li>同程旅交汇低价支付高价订单<a href="https://www.uedbox.com/post/24090/" target="_blank" rel="noopener">https://www.uedbox.com/post/24090/</a></li>
+</ul>
+</li>
+<li>修改订单数量<ul>
+<li>修改数量为特殊值(-1、0)，计算总价时产生逻辑错误。</li>
+<li>同程旅游网支付漏洞<a href="https://www.uedbox.com/post/23143/" target="_blank" rel="noopener">https://www.uedbox.com/post/23143/</a></li>
+</ul>
+</li>
+<li>越权支付<ul>
+<li>用他人的账户买单。当存在userid这类传参时，就可以尝试修改id值测试是否存在越权支付。</li>
+<li>同程艺龙可用他人信用卡代为支付<a href="https://www.uedbox.com/post/12258/" target="_blank" rel="noopener">https://www.uedbox.com/post/12258/</a></li>
+</ul>
+</li>
+<li>无限制试用<ul>
+<li>没有对商品属性进行严格判断，比如抓包修改参数，购买试用或者活动的商品。</li>
+</ul>
+</li>
+<li>积分兑换<ul>
+<li>同支付，皆可尝试抓包修改参数值进行测试。</li>
+<li>东吴人寿商城积分支付漏洞<a href="http://woo.zone.ci/bug_detail.php?wybug_id=wooyun-2015-0156253" target="_blank" rel="noopener">http://woo.zone.ci/bug_detail.php?wybug_id=wooyun-2015-0156253</a></li>
+</ul>
+</li>
+<li>优惠券使用<ul>
+<li>抓包修改优惠券的使用参数，例如数量、金额等</li>
+</ul>
+</li>
+<li>运费<ul>
+<li>抓包修改负值运费，使订单总价降低。</li>
+</ul>
+</li>
+</ul>
+<h5 id="漏洞挖掘"><a href="#漏洞挖掘" class="headerlink" title="漏洞挖掘"></a>漏洞挖掘</h5><ul>
+<li>观察数据包<ul>
+<li>可能一个支付操作有三四个数据包，要对数据包进行仔细筛选。</li>
+</ul>
+</li>
+<li>分析数据包<ul>
+<li>要对数据包的中参数进行仔细分析。</li>
+</ul>
+</li>
+<li>发散思维<ul>
+<li>多站在开发者角度思考。</li>
+</ul>
+</li>
+<li>多尝试<ul>
+<li>PC端、Wap端(移动端)、App端。</li>
+</ul>
+</li>
+</ul>
+<h4 id="防御方法"><a href="#防御方法" class="headerlink" title="防御方法"></a>防御方法</h4><ul>
+<li>对支付过程的每一项参数进行检查校验。</li>
+<li>落实好与第三方支付平台的校验核对。</li>
+<li>支付参数进行MD5 加密、解密、数字签名及验证，避免数据修改，重放攻击中的各种问题。</li>
+<li>对交易金额设置阈值，进行人工审核，尽可能减小损失。</li>
+</ul>
+<p><br/><br/><br/></p>
+<blockquote>
+<p><font face="Georgia" color=#c4444>把握住传参就能把握住逻辑漏洞的命脉。</font></p>
+</blockquote>
+<p>作者：WebDogC<br>参考书籍《白帽子讲Web安全》</p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">逻辑、验证码、越权、支付、security、Web安全</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2020/04/07/%E9%80%BB%E8%BE%91%E6%BC%8F%E6%B4%9E/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
     <article id="post-变量覆盖漏洞" class="article article-type-post  article-index" itemscope itemprop="blogPost">
   <div class="article-inner">
     
@@ -1362,113 +1555,6 @@
 
 
   
-    <article id="post-the view of security" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2020/02/29/the%20view%20of%20security/">The View of Security</a>
-    </h1>
-  
-
-        
-        <a href="/2020/02/29/the%20view%20of%20security/" class="archive-article-date">
-  	<time datetime="2020-02-28T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-02-29</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h2>安全问题的本质是信任的问题。</h2>
-
-<p>&emsp;&emsp;一切的安全方案设计的基础，都是在建立在信任关系上的。我们必须相信一些东西，必须有一些最基本的假设，安全方案才能得以建立；如果我们否定一切，安全方案就会如无源之水，无根之木，无法设计，也无法完成。</p>
-<blockquote>
-<p>&emsp;&emsp;保管文件时，确认文件安全的信任基础是锁与抽屉没有损坏、唯有自己拥有开锁的钥匙以及制造锁的工匠无法打开，一旦某个信任基础被打破，那么就无法判定文件的安全。<br>&emsp;&emsp;看病时，确认身体健康安全的信任基础是医生的判断、检查仪器的结果以及自身的感觉，若某一信任基础被打破，同样无法判定身体的安全。<br>&emsp;&emsp;但是，在现实生活中，<strong>没有绝对的安全</strong>，人们会近似认为小概率事件为不可能事件，然后坚定信任基础，从而确保安全。</p>
-</blockquote>
-<p>&emsp;&emsp;所以，安全方案设计的<strong>难点</strong>在于把握信任条件的度。信任条件被打破的概率，决定了对其的信任程度，从而直接影响了安全的确保程度。</p>
-<h2>在安全的领域中，没有银弹。</h2>
-
-<p>&emsp;&emsp;针对攻防技术双方，也许会出现在某一时期其中一方占上风的情况，但是这绝对只是暂时的。无论是攻击或者防御技术都不可能永远有效，因为防御技术在发展的同时，攻击技术也在不断发展，二者是相互促进的辩证关系。</p>
-<p>&emsp;&emsp;<strong>安全是一个持续的过程</strong>。</p>
-<blockquote>
-<p>银弹：银色子弹，指由纯银质或镀银的子弹。在欧洲民间传说及19世纪以来哥特小说风潮的影响下，银色子弹往往被描绘成具有驱魔功效的武器，是针对狼人等超自然怪物的特效武器。后来也被比喻为具有极端有效性的解决方法，作为杀手锏、最强杀招、王牌等的代称。</p>
-</blockquote>
-<h2>安全三要素</h2>
-
-<p>安全三要素是安全的基本组成元素，分别是</p>
-<ul>
-<li>机密性(Confidentiality)</li>
-<li>完整性(Integrity)</li>
-<li>可用性(Availability)</li>
-</ul>
-<blockquote>
-<p>机密性要求保护数据内容不能泄露。</p>
-</blockquote>
-<blockquote>
-<p>完整性则要求保护数据内容是完整、没有被篡改的。</p>
-</blockquote>
-<blockquote>
-<p>可用性要求保护资源是“随需随得”。</p>
-</blockquote>
-<p><br><br></p>
-<p><font face="Georgia" color=#c4444>互联网本来是安全的，自从有了研究安全的人之后，互联网就变得不安全了。</font><br><br></p>
-<p>作者：WebDogC<br>参考书籍《白帽子讲Web安全》</p>
-
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">白帽子讲Web安全、note、security</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2020/02/29/the%20view%20of%20security/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
   
     <nav id="page-nav">
       <a class="extend prev" rel="prev" href="/">&amp;laquo; Prev</a><a class="page-number" href="/">1</a><span class="page-number current">2</span><a class="page-number" href="/page/3/">3</a><a class="extend next" rel="next" href="/page/3/">Next &amp;raquo;</a>
@@ -1635,6 +1721,10 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color3">复现、CTF、study、flag、文件包含</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">复现、CTF、study、flag、暴力破解</a>
               </li>
             
             <div class="clearfix"></div>
