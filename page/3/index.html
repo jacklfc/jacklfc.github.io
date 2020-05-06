@@ -160,6 +160,193 @@
           <div id="js-content" class="content-ll">
             
   
+    <article id="post-安全评估实施" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2020/02/29/%E5%AE%89%E5%85%A8%E8%AF%84%E4%BC%B0%E5%AE%9E%E6%96%BD/">安全评估实施</a>
+    </h1>
+  
+
+        
+        <a href="/2020/02/29/%E5%AE%89%E5%85%A8%E8%AF%84%E4%BC%B0%E5%AE%9E%E6%96%BD/" class="archive-article-date">
+  	<time datetime="2020-02-28T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-02-29</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="安全评估过程四大阶段"><a href="#安全评估过程四大阶段" class="headerlink" title="安全评估过程四大阶段"></a>安全评估过程四大阶段</h2><ul>
+<li>资产等级划分<ul>
+<li>互联网安全的核心问题，是数据安全的问题。</li>
+<li>对资产进行等级划分，就是对数据做等级划分。</li>
+<li>确认侧重的数据后，划分信任域及信任边界。</li>
+</ul>
+</li>
+<li>威胁分析<ul>
+<li>要尽可能的将所有的威胁都找出来。</li>
+<li>一般采用头脑风暴法、或利用模型进行威胁建模。</li>
+<li><a href="#STRIDE">STRIDE模型</a></li>
+</ul>
+</li>
+<li>风险分析<ul>
+<li>风险由发生可能性和造成损失大小两个因素组成。</li>
+<li>需要结合具体情况，权衡事件发生的可能性，科学的衡量风险。</li>
+<li><a href="#DREAD">DREAD模型</a>，在DREAD模型中，根据等级权重，可以具体计算一个风险值。</li>
+</ul>
+</li>
+<li>确认解决方案<ul>
+<li>根据前三个阶段的结果做出具有针对性的解决方案。</li>
+<li>特点：能够有效解决问题、用户体验好、高性能、低耦合、易于扩展与升级。</li>
+</ul>
+</li>
+</ul>
+<p>威胁建模：使用一个模型，帮助我们去思考那些方面有可能存在威胁的建模过程。</p>
+<div id="STRIDE">STRIDE模型</div>
+
+<table>
+<thead>
+<tr>
+<th>威胁</th>
+<th>定义</th>
+<th>对应的安全属性</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Spoofing(伪装)</td>
+<td>冒充他人身份</td>
+<td>认证</td>
+</tr>
+<tr>
+<td>Tampering(篡改)</td>
+<td>修改数据或代码</td>
+<td>完整性</td>
+</tr>
+<tr>
+<td>Repudiation(抵赖)</td>
+<td>否认做过的事情</td>
+<td>不可抵赖性</td>
+</tr>
+<tr>
+<td>InformationDisclosure(信息泄露)</td>
+<td>机密信息泄露</td>
+<td>机密性</td>
+</tr>
+<tr>
+<td>Denial of Service(拒绝服务)</td>
+<td>拒绝服务</td>
+<td>可用性</td>
+</tr>
+<tr>
+<td>Elevation of Privilege(提升权限)</td>
+<td>未经授权获得许可</td>
+<td>授权</td>
+</tr>
+</tbody></table>
+<div id="DREAD">DREAD模型</div>
+
+<table>
+<thead>
+<tr>
+<th>等级</th>
+<th>高(3)</th>
+<th>中(2)</th>
+<th>低(1)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Damage Potential(潜在损害)</td>
+<td>获取完全验证权限；执行管理员操<br>作；非法上传文件</td>
+<td>泄露敏感信息</td>
+<td>泄露其他信息</td>
+</tr>
+<tr>
+<td>Reproducibility(再现性)</td>
+<td>攻击者可以随意再次攻击</td>
+<td>攻击者可以重复攻击，但有时间限制</td>
+<td>攻击者很难重复攻击过程</td>
+</tr>
+<tr>
+<td>Exploitability(可利用性)</td>
+<td>初学者在短期内能掌握攻击方法</td>
+<td>熟练的攻击者才能完成这次攻击</td>
+<td>漏洞利用条件非常苛刻</td>
+</tr>
+<tr>
+<td>Affected users(受影响用户)</td>
+<td>所有用户，默认配置，关键用户</td>
+<td>部分用户，非默认配置</td>
+<td>极少数用户，匿名用户</td>
+</tr>
+<tr>
+<td>Discoverability(可发现性)</td>
+<td>漏洞显眼</td>
+<td>需要深入挖掘</td>
+<td>发现该漏洞及其困难</td>
+</tr>
+</tbody></table>
+<br>
+<font size=5 color=black>模型只能起到一个辅助的作用，最终做出决策的还是人。</font>
+
+<p><br><br><br><br><font face="Georgia" color=#c4444>安全是一门朴素的学问，也是一种平衡的艺术。</font></p>
+<p>作者：WebDogC<br>参考书籍《白帽子讲Web安全》</p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">白帽子讲Web安全、note、security</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2020/02/29/%E5%AE%89%E5%85%A8%E8%AF%84%E4%BC%B0%E5%AE%9E%E6%96%BD/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
     <article id="post-the view of security" class="article article-type-post  article-index" itemscope itemprop="blogPost">
   <div class="article-inner">
     
@@ -676,6 +863,10 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color3">复现、CTF、study、flag、暴力破解</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">复现、CTF、study、flag、命令执行</a>
               </li>
             
             <div class="clearfix"></div>

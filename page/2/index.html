@@ -160,6 +160,94 @@
           <div id="js-content" class="content-ll">
             
   
+    <article id="post-反序列化漏洞" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2020/04/07/%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E/">反序列化漏洞</a>
+    </h1>
+  
+
+        
+        <a href="/2020/04/07/%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E/" class="archive-article-date">
+  	<time datetime="2020-04-06T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-04-07</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p><strong>概念</strong><br>&emsp;&emsp;序列化(serialize)：将PHP中的对象、类、数组等多种数据类型变量的信息保存为字符串，方便保存到数据库或者文件中。<br>&emsp;&emsp;反序列化(unserialize)：将经过序列化后的状态信息字符串反转为数据类型，方便对其进行使用。</p>
+<p>&emsp;&emsp;序列化后的字符串解析：<br>&emsp;&emsp;&emsp;&emsp;变量类型:类名长度:类名：属性数量:{属性类型:属性名长度:属性名;属性值类型:属性值长度:属性值;}<br><strong>例子</strong></p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs php"><span class="hljs-meta">&lt;?php</span><br><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">testclass</span></span>&#123;<br>	<span class="hljs-keyword">var</span> $test = <span class="hljs-string">'123'</span>;<br>&#125;<br>$object1 = <span class="hljs-keyword">new</span> testclass;<br>$object_ser = serialize($object1);<br>print_r($object_ser);<br><span class="hljs-keyword">echo</span> <span class="hljs-string">"&lt;hr&gt;"</span>;<br>$object2=unerialize($object_ser);<br>print_r($object2);<br><span class="hljs-meta">?&gt;</span><br></code></pre></td></tr></table></figure>
+<p>&emsp;&emsp;在这里，声明了一个类<code>testclass</code>，这个类只有一个属性<code>$test</code>，并用这个类创建了一个对象<code>$object1</code>，通过<code>serialize()</code>把这个对象转变成一个字符串<code>$object_ser</code>，与 <code>serialize()</code>对应的，<code>unserialize()</code>将序列化后的结果字符串<code>$object_ser</code>恢复成其原本的对象类型并赋值给<code>$object2</code>，代码执行结果为<code>O:9:&quot;testclass&quot;:1:{s:4:&quot;test&quot;;s:3:&quot;123&quot;;}&lt;hr&gt;testclass Object ( [test] =&gt; 123 )</code>。</p>
+<h4 id="魔术方法"><a href="#魔术方法" class="headerlink" title="魔术方法"></a>魔术方法</h4><p>&emsp;&emsp;在php中有一类特殊的方法叫“Magic function”，PHP 将所有以<code>__</code>(两个下划线)开头的类方法保留为魔术方法。魔术方法的作用在于当程序符合魔术方法的触发条件时，魔术方法会被自动调用。</p>
+<ul>
+<li><code>__construct()</code>：创建对象时会自动调用。(构造函数)</li>
+<li><code>__destruct()</code>：对象被销毁时会自动调用。(析构函数)</li>
+<li><code>__wakeup()</code>：当使用unserialize()反序列化一个对象时，会检查是否存在一个<code>__wakeup()</code>方法。如果存在，则会先调用 <code>__wakeup ()</code>方法，预先准备反序列化后的对象需要的资源。 </li>
+<li><code>__toString()</code>：当对象被当成字符串使用时自动调用。</li>
+</ul>
+<p><strong>详解<a href="https://www.php.net/manual/zh/language.oop5.magic.php" target="_blank" rel="noopener">https://www.php.net/manual/zh/language.oop5.magic.php</a></strong></p>
+<p><strong>原理：</strong><br>&emsp;&emsp;本质上<code>serialize()</code>和<code>unserialize()</code>在PHP内部实现上是没有漏洞的，漏洞的主要产生是由于应用程序无法严谨地处理对象、魔术函数以及序列化相关问题导致的。<br>&emsp;&emsp;当传给<code>unserialize()</code>的参数可控时，那么用户就可以注入精心构造的payload。当程序进行反序列化的时候就会触发对象中的<code>__destruct()</code>或者<code>__wakeup()</code>魔术方法，造成意想不到的危害。<br><strong>结论：</strong><br>&emsp;&emsp;反序列化漏洞有两个条件，一是参数可控，二是存在<code>__destruct()</code>或者<code>__wakeup()</code>魔术方法。</p>
+<p><br><br><br><br><font face="Georgia" color=#c4444>安全问题产生于不正当的传参。</font></p>
+<p>作者：WebDogC<br>参考书籍《白帽子讲Web安全》</p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">反序列化、白帽子讲Web安全、note、security</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2020/04/07/%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
     <article id="post-逻辑漏洞" class="article article-type-post  article-index" itemscope itemprop="blogPost">
   <div class="article-inner">
     
@@ -395,7 +483,7 @@
 <li>对变量进行初始化。</li>
 </ul>
 <div id="$$"><理解变量覆盖></div>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><code class="hljs php"><span class="hljs-meta">&lt;?php</span><br>	$array=<span class="hljs-keyword">array</span>(<span class="hljs-string">"a"</span>=&gt;<span class="hljs-string">"1"</span>);<br>	<span class="hljs-comment">//生成一个键值对(一个键名与键值的组合)数组，=&gt;相当于一个索引连接符，这里a为数组中其中一个键名，1为其对应的值</span><br>	<span class="hljs-comment">//当我们需要使用数组中的值时，只需要用数组名['值所对应的键名']即可</span><br>	<span class="hljs-keyword">echo</span> $array[<span class="hljs-string">'a'</span>].<span class="hljs-string">"&lt;br&gt;"</span>;<br>	<span class="hljs-comment">//输出在array数组中键名为a所对应的键值，结果为1</span><br>	<span class="hljs-comment">//而$_GET、$_POST、$_COOKIE都是键值对数组，接收的传参参数名为键名，参数值为键值。</span><br>	<br>	<span class="hljs-comment">//向此网页做如下输出结果的传参(可修改)</span><br>	<span class="hljs-keyword">echo</span> $_GET[<span class="hljs-string">'name'</span>].<span class="hljs-string">"&lt;br&gt;"</span>; <span class="hljs-comment">//name=&gt;123</span><br>	<span class="hljs-keyword">echo</span> $_POST[<span class="hljs-string">'pwd'</span>].<span class="hljs-string">"&lt;br&gt;"</span>; <span class="hljs-comment">//pwd=&gt;456</span><br>	<span class="hljs-keyword">echo</span> $_COOKIE[<span class="hljs-string">'a'</span>].<span class="hljs-string">"&lt;br&gt;"</span>; <span class="hljs-comment">//a=&gt;12345678</span><br>	<br>	<span class="hljs-comment">//先来看看foreach(array('_COOKIE','_POST','_GET') as $_request)</span><br>	<span class="hljs-keyword">foreach</span>(<span class="hljs-keyword">array</span>(<span class="hljs-string">'_COOKIE'</span>,<span class="hljs-string">'_POST'</span>,<span class="hljs-string">'_GET'</span>) <span class="hljs-keyword">as</span> $_request) &#123;  <br>		<span class="hljs-keyword">echo</span> $_request.<span class="hljs-string">"&lt;br&gt;"</span>;<br>		<span class="hljs-comment">/*<br>			输出结果为<br>			    _COOKIE<br>			    _POST<br>			    _GET<br>		*/</span><br>	&#125;<br>	<span class="hljs-comment">//生成一个数组$request，将'_COOKIE','_POST','_GET'作为键名</span><br>	<br>	$a = <span class="hljs-number">1</span>; <br>	<span class="hljs-keyword">echo</span> <span class="hljs-string">"\$a="</span>.$a.<span class="hljs-string">"&lt;br&gt;"</span>; <span class="hljs-comment">//声明一个变量$a，此时变量$a的值为1 </span><br>	<span class="hljs-keyword">echo</span> <span class="hljs-string">"&lt;br/&gt;"</span>;<br>	<span class="hljs-keyword">foreach</span>(<span class="hljs-keyword">array</span>(<span class="hljs-string">'_COOKIE'</span>,<span class="hljs-string">'_POST'</span>,<span class="hljs-string">'_GET'</span>) <span class="hljs-keyword">as</span> $_request) &#123;  <br>		<span class="hljs-keyword">foreach</span>($$_request <span class="hljs-keyword">as</span> $_key=&gt;$_value) <br>		&#123;<br>		<span class="hljs-comment">//$_request的值为_COOKIE、_POST、_GET 那么$$_request的值为$_COOKIE、$_POST、$_GET</span><br>		<span class="hljs-comment">//那么这个foreach循环实际上遍历的是数组$_COOKIE、$_POST、$_GET</span><br>			<span class="hljs-keyword">echo</span> $_key.<span class="hljs-string">"="</span>.$_value;<br>			<span class="hljs-comment">//输出各个数组的键值对</span><br>			<span class="hljs-comment">/*结果为<br>			   a=12345678<br>			   pwd=456<br>			   name=123<br>			*/</span><br>			<br>			$$_key=addslashes($_value); <br>			<span class="hljs-comment">//$_key的值为a、pwd、name，$$_key就是生成变量$a、$pwd、$name,这里的赋值就是对$_key产生变量覆盖</span><br>			<span class="hljs-comment">//由于这里的顺序是$_COOKIE、$_POST、$_GET</span><br>			<span class="hljs-comment">//所以如果三种传参都含有a参数，会以GET&gt;POST&gt;Cookie的顺序进行变量覆盖</span><br>			<span class="hljs-keyword">echo</span> <span class="hljs-string">"&lt;br&gt;"</span>; <br>		&#125;<br>	&#125;<br>	<span class="hljs-keyword">echo</span> <span class="hljs-string">"\$a="</span>.$a.<span class="hljs-string">"&lt;br&gt;"</span>; <br>	<span class="hljs-comment">/*最初变量$a=1,但是当我们向GET、POST、Cookie传参a参数时<br>	上述代码就会新生成一个$a并且赋值我们传参的值<br>	在这里，此时再输出变量$a，此时变量$a的值为COOKIE传参中的值12345678<br>	*/</span><br><span class="hljs-meta">?&gt;</span><br></code></pre></td></tr></table></figure>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><code class="hljs php"><span class="hljs-meta">&lt;?php</span><br>	$array=<span class="hljs-keyword">array</span>(<span class="hljs-string">"a"</span>=&gt;<span class="hljs-string">"1"</span>);<br>	<span class="hljs-comment">//生成一个键值对(一个键名与键值的组合)数组，=&gt;相当于一个索引连接符，这里a为数组中其中一个键名，1为其对应的值</span><br>	<span class="hljs-comment">//当我们需要使用数组中的值时，只需要用数组名['值所对应的键名']即可</span><br>	<span class="hljs-keyword">echo</span> $array[<span class="hljs-string">'a'</span>].<span class="hljs-string">"&lt;br&gt;"</span>;<br>	<span class="hljs-comment">//输出在array数组中键名为a所对应的键值，结果为1</span><br>	<span class="hljs-comment">//而$_GET、$_POST、$_COOKIE都是键值对数组，接收的传参参数名为键名，参数值为键值。</span><br>	<br>	<span class="hljs-comment">//向此网页做如下输出结果的传参(可修改)</span><br>	<span class="hljs-keyword">echo</span> $_GET[<span class="hljs-string">'name'</span>].<span class="hljs-string">"&lt;br&gt;"</span>; <span class="hljs-comment">//name=&gt;123</span><br>	<span class="hljs-keyword">echo</span> $_POST[<span class="hljs-string">'pwd'</span>].<span class="hljs-string">"&lt;br&gt;"</span>; <span class="hljs-comment">//pwd=&gt;456</span><br>	<span class="hljs-keyword">echo</span> $_COOKIE[<span class="hljs-string">'a'</span>].<span class="hljs-string">"&lt;br&gt;"</span>; <span class="hljs-comment">//a=&gt;12345678</span><br>	<br>	<span class="hljs-comment">//先来看看foreach(array('_COOKIE','_POST','_GET') as $_request)</span><br>	<span class="hljs-keyword">foreach</span>(<span class="hljs-keyword">array</span>(<span class="hljs-string">'_COOKIE'</span>,<span class="hljs-string">'_POST'</span>,<span class="hljs-string">'_GET'</span>) <span class="hljs-keyword">as</span> $_request) &#123;  <br>		<span class="hljs-keyword">echo</span> $_request.<span class="hljs-string">"&lt;br&gt;"</span>;<br>		<span class="hljs-comment">/*<br>			输出结果为<br>			    _COOKIE<br>			    _POST<br>			    _GET<br>		*/</span><br>	&#125;<br>	<span class="hljs-comment">//生成一个数组$request，将'_COOKIE','_POST','_GET'作为键名</span><br>	<br>	$a = <span class="hljs-number">1</span>; <br>	<span class="hljs-keyword">echo</span> <span class="hljs-string">"\$a="</span>.$a.<span class="hljs-string">"&lt;br&gt;"</span>; <span class="hljs-comment">//声明一个变量$a，此时变量$a的值为1 </span><br>	<span class="hljs-keyword">echo</span> <span class="hljs-string">"&lt;br/&gt;"</span>;<br>	<span class="hljs-keyword">foreach</span>(<span class="hljs-keyword">array</span>(<span class="hljs-string">'_COOKIE'</span>,<span class="hljs-string">'_POST'</span>,<span class="hljs-string">'_GET'</span>) <span class="hljs-keyword">as</span> $_request) &#123;  <br>		<span class="hljs-keyword">foreach</span>($$_request <span class="hljs-keyword">as</span> $_key=&gt;$_value) <br>		&#123;<br>		<span class="hljs-comment">//$_request的值为_COOKIE、_POST、_GET 那么$$_request的值为$_COOKIE、$_POST、$_GET</span><br>		<span class="hljs-comment">//那么这个foreach循环实际上遍历的是数组$_COOKIE、$_POST、$_GET</span><br>			<span class="hljs-keyword">echo</span> $_key.<span class="hljs-string">"="</span>.$_value;<br>			<span class="hljs-comment">//输出各个数组的键值对</span><br>			<span class="hljs-comment">/*结果为<br>			   a=12345678<br>			   pwd=456<br>			   name=123<br>			*/</span><br>			<br>			$$_key=addslashes($_value); <br>			<span class="hljs-comment">//$_key的值为a、pwd、name，$$_key就是生成变量$a、$pwd、$name,赋值就是对$_key产生变量覆盖</span><br>			<span class="hljs-comment">//由于这里的顺序是$_COOKIE、$_POST、$_GET</span><br>			<span class="hljs-comment">//所以如果三种传参都含有a参数，会以GET&gt;POST&gt;Cookie的顺序进行变量覆盖</span><br>			<span class="hljs-keyword">echo</span> <span class="hljs-string">"&lt;br&gt;"</span>; <br>		&#125;<br>	&#125;<br>	<span class="hljs-keyword">echo</span> <span class="hljs-string">"\$a="</span>.$a.<span class="hljs-string">"&lt;br&gt;"</span>; <br>	<span class="hljs-comment">/*最初变量$a=1,但是当我们向GET、POST、Cookie传参a参数时<br>	上述代码就会新生成一个$a并且赋值我们传参的值<br>	在这里，此时再输出变量$a，此时变量$a的值为COOKIE传参中的值12345678<br>	*/</span><br><span class="hljs-meta">?&gt;</span><br></code></pre></td></tr></table></figure>
 <br><br><br>
 <font face="Georgia" color=#c4444>安全问题产生于不正当的传参。</font>
 
@@ -1368,193 +1456,6 @@
 
 
   
-    <article id="post-安全评估实施" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2020/02/29/%E5%AE%89%E5%85%A8%E8%AF%84%E4%BC%B0%E5%AE%9E%E6%96%BD/">安全评估实施</a>
-    </h1>
-  
-
-        
-        <a href="/2020/02/29/%E5%AE%89%E5%85%A8%E8%AF%84%E4%BC%B0%E5%AE%9E%E6%96%BD/" class="archive-article-date">
-  	<time datetime="2020-02-28T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-02-29</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h2 id="安全评估过程四大阶段"><a href="#安全评估过程四大阶段" class="headerlink" title="安全评估过程四大阶段"></a>安全评估过程四大阶段</h2><ul>
-<li>资产等级划分<ul>
-<li>互联网安全的核心问题，是数据安全的问题。</li>
-<li>对资产进行等级划分，就是对数据做等级划分。</li>
-<li>确认侧重的数据后，划分信任域及信任边界。</li>
-</ul>
-</li>
-<li>威胁分析<ul>
-<li>要尽可能的将所有的威胁都找出来。</li>
-<li>一般采用头脑风暴法、或利用模型进行威胁建模。</li>
-<li><a href="#STRIDE">STRIDE模型</a></li>
-</ul>
-</li>
-<li>风险分析<ul>
-<li>风险由发生可能性和造成损失大小两个因素组成。</li>
-<li>需要结合具体情况，权衡事件发生的可能性，科学的衡量风险。</li>
-<li><a href="#DREAD">DREAD模型</a>，在DREAD模型中，根据等级权重，可以具体计算一个风险值。</li>
-</ul>
-</li>
-<li>确认解决方案<ul>
-<li>根据前三个阶段的结果做出具有针对性的解决方案。</li>
-<li>特点：能够有效解决问题、用户体验好、高性能、低耦合、易于扩展与升级。</li>
-</ul>
-</li>
-</ul>
-<p>威胁建模：使用一个模型，帮助我们去思考那些方面有可能存在威胁的建模过程。</p>
-<div id="STRIDE">STRIDE模型</div>
-
-<table>
-<thead>
-<tr>
-<th>威胁</th>
-<th>定义</th>
-<th>对应的安全属性</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>Spoofing(伪装)</td>
-<td>冒充他人身份</td>
-<td>认证</td>
-</tr>
-<tr>
-<td>Tampering(篡改)</td>
-<td>修改数据或代码</td>
-<td>完整性</td>
-</tr>
-<tr>
-<td>Repudiation(抵赖)</td>
-<td>否认做过的事情</td>
-<td>不可抵赖性</td>
-</tr>
-<tr>
-<td>InformationDisclosure(信息泄露)</td>
-<td>机密信息泄露</td>
-<td>机密性</td>
-</tr>
-<tr>
-<td>Denial of Service(拒绝服务)</td>
-<td>拒绝服务</td>
-<td>可用性</td>
-</tr>
-<tr>
-<td>Elevation of Privilege(提升权限)</td>
-<td>未经授权获得许可</td>
-<td>授权</td>
-</tr>
-</tbody></table>
-<div id="DREAD">DREAD模型</div>
-
-<table>
-<thead>
-<tr>
-<th>等级</th>
-<th>高(3)</th>
-<th>中(2)</th>
-<th>低(1)</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>Damage Potential(潜在损害)</td>
-<td>获取完全验证权限；执行管理员操<br>作；非法上传文件</td>
-<td>泄露敏感信息</td>
-<td>泄露其他信息</td>
-</tr>
-<tr>
-<td>Reproducibility(再现性)</td>
-<td>攻击者可以随意再次攻击</td>
-<td>攻击者可以重复攻击，但有时间限制</td>
-<td>攻击者很难重复攻击过程</td>
-</tr>
-<tr>
-<td>Exploitability(可利用性)</td>
-<td>初学者在短期内能掌握攻击方法</td>
-<td>熟练的攻击者才能完成这次攻击</td>
-<td>漏洞利用条件非常苛刻</td>
-</tr>
-<tr>
-<td>Affected users(受影响用户)</td>
-<td>所有用户，默认配置，关键用户</td>
-<td>部分用户，非默认配置</td>
-<td>极少数用户，匿名用户</td>
-</tr>
-<tr>
-<td>Discoverability(可发现性)</td>
-<td>漏洞显眼</td>
-<td>需要深入挖掘</td>
-<td>发现该漏洞及其困难</td>
-</tr>
-</tbody></table>
-<br>
-<font size=5 color=black>模型只能起到一个辅助的作用，最终做出决策的还是人。</font>
-
-<p><br><br><br><br><font face="Georgia" color=#c4444>安全是一门朴素的学问，也是一种平衡的艺术。</font></p>
-<p>作者：WebDogC<br>参考书籍《白帽子讲Web安全》</p>
-
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">白帽子讲Web安全、note、security</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2020/02/29/%E5%AE%89%E5%85%A8%E8%AF%84%E4%BC%B0%E5%AE%9E%E6%96%BD/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
   
     <nav id="page-nav">
       <a class="extend prev" rel="prev" href="/">&amp;laquo; Prev</a><a class="page-number" href="/">1</a><span class="page-number current">2</span><a class="page-number" href="/page/3/">3</a><a class="extend next" rel="next" href="/page/3/">Next &amp;raquo;</a>
@@ -1725,6 +1626,10 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color3">复现、CTF、study、flag、暴力破解</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">复现、CTF、study、flag、命令执行</a>
               </li>
             
             <div class="clearfix"></div>

