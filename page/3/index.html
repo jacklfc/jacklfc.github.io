@@ -160,19 +160,19 @@
           <div id="js-content" class="content-ll">
             
   
-    <article id="post-安全方案设计原则" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+    <article id="post-the view of security" class="article article-type-post  article-index" itemscope itemprop="blogPost">
   <div class="article-inner">
     
       <header class="article-header">
         
   
     <h1 itemprop="name">
-      <a class="article-title" href="/2020/02/29/%E5%AE%89%E5%85%A8%E6%96%B9%E6%A1%88%E8%AE%BE%E8%AE%A1%E5%8E%9F%E5%88%99/">安全方案设计原则</a>
+      <a class="article-title" href="/2020/02/29/the%20view%20of%20security/">The View of Security</a>
     </h1>
   
 
         
-        <a href="/2020/02/29/%E5%AE%89%E5%85%A8%E6%96%B9%E6%A1%88%E8%AE%BE%E8%AE%A1%E5%8E%9F%E5%88%99/" class="archive-article-date">
+        <a href="/2020/02/29/the%20view%20of%20security/" class="archive-article-date">
   	<time datetime="2020-02-28T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-02-29</time>
 </a>
         
@@ -180,32 +180,39 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h2 id="白帽子兵法–安全方案设计原则"><a href="#白帽子兵法–安全方案设计原则" class="headerlink" title="白帽子兵法–安全方案设计原则"></a>白帽子兵法–安全方案设计原则</h2><h4>安全默认原则(Security By Default)</h4>
+        <h2>安全问题的本质是信任的问题。</h2>
 
+<p>&emsp;&emsp;一切的安全方案设计的基础，都是在建立在信任关系上的。我们必须相信一些东西，必须有一些最基本的假设，安全方案才能得以建立；如果我们否定一切，安全方案就会如无源之水，无根之木，无法设计，也无法完成。</p>
+<blockquote>
+<p>&emsp;&emsp;保管文件时，确认文件安全的信任基础是锁与抽屉没有损坏、唯有自己拥有开锁的钥匙以及制造锁的工匠无法打开，一旦某个信任基础被打破，那么就无法判定文件的安全。<br>&emsp;&emsp;看病时，确认身体健康安全的信任基础是医生的判断、检查仪器的结果以及自身的感觉，若某一信任基础被打破，同样无法判定身体的安全。<br>&emsp;&emsp;但是，在现实生活中，<strong>没有绝对的安全</strong>，人们会近似认为小概率事件为不可能事件，然后坚定信任基础，从而确保安全。</p>
+</blockquote>
+<p>&emsp;&emsp;所以，安全方案设计的<strong>难点</strong>在于把握信任条件的度。信任条件被打破的概率，决定了对其的信任程度，从而直接影响了安全的确保程度。</p>
+<h2>在安全的领域中，没有银弹。</h2>
+
+<p>&emsp;&emsp;针对攻防技术双方，也许会出现在某一时期其中一方占上风的情况，但是这绝对只是暂时的。无论是攻击或者防御技术都不可能永远有效，因为防御技术在发展的同时，攻击技术也在不断发展，二者是相互促进的辩证关系。</p>
+<p>&emsp;&emsp;<strong>安全是一个持续的过程</strong>。</p>
+<blockquote>
+<p>银弹：银色子弹，指由纯银质或镀银的子弹。在欧洲民间传说及19世纪以来哥特小说风潮的影响下，银色子弹往往被描绘成具有驱魔功效的武器，是针对狼人等超自然怪物的特效武器。后来也被比喻为具有极端有效性的解决方法，作为杀手锏、最强杀招、王牌等的代称。</p>
+</blockquote>
+<h2>安全三要素</h2>
+
+<p>安全三要素是安全的基本组成元素，分别是</p>
 <ul>
-<li>白名单原则：尽可能多的使用白名单限制。</li>
-<li>最小权限原则：系统只授予主体必要的权限，避免过度授权。</li>
+<li>机密性(Confidentiality)</li>
+<li>完整性(Integrity)</li>
+<li>可用性(Availability)</li>
 </ul>
-<h4>纵深防御原则(Defense in Depth)</h4>
-
-<ul>
-<li>全方面实施解决方案，各方案相互配合，构成一个整体。</li>
-<li>在解决根本问题的地方实施针对性的安全方案。</li>
-</ul>
-<h4>数据与代码分离原则</h4>
-&emsp;&emsp;将数据与代码进行严格的分离，避免恶意代码执行从而导致安全问题的发生。
-
-<h4>不可预测性原则</h4>
-&emsp;&emsp;有规律的参数将容易被遍历导致安全问题，而不可预测性，能够有效地对抗基于篡改、伪造的攻击。
-<br>
-<br>
->Security By Default是时刻要牢记的总则；纵深防御，是要更全面、更正确的看待问题；数据与代码分离，是从漏洞成因上看问题；不可预测性原则，则是从客服攻击方法的角度看问题。
-
-<br>
-<br><br>
-<font face="Georgia" color=#c4444>在正确的地方做正确的事情。</font>
-<br>
-
+<blockquote>
+<p>机密性要求保护数据内容不能泄露。</p>
+</blockquote>
+<blockquote>
+<p>完整性则要求保护数据内容是完整、没有被篡改的。</p>
+</blockquote>
+<blockquote>
+<p>可用性要求保护资源是“随需随得”。</p>
+</blockquote>
+<p><br><br></p>
+<p><font face="Georgia" color=#c4444>互联网本来是安全的，自从有了研究安全的人之后，互联网就变得不安全了。</font><br><br></p>
 <p>作者：WebDogC<br>参考书籍《白帽子讲Web安全》</p>
 
       
@@ -230,7 +237,7 @@
 
       
         <p class="article-more-link">
-          <a class="article-more-a" href="/2020/02/29/%E5%AE%89%E5%85%A8%E6%96%B9%E6%A1%88%E8%AE%BE%E8%AE%A1%E5%8E%9F%E5%88%99/">展开全文 >></a>
+          <a class="article-more-a" href="/2020/02/29/the%20view%20of%20security/">展开全文 >></a>
         </p>
       
 
@@ -447,19 +454,19 @@
 
 
   
-    <article id="post-the view of security" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+    <article id="post-安全方案设计原则" class="article article-type-post  article-index" itemscope itemprop="blogPost">
   <div class="article-inner">
     
       <header class="article-header">
         
   
     <h1 itemprop="name">
-      <a class="article-title" href="/2020/02/29/the%20view%20of%20security/">The View of Security</a>
+      <a class="article-title" href="/2020/02/29/%E5%AE%89%E5%85%A8%E6%96%B9%E6%A1%88%E8%AE%BE%E8%AE%A1%E5%8E%9F%E5%88%99/">安全方案设计原则</a>
     </h1>
   
 
         
-        <a href="/2020/02/29/the%20view%20of%20security/" class="archive-article-date">
+        <a href="/2020/02/29/%E5%AE%89%E5%85%A8%E6%96%B9%E6%A1%88%E8%AE%BE%E8%AE%A1%E5%8E%9F%E5%88%99/" class="archive-article-date">
   	<time datetime="2020-02-28T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-02-29</time>
 </a>
         
@@ -467,39 +474,32 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h2>安全问题的本质是信任的问题。</h2>
+        <h2 id="白帽子兵法–安全方案设计原则"><a href="#白帽子兵法–安全方案设计原则" class="headerlink" title="白帽子兵法–安全方案设计原则"></a>白帽子兵法–安全方案设计原则</h2><h4>安全默认原则(Security By Default)</h4>
 
-<p>&emsp;&emsp;一切的安全方案设计的基础，都是在建立在信任关系上的。我们必须相信一些东西，必须有一些最基本的假设，安全方案才能得以建立；如果我们否定一切，安全方案就会如无源之水，无根之木，无法设计，也无法完成。</p>
-<blockquote>
-<p>&emsp;&emsp;保管文件时，确认文件安全的信任基础是锁与抽屉没有损坏、唯有自己拥有开锁的钥匙以及制造锁的工匠无法打开，一旦某个信任基础被打破，那么就无法判定文件的安全。<br>&emsp;&emsp;看病时，确认身体健康安全的信任基础是医生的判断、检查仪器的结果以及自身的感觉，若某一信任基础被打破，同样无法判定身体的安全。<br>&emsp;&emsp;但是，在现实生活中，<strong>没有绝对的安全</strong>，人们会近似认为小概率事件为不可能事件，然后坚定信任基础，从而确保安全。</p>
-</blockquote>
-<p>&emsp;&emsp;所以，安全方案设计的<strong>难点</strong>在于把握信任条件的度。信任条件被打破的概率，决定了对其的信任程度，从而直接影响了安全的确保程度。</p>
-<h2>在安全的领域中，没有银弹。</h2>
-
-<p>&emsp;&emsp;针对攻防技术双方，也许会出现在某一时期其中一方占上风的情况，但是这绝对只是暂时的。无论是攻击或者防御技术都不可能永远有效，因为防御技术在发展的同时，攻击技术也在不断发展，二者是相互促进的辩证关系。</p>
-<p>&emsp;&emsp;<strong>安全是一个持续的过程</strong>。</p>
-<blockquote>
-<p>银弹：银色子弹，指由纯银质或镀银的子弹。在欧洲民间传说及19世纪以来哥特小说风潮的影响下，银色子弹往往被描绘成具有驱魔功效的武器，是针对狼人等超自然怪物的特效武器。后来也被比喻为具有极端有效性的解决方法，作为杀手锏、最强杀招、王牌等的代称。</p>
-</blockquote>
-<h2>安全三要素</h2>
-
-<p>安全三要素是安全的基本组成元素，分别是</p>
 <ul>
-<li>机密性(Confidentiality)</li>
-<li>完整性(Integrity)</li>
-<li>可用性(Availability)</li>
+<li>白名单原则：尽可能多的使用白名单限制。</li>
+<li>最小权限原则：系统只授予主体必要的权限，避免过度授权。</li>
 </ul>
-<blockquote>
-<p>机密性要求保护数据内容不能泄露。</p>
-</blockquote>
-<blockquote>
-<p>完整性则要求保护数据内容是完整、没有被篡改的。</p>
-</blockquote>
-<blockquote>
-<p>可用性要求保护资源是“随需随得”。</p>
-</blockquote>
-<p><br><br></p>
-<p><font face="Georgia" color=#c4444>互联网本来是安全的，自从有了研究安全的人之后，互联网就变得不安全了。</font><br><br></p>
+<h4>纵深防御原则(Defense in Depth)</h4>
+
+<ul>
+<li>全方面实施解决方案，各方案相互配合，构成一个整体。</li>
+<li>在解决根本问题的地方实施针对性的安全方案。</li>
+</ul>
+<h4>数据与代码分离原则</h4>
+&emsp;&emsp;将数据与代码进行严格的分离，避免恶意代码执行从而导致安全问题的发生。
+
+<h4>不可预测性原则</h4>
+&emsp;&emsp;有规律的参数将容易被遍历导致安全问题，而不可预测性，能够有效地对抗基于篡改、伪造的攻击。
+<br>
+<br>
+>Security By Default是时刻要牢记的总则；纵深防御，是要更全面、更正确的看待问题；数据与代码分离，是从漏洞成因上看问题；不可预测性原则，则是从客服攻击方法的角度看问题。
+
+<br>
+<br><br>
+<font face="Georgia" color=#c4444>在正确的地方做正确的事情。</font>
+<br>
+
 <p>作者：WebDogC<br>参考书籍《白帽子讲Web安全》</p>
 
       
@@ -524,7 +524,7 @@
 
       
         <p class="article-more-link">
-          <a class="article-more-a" href="/2020/02/29/the%20view%20of%20security/">展开全文 >></a>
+          <a class="article-more-a" href="/2020/02/29/%E5%AE%89%E5%85%A8%E6%96%B9%E6%A1%88%E8%AE%BE%E8%AE%A1%E5%8E%9F%E5%88%99/">展开全文 >></a>
         </p>
       
 
@@ -890,11 +890,7 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
           <ul class="article-tag-list" q-show="showTags">
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">复现、PHPSHE</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">XXE、security、Web安全、note</a>
+                <a href="javascript:void(0)" class="js-tag color5">白帽子讲Web安全、文件包含、security、Web安全、note</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -906,51 +902,7 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">plan</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">OWASP TOP 10、note、security</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">XSS、security、Web安全</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">反序列化、白帽子讲Web安全、note、security</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">注入、SQL注入、security、Web安全</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">变量覆盖、白帽子讲Web安全、note、security</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">绕WAF、WAF、security、Web安全、note</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">逻辑、验证码、越权、支付、security、Web安全</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">白帽子讲Web安全、文件包含、security、Web安全、note</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">白帽子讲Web安全、note、security</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">复现、CTF、study、SQL、GET</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">复现、CTF、study、SQL、POST</a>
+                <a href="javascript:void(0)" class="js-tag color3">复现、CTF、study、flag、命令执行</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -958,7 +910,15 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">复现、CTF、study、flag、文件包含</a>
+                <a href="javascript:void(0)" class="js-tag color1">复现、CTF、study、SQL、GET</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">OWASP TOP 10、note、security</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">复现、CTF、study、SQL、POST</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -966,7 +926,47 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">复现、CTF、study、flag、命令执行</a>
+                <a href="javascript:void(0)" class="js-tag color5">复现、PHPSHE</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">复现、CTF、study、flag、文件包含</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">注入、SQL注入、security、Web安全</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">XSS、security、Web安全</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">plan</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">白帽子讲Web安全、note、security</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">反序列化、白帽子讲Web安全、note、security</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">绕WAF、WAF、security、Web安全、note</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">XXE、security、Web安全、note</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">逻辑、验证码、越权、支付、security、Web安全</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">变量覆盖、白帽子讲Web安全、note、security</a>
               </li>
             
             <div class="clearfix"></div>
