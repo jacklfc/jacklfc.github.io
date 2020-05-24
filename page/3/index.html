@@ -160,6 +160,149 @@
           <div id="js-content" class="content-ll">
             
   
+    <article id="post-SQL" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2020/03/12/SQL/">注入攻击之SQL注入</a>
+    </h1>
+  
+
+        
+        <a href="/2020/03/12/SQL/" class="archive-article-date">
+  	<time datetime="2020-03-11T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-03-12</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="SQL注入简介"><a href="#SQL注入简介" class="headerlink" title="SQL注入简介"></a>SQL注入简介</h2><p>&emsp;&emsp;<strong>注入攻击的本质</strong>，是把用户输入的数据当做代码执行，这里有两个关键条件，第一是用户能够控制输入，第二是原本程序要执行的代码，拼接了用户输入的数据。</p>
+<p>&emsp;&emsp;<strong>SQL注入</strong>，SQL Injection，指的是web应用程序对用户输入数据的合法性没有判断或过滤不严，攻击者可以在web应用程序中事先定义好的查询语句的结尾上添加额外的SQL语句，在管理员不知情的情况下实现非法操作，以此来实现欺骗数据库服务器执行非授权的任意查询，从而进一步得到相应的数据信息的一种攻击方式。</p>
+<p>&emsp;&emsp;<strong>原理</strong>：构造特殊的SQL查询，由于服务器缺少对请求内容的检验,数据和代码未分离，即数据当做了代码来执行，数据库执行了攻击者所要的操作。<br>&emsp;&emsp;<strong>利用</strong>:<br>&emsp;&emsp;&emsp;&emsp;1. 万能密码登录<br>&emsp;&emsp;&emsp;&emsp;2. 数据库信息泄露<br>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;+管理员后台用户名和密码<br>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;+数据库其他敏感信息<br>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;+整个数据库信息(脱库)<br>&emsp;&emsp;&emsp;&emsp;3. 获取Webshell<br>&emsp;&emsp;&emsp;&emsp;4. 获取服务器敏感文件<br>&emsp;&emsp;&emsp;&emsp;5. 获取服务器系统权限</p>
+<h4 id="SQL注入分类"><a href="#SQL注入分类" class="headerlink" title="SQL注入分类"></a>SQL注入分类</h4><p>&emsp;&emsp;SQL注入可以简要分为GET/POST/HEAD注入、数字型/字符型注入、Orale/Mysql/MSSQL/Access注入。<br>具体分为</p>
+<ul>
+<li>显错注入<ul>
+<li>查询语句显错</li>
+<li>函数updatexml()显错<ul>
+<li>insert信息注入<ul>
+<li>header参数注入</li>
+</ul>
+</li>
+<li>update信息注入</li>
+<li>delete信息注入</li>
+</ul>
+</li>
+<li>函数extractvalue()显错</li>
+</ul>
+</li>
+<li>盲注<ul>
+<li>布尔盲注</li>
+<li>延时盲注</li>
+<li>Dnslog盲注</li>
+</ul>
+</li>
+<li>特殊注入<ul>
+<li>宽字节注入</li>
+<li>二次编码注入 </li>
+</ul>
+</li>
+</ul>
+<h2 id="SQL注入攻击"><a href="#SQL注入攻击" class="headerlink" title="SQL注入攻击"></a>SQL注入攻击</h2><p>找到SQL注入漏洞，仅仅是一个开始。要实施一次完整的攻击，还有很多事情要做。下面是一些有关SQL注入的攻击方式。</p>
+<ul>
+<li><p>常见攻击方式：猜解数据库信息(版本、用户等)、修改数据库结构(增删改表)、读写文件(Webshell)。</p>
+</li>
+<li><p>UDF命令执行：利用“用户自定义函数”的技巧，即UDF(User-Defined- Functions)来执行命令。</p>
+</li>
+<li><p>攻击存储过程：数据库内有大量的存储过程，其中有不少(如xp_cmdshell)能为攻击者提供极大的便利，除此之外，存储过程本身也可能会存在注入漏洞。</p>
+</li>
+<li><p>SQL约束攻击(SQL Column Truncation)：在MySQL的配置选项中，有一个sql_mode选项。当MySQL的sql_mode设置为default时，即没有开启STRICT_ALL_TABLES选项时，MySQL对于用户插入的超长值只会提示warning，而不是error（如果是error则插入不成功），这可能会导致发生一些“截断”问题。</p>
+</li>
+</ul>
+<h2 id="SQL注入防御"><a href="#SQL注入防御" class="headerlink" title="SQL注入防御"></a>SQL注入防御</h2><ul>
+<li><p>对用户的输入进行严格的过滤</p>
+<ul>
+<li>检查数据类型，对于一些特定的输入(如邮箱、时间、数字)进行严格的格式检。</li>
+<li>使用安全函数，通过一个足够安全的编码函数，可以帮助对抗SQl注入。    <ul>
+<li>参考OWASP ESAPI中的<code>ESAPI.encoder().encodeForSQL()</code></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>参数化SQL语句</p>
+<ul>
+<li>使用预编译语句，绑定变量。攻击者无法改变SQL语句的结构，只会将用户的输入当做字符串来处理。</li>
+<li>使用安全的存储过程对抗SQL，存储过程中的效果和使用预编译语句类似，但需要注意的是，存储过程也可能会存在注入问题。</li>
+</ul>
+</li>
+<li><p>严格控制用户权限</p>
+<ul>
+<li>根据最小权限原则，避免Web应用使用root、dbowner等高权限账户直接连接数据库。另外，Web应用使用的数据库账户，不应该有创建自定义函数、操作本地文件的权限。</li>
+</ul>
+</li>
+</ul>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>&emsp;&emsp;SQL注入攻击是应用违背了“数据与代码分离原则”导致的结果。它有两个条件：一是用户能够控制数据的输入；二是代码拼接了用户输入的数据，将其当成代码执行。<br>&emsp;&emsp;所以在防御SQL注入攻击时，只需要牢记“数据与代码分离原则”，在应用与数据库的交互点进行安全的过滤检查，就能避免此类问题。</p>
+<p><br/><br/><br/><br><br/><br/><br/></p>
+<blockquote>
+<p><font face="Georgia" color=#c4444>理论上，通过设计和实施合理的安全解决方案，注入攻击是可以彻底杜绝的。</font></p>
+</blockquote>
+<p>作者：WebDogC<br>参考书籍《白帽子讲Web安全》</p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">注入、SQL注入、security、Web安全</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2020/03/12/SQL/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
     <article id="post-CSRF" class="article article-type-post  article-index" itemscope itemprop="blogPost">
   <div class="article-inner">
     
