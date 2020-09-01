@@ -160,6 +160,85 @@
           <div id="js-content" class="content-ll">
             
   
+    <article id="post-GetFlag-XFF-SQL注入" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2020/05/01/GetFlag-XFF-SQL%E6%B3%A8%E5%85%A5/">GetFlag-XFF-SQL注入</a>
+    </h1>
+  
+
+        
+        <a href="/2020/05/01/GetFlag-XFF-SQL%E6%B3%A8%E5%85%A5/" class="archive-article-date">
+  	<time datetime="2020-04-30T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-05-01</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p><strong>0x00前言</strong><br>&emsp;&emsp;本文是第三篇，重点记录靶机80端口X-Forwarded-For-SQL注入的渗透过程，涉及知识点：sqlmap之hearder扫描、nikto及nmap的使用、文件上传之CGI、msf生成后门等。关于靶场，玩法不一，以下只是本人的一次学习过程，不喜勿喷。ps：靶场可能没有设置Flag值，也可能是由于本人水平有限，无法提权到root找到flag。<br><strong>0x01环境</strong><br>&emsp;&emsp;攻击机(kali)：192.168.3.104<br>&emsp;&emsp;靶机：192.168.3.103<br><strong>0x02工具</strong><br>&emsp;&emsp;nmap、nikto、dirb、sqlmap、metasploit、VMware<br><strong>0x03过程</strong><br>&emsp;&emsp;<strong>信息探测</strong><br>&emsp;&emsp;终端下输入<code>nmap -T4 -A -p- -v 192.168.3.103</code><br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/XFF-SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%871.png" alt=""><br>&emsp;&emsp;探测结果为<br>&emsp;&emsp;&emsp;&emsp;开放端口：80(http)<br>&emsp;&emsp;&emsp;&emsp;Web容器信息：nginx 0.7.67<br>&emsp;&emsp;进一步探测敏感信息<br>&emsp;&emsp;终端下输入<code>nikto -host http://192.168.3.103</code><br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/XFF-SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%872.png" alt=""><br>&emsp;&emsp;输入<code>dirb http://192.168.3.103</code><br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/XFF-SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%873.png" alt=""><br>&emsp;&emsp;扫描结果：后台登录页面<code>/admin/login.php</code>、PHP版本为5.3.3<br>&emsp;&emsp;<strong>深入挖掘</strong><br>&emsp;&emsp;打开浏览器对站点进行简单浏览<br>&emsp;&emsp;发现网站和SQL注入-GET站点一样，尝试GET注入<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/XFF-SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%874.png" alt=""><br>&emsp;&emsp;很明显，这里做了限制，也许是盲注或者是过滤了简单payload，这里不做展开。<br>&emsp;&emsp;直接来到后台登录页面，尝试弱口令以及万能密码<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/XFF-SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%875.png" alt=""><br>&emsp;&emsp;登录失败。<br>&emsp;&emsp;用Burpsuite抓取一下数据包<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/XFF-SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%876.png" alt=""><br>&emsp;&emsp;可尝试暴力破解账号密码(这里不做展开)，在破解的同时，思考是否会存在head注入，常见的head注入参数有User-Agent、Referer、X-Forwarded-For，分别放到sqlmap工具中跑一下。</p>
+<blockquote>
+<p><code>sqlmap -u &quot;http://192.168.3.103&quot; --headers=&quot;User-Agent:*&quot; --level 5 --batch</code><br><code>sqlmap -u &quot;http://192.168.3.103&quot; --headers=&quot;Referer:*&quot; --level 5 --batch</code><br><code>sqlmap -u &quot;http://192.168.3.103&quot; --headers=&quot;X-Forwarded-For:*&quot; --level 5 --batch</code></p>
+</blockquote>
+<p>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/XFF-SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%877.png" alt=""><br>&emsp;&emsp;发现只有X-Forwarded-For存在SQL。<br>&emsp;&emsp;通过sqlmap工具找到了当前数据库photoblog下的users表中的login和password字段值。<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/XFF-SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%878.png" alt=""><br>&emsp;&emsp;登录后台<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/XFF-SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%879.png" alt=""><br>&emsp;&emsp;成功登录，发现与SQL注入-GET类似。<br>&emsp;&emsp;<strong>漏洞利用</strong><br>&emsp;&emsp;同样使用msf制作木马文件，并修改文件名后缀为PHP后上传。<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/XFF-SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%8710.png" alt=""><br>&emsp;&emsp;上传失败，只能上传图片文件。<br>&emsp;&emsp;百度，并没有搜索到Nginx 0.7.67相关解析漏洞<br>&emsp;&emsp;制作图片马文件，代码为msf生成的php代码。设置好监听ip以及端口后，打开监听器<br>&emsp;&emsp;上传图片马文件，尝试%00截断，发现图片会被重新命名，失效。<br>&emsp;&emsp;尝试CGI解析，访问上传的图片，并在url后加上<code>/1.php</code><br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/XFF-SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%8711.png" alt=""><br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/XFF-SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%8712.png" alt=""><br>&emsp;&emsp;成功返回shell，当前用户为普通用户权限，接下来是提权操作。由于本人水平有限，无法展开。<br>—————————-分割线——————————–<br><strong>0x04总结</strong><br>&emsp;&emsp;此次渗透过程首先对目标站点进行信息收集，针对唯一开放的80端口进行敏感信息探测，发现存在后台登录页面，不存在明显的GET/POST-SQL注入，从head-SQL注入入手，用SQLmap逐个尝试，利用存在的X-Forwarded-For-SQL注入，获取数据成功登录后台，接着获取WebShell的过程存在文件上传的限制，利用CGI解析成功绕过，拿到webshell。<br>&emsp;&emsp;虽然此次渗透大体过程与前两次并无太大差异，但也复习了一些知识点且学到了一些新姿势。渗透还可深入提权，奈何现在水平有限，以后有时间再来填这个坑吧。</p>
+<p><br><br><br><br><font face="Georgia" color=#c4444>head-SQL注入除了User-Agent、Referer、X-Forwarded-For还有Cookie。</font><br>作者：WebDogC</p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">复现、CTF、study、SQL、XFF</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2020/05/01/GetFlag-XFF-SQL%E6%B3%A8%E5%85%A5/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
     <article id="post-GetFlag-POST-SQL注入" class="article article-type-post  article-index" itemscope itemprop="blogPost">
   <div class="article-inner">
     
@@ -1072,129 +1151,9 @@
 
 
   
-    <article id="post-File Inclusion" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2020/03/25/File%20Inclusion/">文件包含</a>
-    </h1>
-  
-
-        
-        <a href="/2020/03/25/File%20Inclusion/" class="archive-article-date">
-  	<time datetime="2020-03-24T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-03-25</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p><strong>概念：</strong>服务器执行PHP文件时，可以通过文件包含函数加载另一个文件(可以是非php文件)中的PHP代码，并且当PHP来执行。这个过程被称为<strong>文件包含</strong>。</p>
-<p><strong>原理：</strong>Web应用使用了文件包含函数,其加载的文件名参数为用户可控，加上对文件名过滤不严，导致Web应用包含了其他恶意文件，执行了非预期的代码。</p>
-<h5 id="文件包含函数"><a href="#文件包含函数" class="headerlink" title="文件包含函数"></a>文件包含函数</h5><ul>
-<li>require()</li>
-<li>require_once()</li>
-<li>include()</li>
-<li>include_once()</li>
-</ul>
-<p>&emsp;&emsp;当使用这4个函数包含文件时，该文件将作为PHP文件执行，PHP内核并不会在意该被包含的文件是什么类型。</p>
-<blockquote>
-<p><code>include</code>：使用<code>include</code>引用外部文件时，只有代码执行到<code>include</code>语句时，调用的外部文件才会被引用并读取，当引用的文件发生错误时，系统会抛出一个警告，程序继续<strong>正常运行</strong>。<br><code>require</code>：使用<code>include</code>引用外部文件时，在php文件被执行之前，php解析器会将require语句替换成被引用的外部文件的全部内容然后重新生成一个php文件，并执行新生成的php文件代码，如果发生错误，服务器会直接报错并<strong>退出程序</strong>的执行。<br><code>include_once()</code>：使用include_once会在导入文件前先检测该文件是否在该页面的其他部分被引用过，如果有，则不会重复引用该文件，文件只能被<strong>引用一次</strong>。<br><code>require_once()</code>：在使用<code>require_once</code>时，先会检查要引用的文件是不是已将在该程序中的其他地方被引用过，如果有，则不会在重复调用该文件。(另外同时使用<code>require_once</code>语句在同一页面中引用了两个不同的文件时，只有第一个文件被执行，第二个引用的文件不会被执行)。</p>
-</blockquote>
-<h5 id="文件包含分类"><a href="#文件包含分类" class="headerlink" title="文件包含分类"></a>文件包含分类</h5><ul>
-<li>本地文件包含(LFI)：被包含的文件在服务器本地。<ul>
-<li>如 <code>url···?page=inlcude(&quot;文件所在绝对/相对路径&quot;)</code> </li>
-</ul>
-</li>
-<li>远程文件包含(RFI)：被包含的文件在第三方服务器,需要开启<code>php.ini</code>中的<code>allow_url_include</code>(默认是Off)。<ul>
-<li>如 <code>url···?page=http://文件访问url</code></li>
-</ul>
-</li>
-</ul>
-<h5 id="文件包含的利用技巧"><a href="#文件包含的利用技巧" class="headerlink" title="文件包含的利用技巧"></a>文件包含的利用技巧</h5><ol>
-<li>%00截断文件名 </li>
-<li>目录遍历/穿越<br>&emsp;&emsp;利用<code>./</code>以及<code>../</code>遍历目录，还可以用其不同的编码方式来绕过一些服务器逻辑。</li>
-<li>操作系统对目录最大长度限制<br>&emsp;&emsp;目录字符串，在Windows下256字节、Linux下4096字节时会达到最大值，最大长度之后的字符将被丢弃。利用这个方法可以绕过代码对包含文件名部分可控的限制。</li>
-</ol>
-<h5 id="包含的文件技巧"><a href="#包含的文件技巧" class="headerlink" title="包含的文件技巧"></a>包含的文件技巧</h5><ul>
-<li>包含用户上传的文件。</li>
-<li>包含<code>data://</code>或<code>php://input</code>等为协议。要求<code>allow_url_inlcude</code>配置为ON。</li>
-<li>包含Session文件。要求攻击者能控制Session文件的内容。</li>
-<li>包含日志文件。服务器一般会往WebServer的<code>access_log</code>里记录客户端的请求信息，在<code>error_log</code>记录出错请求，因此攻击者可以间接地将PHP代码写入到日志文件中进行包含。需要注意的是，在凌晨时包含文件，将提高攻击的成功性，因为WebServer会每天生成一个新的日志文件，这样就避免了因日志文件可能会很大以至于包含时PHP进程僵死。</li>
-<li>包含<code>/proc/self/environ</code>文件。<code>environ</code>文件是存储Web进程运行时的环境变量，其中很多都是用户可以控制的。</li>
-<li>包含上传的临时文件。</li>
-<li>包含其他应用创建的文件，比如数据库文件、缓存文件等。</li>
-</ul>
-<h3 id="防御"><a href="#防御" class="headerlink" title="防御"></a>防御</h3><ol>
-<li>禁用0字节，在一般的Web应用中，0字节对于用户来说，其实是不需要的。<code>./</code>以及<code>../</code>同理。</li>
-<li>配置open_basedir，指定PHP能打开的文件的目录。在Window下多个目录应当用分号隔开，在Linux下则用冒号隔开。</li>
-<li>对输入进行白名单机制验证。</li>
-<li>禁止用户对文件名可控，若实在存在需求，则需对文件名进行严格的检查。</li>
-</ol>
-<p><br /><br /><br /><br /></p>
-<blockquote>
-<p>偷梁换柱</p>
-</blockquote>
-<p>作者：WebDogC<br>参考书籍《白帽子讲Web安全》</p>
-
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">白帽子讲Web安全、文件包含、security、Web安全、note</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2020/03/25/File%20Inclusion/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
   
     <nav id="page-nav">
-      <a class="extend prev" rel="prev" href="/">&amp;laquo; Prev</a><a class="page-number" href="/">1</a><span class="page-number current">2</span><a class="page-number" href="/page/3/">3</a><a class="extend next" rel="next" href="/page/3/">Next &amp;raquo;</a>
+      <a class="extend prev" rel="prev" href="/">&amp;laquo; Prev</a><a class="page-number" href="/">1</a><span class="page-number current">2</span><a class="page-number" href="/page/3/">3</a><a class="page-number" href="/page/4/">4</a><a class="extend next" rel="next" href="/page/3/">Next &amp;raquo;</a>
     </nav>
   
 

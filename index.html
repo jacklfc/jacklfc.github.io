@@ -160,6 +160,107 @@
           <div id="js-content" class="content-ll">
             
   
+    <article id="post-Google Harking" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2020/09/01/Google%20Harking/">Google Harking</a>
+    </h1>
+  
+
+        
+        <a href="/2020/09/01/Google%20Harking/" class="archive-article-date">
+  	<time datetime="2020-09-01T10:24:12.415Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-09-01</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="Google-Hacking"><a href="#Google-Hacking" class="headerlink" title="Google Hacking"></a>Google Hacking</h2><p>谷歌镜像<a href="https://ac.scmor.com/" target="_blank" rel="noopener">https://ac.scmor.com/</a></p>
+<p>Google hacking</p>
+<table>
+<thead>
+<tr>
+<th>关键字</th>
+<th>功能</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>“str”</td>
+<td>完全匹配str</td>
+</tr>
+<tr>
+<td>site: xxx.xxx</td>
+<td>指定域名xxx.xxx</td>
+</tr>
+<tr>
+<td>inurl: str</td>
+<td>返回的网页url包含值str</td>
+</tr>
+<tr>
+<td>intitle: str</td>
+<td>返回的网页标题包含值str</td>
+</tr>
+<tr>
+<td>filetype: xxx</td>
+<td>返回的网页的文件后缀名为xxx</td>
+</tr>
+<tr>
+<td>intext: str</td>
+<td>返回的网页内容中包含str</td>
+</tr>
+<tr>
+<td>link: xxx.xxx</td>
+<td>返回所有与xxx.xxx做了连接的网页</td>
+</tr>
+</tbody></table>
+<p>在<a href="https://www.exploit-db.com/google-hacking-database上有很多关于Google" target="_blank" rel="noopener">https://www.exploit-db.com/google-hacking-database上有很多关于Google</a> Hacking的<strong>组合利用</strong>。</p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2020/09/01/Google%20Harking/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
     <article id="post-GetFlag-Mysql" class="article article-type-post  article-index" itemscope itemprop="blogPost">
   <div class="article-inner">
     
@@ -840,88 +941,9 @@
 
 
   
-    <article id="post-GetFlag-XFF-SQL注入" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2020/05/01/GetFlag-XFF-SQL%E6%B3%A8%E5%85%A5/">GetFlag-XFF-SQL注入</a>
-    </h1>
-  
-
-        
-        <a href="/2020/05/01/GetFlag-XFF-SQL%E6%B3%A8%E5%85%A5/" class="archive-article-date">
-  	<time datetime="2020-04-30T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-05-01</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p><strong>0x00前言</strong><br>&emsp;&emsp;本文是第三篇，重点记录靶机80端口X-Forwarded-For-SQL注入的渗透过程，涉及知识点：sqlmap之hearder扫描、nikto及nmap的使用、文件上传之CGI、msf生成后门等。关于靶场，玩法不一，以下只是本人的一次学习过程，不喜勿喷。ps：靶场可能没有设置Flag值，也可能是由于本人水平有限，无法提权到root找到flag。<br><strong>0x01环境</strong><br>&emsp;&emsp;攻击机(kali)：192.168.3.104<br>&emsp;&emsp;靶机：192.168.3.103<br><strong>0x02工具</strong><br>&emsp;&emsp;nmap、nikto、dirb、sqlmap、metasploit、VMware<br><strong>0x03过程</strong><br>&emsp;&emsp;<strong>信息探测</strong><br>&emsp;&emsp;终端下输入<code>nmap -T4 -A -p- -v 192.168.3.103</code><br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/XFF-SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%871.png" alt=""><br>&emsp;&emsp;探测结果为<br>&emsp;&emsp;&emsp;&emsp;开放端口：80(http)<br>&emsp;&emsp;&emsp;&emsp;Web容器信息：nginx 0.7.67<br>&emsp;&emsp;进一步探测敏感信息<br>&emsp;&emsp;终端下输入<code>nikto -host http://192.168.3.103</code><br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/XFF-SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%872.png" alt=""><br>&emsp;&emsp;输入<code>dirb http://192.168.3.103</code><br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/XFF-SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%873.png" alt=""><br>&emsp;&emsp;扫描结果：后台登录页面<code>/admin/login.php</code>、PHP版本为5.3.3<br>&emsp;&emsp;<strong>深入挖掘</strong><br>&emsp;&emsp;打开浏览器对站点进行简单浏览<br>&emsp;&emsp;发现网站和SQL注入-GET站点一样，尝试GET注入<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/XFF-SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%874.png" alt=""><br>&emsp;&emsp;很明显，这里做了限制，也许是盲注或者是过滤了简单payload，这里不做展开。<br>&emsp;&emsp;直接来到后台登录页面，尝试弱口令以及万能密码<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/XFF-SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%875.png" alt=""><br>&emsp;&emsp;登录失败。<br>&emsp;&emsp;用Burpsuite抓取一下数据包<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/XFF-SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%876.png" alt=""><br>&emsp;&emsp;可尝试暴力破解账号密码(这里不做展开)，在破解的同时，思考是否会存在head注入，常见的head注入参数有User-Agent、Referer、X-Forwarded-For，分别放到sqlmap工具中跑一下。</p>
-<blockquote>
-<p><code>sqlmap -u &quot;http://192.168.3.103&quot; --headers=&quot;User-Agent:*&quot; --level 5 --batch</code><br><code>sqlmap -u &quot;http://192.168.3.103&quot; --headers=&quot;Referer:*&quot; --level 5 --batch</code><br><code>sqlmap -u &quot;http://192.168.3.103&quot; --headers=&quot;X-Forwarded-For:*&quot; --level 5 --batch</code></p>
-</blockquote>
-<p>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/XFF-SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%877.png" alt=""><br>&emsp;&emsp;发现只有X-Forwarded-For存在SQL。<br>&emsp;&emsp;通过sqlmap工具找到了当前数据库photoblog下的users表中的login和password字段值。<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/XFF-SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%878.png" alt=""><br>&emsp;&emsp;登录后台<br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/XFF-SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%879.png" alt=""><br>&emsp;&emsp;成功登录，发现与SQL注入-GET类似。<br>&emsp;&emsp;<strong>漏洞利用</strong><br>&emsp;&emsp;同样使用msf制作木马文件，并修改文件名后缀为PHP后上传。<br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/XFF-SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%8710.png" alt=""><br>&emsp;&emsp;上传失败，只能上传图片文件。<br>&emsp;&emsp;百度，并没有搜索到Nginx 0.7.67相关解析漏洞<br>&emsp;&emsp;制作图片马文件，代码为msf生成的php代码。设置好监听ip以及端口后，打开监听器<br>&emsp;&emsp;上传图片马文件，尝试%00截断，发现图片会被重新命名，失效。<br>&emsp;&emsp;尝试CGI解析，访问上传的图片，并在url后加上<code>/1.php</code><br><img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/XFF-SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%8711.png" alt=""><br>&emsp;&emsp;<img src="https://img-1301411730.cos.ap-chengdu.myqcloud.com/myblog/CTF/XFF-SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%8712.png" alt=""><br>&emsp;&emsp;成功返回shell，当前用户为普通用户权限，接下来是提权操作。由于本人水平有限，无法展开。<br>—————————-分割线——————————–<br><strong>0x04总结</strong><br>&emsp;&emsp;此次渗透过程首先对目标站点进行信息收集，针对唯一开放的80端口进行敏感信息探测，发现存在后台登录页面，不存在明显的GET/POST-SQL注入，从head-SQL注入入手，用SQLmap逐个尝试，利用存在的X-Forwarded-For-SQL注入，获取数据成功登录后台，接着获取WebShell的过程存在文件上传的限制，利用CGI解析成功绕过，拿到webshell。<br>&emsp;&emsp;虽然此次渗透大体过程与前两次并无太大差异，但也复习了一些知识点且学到了一些新姿势。渗透还可深入提权，奈何现在水平有限，以后有时间再来填这个坑吧。</p>
-<p><br><br><br><br><font face="Georgia" color=#c4444>head-SQL注入除了User-Agent、Referer、X-Forwarded-For还有Cookie。</font><br>作者：WebDogC</p>
-
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">复现、CTF、study、SQL、XFF</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2020/05/01/GetFlag-XFF-SQL%E6%B3%A8%E5%85%A5/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
   
     <nav id="page-nav">
-      <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="page-number" href="/page/3/">3</a><a class="extend next" rel="next" href="/page/2/">Next &amp;raquo;</a>
+      <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="page-number" href="/page/3/">3</a><a class="page-number" href="/page/4/">4</a><a class="extend next" rel="next" href="/page/2/">Next &amp;raquo;</a>
     </nav>
   
 
